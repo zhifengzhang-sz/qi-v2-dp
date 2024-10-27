@@ -1,0 +1,80 @@
+digraph QISystem {
+  //--------------------------------------------------------------------------
+  // setting properties
+  //--------------------------------------------------------------------------
+  graph [rankdir="TB"
+        ,ranksep=".9"
+        ,nodesep=".75"
+        ,pad=".25"
+        ,colorscheme=greys9
+        ,color=3
+        ,fontcolor=5
+        ,splines=ortho
+        ,concentrate=true
+        ,layout="dot"
+        ];
+  bgcolor=2;
+  fontcolor=6;
+  fontsize=18;
+  labelloc="t";
+  labeljust="l";
+  label="The Quantitative Investment (QI) System";
+  node [style=filled, colorscheme=greys9, fillcolor=3, color=4, fontcolor=8];
+  edge [colorscheme=greys9, color=5, minlen=1];
+
+  //--------------------------------------------------------------------------
+  // defining nodes
+  //--------------------------------------------------------------------------
+  source [label="Data Sources"];
+  app [label="Applications"];
+  db [label="      Databases      ",shape=cylinder];
+
+  producer [label="Producers", shape=rect, fillcolor=orange];
+  kafka [label="        Data Stream (redpanda/kafka)        ", shape=rect];
+  consumer [label="Consumers", shape=rect, fillcolor=orange];
+  data_store [label="       Data Store       ", shape=rect, fillcolor=orange];
+  worker [label="Data Workers", shape=rect, fillcolor=orange];
+  iapp [label="Operations and Monitors"];
+
+  producer -> kafka [constraint=true];
+  kafka -> consumer [constraint=true];
+
+  data_store->producer [constraint=true];
+  data_store->consumer [dir=both,constraint=false];
+
+  producer -> worker [dir=back];
+  worker -> consumer [dir=both];
+
+  app->data_store [dir=both];
+  source -> producer [constraint=true];
+  consumer -> db [dir=both,constraint=true];
+  worker -> iapp [dir=both];
+  data_store -> db [dir=both,constraint=true];
+
+  //--------------------------------------------------------------------------
+  // grouping nodes
+  //--------------------------------------------------------------------------
+  subgraph cluster_data_platform {
+    node [style=filled];
+    "data_store" "producer" "kafka" "consumer" "worker"
+    margin=20;
+    labelloc="t";
+    labeljust="l";
+    label="Core Data Platform";
+    fontcolor=3;
+    color=1;
+    bgcolor=9;
+
+    {
+      node [style=filled];
+      rank=same;
+      producer, kafka, consumer;
+    }
+  }
+
+  {
+    node [style=filled];
+    rank=same;
+    source, db;
+  }
+}

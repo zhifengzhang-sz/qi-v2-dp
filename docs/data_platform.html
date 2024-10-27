@@ -1,0 +1,406 @@
+<!DOCTYPE html><html><head>
+      <title>data_platform</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      
+        <script type="text/javascript">
+          window.MathJax = ({"tex":{"inlineMath":[["$","$"],["\\(","\\)"]],"displayMath":[["$$","$$"],["\\[","\\]"]]},"options":{},"loader":{}});
+        </script>
+        <script type="text/javascript" async="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js" charset="UTF-8"></script>
+        
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:rgba(150,150,150,.66);border:4px solid rgba(150,150,150,.66);background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. --><script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script></head><body for="html-export">
+    
+    
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="the-data-platform">The Data Platform </h1>
+<h2 id="investment-platform">Investment platform </h2>
+<p><strong>Investment</strong> is about processing various type of information, most of which are in the form of data stream, making investment decision, executing decision, and managing investment portfolio.</p>
+<p>An <strong>investment system</strong> is a system to manage the day-to-day primary investment activities, such as trading, risk management, portfolio management, investment strategy development, and so on. We view activities of the investment process as <strong>operations</strong> acting on <strong>information flow</strong>, With such view, the main design of the system is to decouple operations from the information flow.</p>
+<p>A <strong>quantitative investment system</strong> is a system that is</p>
+<ol>
+<li>capable of quantifying the operations with models and logic so that operations can be implemented in the (software) system;</li>
+<li>utilizing software engineering framework and tools to model and implement information flow, providing interface for operations to access or to communicate with information flow.</li>
+</ol>
+<p>The <strong>data platform</strong> in this proposal is the platform of modeling and implementing the information flow, in other words, <em>the data platform provides data services for the operations</em>.</p>
+<hr>
+<h2 id="overview-of-the-data-platform">Overview of the data platform </h2>
+<hr>
+<h3 id="scope">Scope </h3>
+<p>The scope of the data platform is to provide data services for the operations. The data platform has the following <strong>functionalities</strong>:</p>
+<ul>
+<li>
+<p><strong>Data services</strong>: The system provides data services via the <code>data store</code> and the <code>data worker</code> components. Both components provide clean interface to communicate with users. <code>data store</code> encapsulating the internal complexities from users, while <code>data workers</code> exposes the internal <code>producer</code> and <code>consumer</code> to its users. The users of the <code>data store</code> interface are called applications (of the data platform). These kind of applications need to consume data from the data platform, but no need to publish data in the platform. While the users of the <code>data workers</code> interface are called operations. They usually not only need to consume data from the data platform, but also need to publish data in the data platform.</p>
+</li>
+<li>
+<p><strong>Historical data acquisition</strong>: The <code>Producer</code> component fetches historical data (assets, exchanges, most active assets, OHLCV, tick data) from external sources and publishes it to the internal data stream using <code>redpanda/kafka</code> which standardizes data ingestion.</p>
+</li>
+<li>
+<p><strong>Real-time tick data feed</strong>: The system obtains real-time tick data from external sources.</p>
+</li>
+<li>
+<p><strong>Data consumption and storage</strong>: The <code>Consumer</code> component consumes data from the data stream and stores it into databases.</p>
+</li>
+</ul>
+<hr>
+<h3 id="key-mechanisms">Key Mechanisms </h3>
+<ul>
+<li>
+<p><strong>Decoupling operations from data flow:</strong> By separating the logic of operations from the data flow, the system promotes modularity and flexibility, and thus allows components operate independently but communicate with applications via well-defined interfaces.</p>
+</li>
+<li>
+<p><strong>Utilizing data flow for cross-language communication:</strong> Using data streams (e.g., Kafka) to communicate between components written in different languages (TypeScript, Go, Python), which allows components to interact regardless of implementation language.</p>
+</li>
+<li>
+<p><strong>Reactive state machine-driven design:</strong> Employing state machines (e.g., <strong>xstate</strong>) to manage component states and transitions, ensuring predictable and manageable system behavior.</p>
+</li>
+</ul>
+<hr>
+<h3 id="architecture-conceptual-diagram">Architecture conceptual diagram </h3>
+<p>The key components in the data platform are colored by orange:</p>
+<p></p><p as="dot" class="dot"><!--?xml version="1.0" encoding="UTF-8" standalone="no"?-->
+
+<!-- Generated by graphviz version 9.0.0 (20230911.1827)
+ -->
+<!-- Title: QISystem Pages: 1 -->
+<svg width="883pt" height="506pt" viewBox="0.00 0.00 882.63 505.60" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(18 487.6)">
+<title>QISystem</title>
+<polygon fill="#f0f0f0" stroke="none" points="-18,18 -18,-487.6 864.63,-487.6 864.63,18 -18,18"></polygon>
+<text text-anchor="middle" x="157.46" y="-449.4" font-family="Times,serif" font-size="18.00" fill="#737373">The Quantitative Investment (QI) System</text>
+<g id="clust1" class="cluster">
+<title>cluster_data_platform</title>
+<polygon fill="#000000" stroke="#ffffff" points="158.25,-81 158.25,-388.6 698.25,-388.6 698.25,-81 158.25,-81"></polygon>
+<text text-anchor="middle" x="236.73" y="-368.4" font-family="Times,serif" font-size="18.00" fill="#d9d9d9">Core Data Platform</text>
+</g>
+<!-- source -->
+<g id="node1" class="node">
+<title>source</title>
+<ellipse fill="#d9d9d9" stroke="#bdbdbd" cx="62.25" cy="-220" rx="62.25" ry="18"></ellipse>
+<text text-anchor="middle" x="62.25" y="-215.8" font-family="Times,serif" font-size="14.00" fill="#252525">Data Sources</text>
+</g>
+<!-- producer -->
+<g id="node4" class="node">
+<title>producer</title>
+<polygon fill="orange" stroke="#bdbdbd" points="250.25,-238 178.26,-238 178.26,-202 250.25,-202 250.25,-238"></polygon>
+<text text-anchor="middle" x="214.25" y="-215.8" font-family="Times,serif" font-size="14.00" fill="#252525">Producers</text>
+</g>
+<!-- source&#45;&gt;producer -->
+<g id="edge8" class="edge">
+<title>source-&gt;producer</title>
+<path fill="none" stroke="#969696" d="M124.96,-220C124.96,-220 166.29,-220 166.29,-220"></path>
+<polygon fill="#969696" stroke="#969696" points="166.29,-223.5 176.29,-220 166.29,-216.5 166.29,-223.5"></polygon>
+</g>
+<!-- app -->
+<g id="node2" class="node">
+<title>app</title>
+<ellipse fill="#d9d9d9" stroke="#bdbdbd" cx="428.25" cy="-422" rx="60.39" ry="18"></ellipse>
+<text text-anchor="middle" x="428.25" y="-417.8" font-family="Times,serif" font-size="14.00" fill="#252525">Applications</text>
+</g>
+<!-- data_store -->
+<g id="node7" class="node">
+<title>data_store</title>
+<polygon fill="orange" stroke="#bdbdbd" points="490.49,-339 366.01,-339 366.01,-303 490.49,-303 490.49,-339"></polygon>
+<text text-anchor="middle" x="428.25" y="-316.8" font-family="Times,serif" font-size="14.00" fill="#252525"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data Store &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+</g>
+<!-- app&#45;&gt;data_store -->
+<g id="edge7" class="edge">
+<title>app-&gt;data_store</title>
+<path fill="none" stroke="#969696" d="M428.25,-392.43C428.25,-392.43 428.25,-350.75 428.25,-350.75"></path>
+<polygon fill="#969696" stroke="#969696" points="424.75,-392.43 428.25,-402.43 431.75,-392.43 424.75,-392.43"></polygon>
+<polygon fill="#969696" stroke="#969696" points="431.75,-350.75 428.25,-340.75 424.75,-350.75 431.75,-350.75"></polygon>
+</g>
+<!-- db -->
+<g id="node3" class="node">
+<title>db</title>
+<path fill="#d9d9d9" stroke="#bdbdbd" d="M846.63,-234.73C846.63,-236.53 820.91,-238 789.25,-238 757.6,-238 731.88,-236.53 731.88,-234.73 731.88,-234.73 731.88,-205.27 731.88,-205.27 731.88,-203.47 757.6,-202 789.25,-202 820.91,-202 846.63,-203.47 846.63,-205.27 846.63,-205.27 846.63,-234.73 846.63,-234.73"></path>
+<path fill="none" stroke="#bdbdbd" d="M846.63,-234.73C846.63,-232.92 820.91,-231.45 789.25,-231.45 757.6,-231.45 731.88,-232.92 731.88,-234.73"></path>
+<text text-anchor="middle" x="789.25" y="-215.8" font-family="Times,serif" font-size="14.00" fill="#252525"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Databases &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+</g>
+<!-- kafka -->
+<g id="node5" class="node">
+<title>kafka</title>
+<polygon fill="#d9d9d9" stroke="#bdbdbd" points="544.6,-238 303.91,-238 303.91,-202 544.6,-202 544.6,-238"></polygon>
+<text text-anchor="middle" x="424.25" y="-215.8" font-family="Times,serif" font-size="14.00" fill="#252525"> &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Data Stream (redpanda/kafka) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</text>
+</g>
+<!-- producer&#45;&gt;kafka -->
+<g id="edge1" class="edge">
+<title>producer-&gt;kafka</title>
+<path fill="none" stroke="#969696" d="M250.35,-220C250.35,-220 292.24,-220 292.24,-220"></path>
+<polygon fill="#969696" stroke="#969696" points="292.24,-223.5 302.24,-220 292.24,-216.5 292.24,-223.5"></polygon>
+</g>
+<!-- worker -->
+<g id="node8" class="node">
+<title>worker</title>
+<polygon fill="orange" stroke="#bdbdbd" points="475.32,-137 381.19,-137 381.19,-101 475.32,-101 475.32,-137"></polygon>
+<text text-anchor="middle" x="428.25" y="-114.8" font-family="Times,serif" font-size="14.00" fill="#252525">Data Workers</text>
+</g>
+<!-- producer&#45;&gt;worker -->
+<g id="edge5" class="edge">
+<title>producer-&gt;worker</title>
+<path fill="none" stroke="#969696" d="M214.25,-190.43C214.25,-190.43 214.25,-119 214.25,-119 214.25,-119 317.71,-119 380.76,-119"></path>
+<polygon fill="#969696" stroke="#969696" points="210.75,-190.43 214.25,-200.43 217.75,-190.43 210.75,-190.43"></polygon>
+</g>
+<!-- consumer -->
+<g id="node6" class="node">
+<title>consumer</title>
+<polygon fill="orange" stroke="#bdbdbd" points="677.75,-238 598.75,-238 598.75,-202 677.75,-202 677.75,-238"></polygon>
+<text text-anchor="middle" x="638.25" y="-215.8" font-family="Times,serif" font-size="14.00" fill="#252525">Consumers</text>
+</g>
+<!-- kafka&#45;&gt;consumer -->
+<g id="edge2" class="edge">
+<title>kafka-&gt;consumer</title>
+<path fill="none" stroke="#969696" d="M545.01,-220C545.01,-220 587.11,-220 587.11,-220"></path>
+<polygon fill="#969696" stroke="#969696" points="587.11,-223.5 597.11,-220 587.11,-216.5 587.11,-223.5"></polygon>
+</g>
+<!-- consumer&#45;&gt;db -->
+<g id="edge9" class="edge">
+<title>consumer-&gt;db</title>
+<path fill="none" stroke="#969696" d="M689.44,-220C689.44,-220 719.87,-220 719.87,-220"></path>
+<polygon fill="#969696" stroke="#969696" points="689.44,-216.5 679.44,-220 689.44,-223.5 689.44,-216.5"></polygon>
+<polygon fill="#969696" stroke="#969696" points="719.87,-223.5 729.87,-220 719.87,-216.5 719.87,-223.5"></polygon>
+</g>
+<!-- data_store&#45;&gt;db -->
+<g id="edge11" class="edge">
+<title>data_store-&gt;db</title>
+<path fill="none" stroke="#969696" d="M502.24,-327C502.24,-327 789.25,-327 789.25,-327 789.25,-327 789.25,-249.66 789.25,-249.66"></path>
+<polygon fill="#969696" stroke="#969696" points="502.24,-323.5 492.24,-327 502.24,-330.5 502.24,-323.5"></polygon>
+<polygon fill="#969696" stroke="#969696" points="792.75,-249.66 789.25,-239.66 785.75,-249.66 792.75,-249.66"></polygon>
+</g>
+<!-- data_store&#45;&gt;producer -->
+<g id="edge3" class="edge">
+<title>data_store-&gt;producer</title>
+<path fill="none" stroke="#969696" d="M365.78,-321C302.62,-321 214.25,-321 214.25,-321 214.25,-321 214.25,-249.57 214.25,-249.57"></path>
+<polygon fill="#969696" stroke="#969696" points="217.75,-249.57 214.25,-239.57 210.75,-249.57 217.75,-249.57"></polygon>
+</g>
+<!-- data_store&#45;&gt;consumer -->
+<g id="edge4" class="edge">
+<title>data_store-&gt;consumer</title>
+<path fill="none" stroke="#969696" d="M502.49,-315C502.49,-315 638.25,-315 638.25,-315 638.25,-315 638.25,-249.83 638.25,-249.83"></path>
+<polygon fill="#969696" stroke="#969696" points="502.49,-311.5 492.49,-315 502.49,-318.5 502.49,-311.5"></polygon>
+<polygon fill="#969696" stroke="#969696" points="641.75,-249.83 638.25,-239.83 634.75,-249.83 641.75,-249.83"></polygon>
+</g>
+<!-- worker&#45;&gt;consumer -->
+<g id="edge6" class="edge">
+<title>worker-&gt;consumer</title>
+<path fill="none" stroke="#969696" d="M487.16,-119C487.16,-119 638.25,-119 638.25,-119 638.25,-119 638.25,-190.43 638.25,-190.43"></path>
+<polygon fill="#969696" stroke="#969696" points="487.16,-115.5 477.16,-119 487.16,-122.5 487.16,-115.5"></polygon>
+<polygon fill="#969696" stroke="#969696" points="634.75,-190.43 638.25,-200.43 641.75,-190.43 634.75,-190.43"></polygon>
+</g>
+<!-- iapp -->
+<g id="node9" class="node">
+<title>iapp</title>
+<ellipse fill="#d9d9d9" stroke="#bdbdbd" cx="428.25" cy="-18" rx="103.3" ry="18"></ellipse>
+<text text-anchor="middle" x="428.25" y="-13.8" font-family="Times,serif" font-size="14.00" fill="#252525">Monitors and Managers</text>
+</g>
+<!-- worker&#45;&gt;iapp -->
+<g id="edge10" class="edge">
+<title>worker-&gt;iapp</title>
+<path fill="none" stroke="#969696" d="M428.25,-89.43C428.25,-89.43 428.25,-47.75 428.25,-47.75"></path>
+<polygon fill="#969696" stroke="#969696" points="424.75,-89.43 428.25,-99.43 431.75,-89.43 424.75,-89.43"></polygon>
+<polygon fill="#969696" stroke="#969696" points="431.75,-47.75 428.25,-37.75 424.75,-47.75 431.75,-47.75"></polygon>
+</g>
+</g>
+</svg>
+</p><p></p>
+<hr>
+<h3 id="components">Components </h3>
+<hr>
+<h4 id="producers">Producers </h4>
+<p>Responsibilities:</p>
+<ol>
+<li>Data acquisition: Fetch historical and real-time data from external sources.</li>
+<li>Data publishing: Publish data into the data stream (Redpanda/Kafka).</li>
+</ol>
+<p>Implementation:</p>
+<ol>
+<li>Typescript modules:</li>
+<li>REST API clients: Communicate with external data sources (e.g., CryptoCompare, TwelveData) to fetch historical data.</li>
+<li>WebSocket clients: Receive real-time tick data via WebSocket connections.</li>
+<li>Cross-language communication:</li>
+<li>Go and Python integration: Leverage Go and Python for specialized data fetching tasks.</li>
+<li>Producer Machine Abstraction:
+<ul>
+<li>Interfaces for machine actions: Define interfaces for actions, context, events, states, and transformation functions.</li>
+<li>Producer actor: Implement as an <strong>xstate</strong> actor, managing the producer's state and behavior.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4 id="consumers">Consumers </h4>
+<p>Responsibilities:</p>
+<ol>
+<li>Data consumption: Consume data from the data stream.</li>
+<li>Data storage: Push data to databases.</li>
+</ol>
+<p>Implementation:</p>
+<ol>
+<li>Typescript modules:
+<ul>
+<li>Database schema with sequelize: Define database schemas without relying on Sequelize TypeScript decorators, providing greater control and alignment with the system's needs.</li>
+<li>Kafka consumers: Implement consumers to read data from Kafka topics.</li>
+</ul>
+</li>
+<li>Consumer machine abstraction:
+<ul>
+<li>Interfaces for machine actions: Similar to producers, define interfaces for the consumer's actions and states.</li>
+<li>Consumer actor: Manage the consumer's behavior and state using <strong>xstate</strong>.</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h4 id="data-workers">Data Workers </h4>
+<p>Responsibilities:</p>
+<ol>
+<li>Provide interface to work with or to spawn producers and consumers.</li>
+<li>Communicating with operations for investment process: any operations in the investment process will be implemented outside the data platform but access to data platform through data workers, to name a few:
+<ul>
+<li>portfolio construction</li>
+<li>trading orders</li>
+<li>risk management</li>
+</ul>
+</li>
+<li>Communicating with process monitors.</li>
+</ol>
+<p>Implementation:</p>
+<ol>
+<li>Interface to communicate with producers and/or consumers.</li>
+<li>Interface to spawn producers or consumers.</li>
+</ol>
+<hr>
+<h4 id="data-store">Data Store </h4>
+<p>Responsibilities:</p>
+<ul>
+<li>
+<p>Application interface: Interact with applications, providing data services transparently.</p>
+</li>
+<li>
+<p>Orchestration: Coordinate producers and consumers based on application needs.</p>
+</li>
+</ul>
+<p>Implementation:</p>
+<ul>
+<li>
+<p>State machine management: Use <em>xstate</em> to manage interactions between producer and consumer actors.</p>
+</li>
+<li>
+<p>Interface definitions: Define clear interfaces for applications to interact with the data store.</p>
+</li>
+</ul>
+<h3 id="formal-definition">Formal definition </h3>
+<p>It is not hard to use category theory to define the data platform in the abstract level, but it is hard to classify the associated functor on the system.</p>
+<p>From abstract point of view, our system is a transition system. There are some research works about complex system have been done, which naturally cover the transition system, for example, <a href="https://centralesupelec.hal.science/hal-00782879/file/aiguier_al-complex-software.pdf">Complex software systems : Formalization and Applications</a> and <a href="https://arxiv.org/pdf/2306.11817">Towards a Definition of Complex Software System</a>.</p>
+<p>We will continue to study and research in this area.</p>
+<h2 id="specifications">Specifications </h2>
+
+      </div>
+      <div class="md-sidebar-toc">
+<div class="md-toc">
+<details style="padding:0;;padding-left:0px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#the-data-platform" class="md-toc-link"><p>The Data Platform</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#investment-platform" class="md-toc-link">
+            <p>Investment platform</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#overview-of-the-data-platform" class="md-toc-link"><p>Overview of the data platform</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#scope" class="md-toc-link">
+            <p>Scope</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#key-mechanisms" class="md-toc-link">
+            <p>Key Mechanisms</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#architecture-conceptual-diagram" class="md-toc-link">
+            <p>Architecture conceptual diagram</p>
+
+          </a></div><details style="padding:0;;padding-left:24px;" open="">
+        <summary class="md-toc-link-wrapper">
+          <a href="#components" class="md-toc-link"><p>Components</p>
+</a>
+          </summary>
+        <div>
+          <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#producers" class="md-toc-link">
+            <p>Producers</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#consumers" class="md-toc-link">
+            <p>Consumers</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#data-workers" class="md-toc-link">
+            <p>Data Workers</p>
+
+          </a></div><div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#data-store" class="md-toc-link">
+            <p>Data Store</p>
+
+          </a></div>
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#formal-definition" class="md-toc-link">
+            <p>Formal definition</p>
+
+          </a></div>
+        </div>
+      </details>
+    <div class="md-toc-link-wrapper" style="padding:0;;display:list-item;list-style:square;margin-left:42px">
+          <a href="#specifications" class="md-toc-link">
+            <p>Specifications</p>
+
+          </a></div>
+        </div>
+      </details>
+    
+</div>
+</div>
+      <a id="sidebar-toc-btn">≡</a>
+    
+    
+    
+    
+    
+    
+<script>
+
+var sidebarTOCBtn = document.getElementById('sidebar-toc-btn')
+sidebarTOCBtn.addEventListener('click', function(event) {
+  event.stopPropagation()
+  if (document.body.hasAttribute('html-show-sidebar-toc')) {
+    document.body.removeAttribute('html-show-sidebar-toc')
+  } else {
+    document.body.setAttribute('html-show-sidebar-toc', true)
+  }
+})
+</script>
+      
+  
+    </body></html>

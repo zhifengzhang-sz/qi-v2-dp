@@ -1,0 +1,105 @@
+digraph EclipseTrader {
+  graph [rankdir="TB"
+        ,ranksep=".9"
+        ,nodesep=".75"
+        ,pad=".25"
+        ,colorscheme=greys9
+        ,color=3
+        ,fontcolor=5
+        ,splines=ortho
+        ,concentrate=true
+        ,layout="dot"
+        ];
+  bgcolor=2;
+  fontcolor=6;
+  fontsize=18;
+  labelloc="t";
+  labeljust="l";
+  label="The Quantitative Investment (QI) System";
+  node [style=filled, shape=rect, colorscheme=greys9, fillcolor=3, color=4, fontcolor=8];
+  edge [colorscheme=greys9, color=4, minlen=1, arrowsize="0.4"];
+
+  // Core Eclipse Platform
+  subgraph cluster_EclipsePlatform {
+    label="Eclipse Rich Client Platform (RCP)";
+    style=filled;
+    color=3;
+    node [style=filled, fillcolor=4];
+
+    OSGi [label="OSGi Framework"];
+    UIFramework [label="UI Framework (SWT/JFace)"];
+  }
+
+  // Core Plugins
+  subgraph cluster_CorePlugins {
+    label="Core Plugins";
+    style=filled;
+    color=3;
+    node [style=filled, color=2, fillcolor=orange];
+
+    DataModel [label="Data Model"];
+    Persistence [label="Persistence"];
+    EventHandling [label="Event Handling"];
+  }
+
+  // UI Plugins
+  subgraph cluster_UIPlugins {
+    label="UI Plugins";
+    style=filled;
+    color=3;
+    node [style=filled, fillcolor=yellowgreen];
+
+    Views [label="Views"];
+    Editors [label="Editors"];
+    Perspectives [label="Perspectives"];
+  }
+
+  // Data Providers
+  subgraph cluster_DataProviders {
+    label="Data Providers";
+    style=filled;
+    color=3;
+    node [style=filled, fillcolor=lightblue];
+
+    MarketDataProvider [label="Market Data Provider Plugins"];
+    NewsProvider [label="News Provider Plugins"];
+  }
+
+  // Extensions
+  subgraph cluster_Extensions {
+    label="Extensions";
+    style=filled;
+    color=3;
+    node [style=filled, color=3, fillcolor=gold];
+
+    TechnicalIndicators [label="Technical Indicators"];
+    StrategyModules [label="Strategy Modules"];
+  }
+
+  // Relationships
+  OSGi -> DataModel;
+  OSGi -> Persistence;
+  OSGi -> EventHandling;
+  OSGi -> MarketDataProvider;
+  OSGi -> NewsProvider;
+  OSGi -> TechnicalIndicators;
+  OSGi -> StrategyModules;
+
+  DataModel -> Views;
+  DataModel -> Editors;
+  DataModel -> Perspectives;
+
+  MarketDataProvider -> DataModel;
+  NewsProvider -> DataModel;
+
+  EventHandling -> Views;
+  EventHandling -> Editors;
+  EventHandling -> Perspectives;
+
+  TechnicalIndicators -> Editors;
+  StrategyModules -> Editors;
+
+  UIFramework -> Views;
+  UIFramework -> Editors;
+  UIFramework -> Perspectives;
+}

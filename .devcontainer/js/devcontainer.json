@@ -1,0 +1,27 @@
+// See https://aka.ms/vscode-remote/devcontainer.json for format details.
+{
+	"name": "data platform - javascript",
+	"dockerComposeFile": [
+		"../docker-compose.yml"
+	],
+	// The name of the following service has to match one of the services in docker-compose.yml
+	"service": "dp_js",
+	"workspaceFolder": "/home/${localEnv:USER}",
+	"extensions": [
+		"firsttris.vscode-jest-runner",
+		"esbenp.prettier-vscode",
+		"eamodio.gitlens",
+		"ms-vsliveshare.vsliveshare",
+		"rtbenfield.vscode-jest-test-adapter",
+		"dbaeumer.vscode-eslint",
+		"donjayamanne.typescript-notebook",
+		"zhang-renyang.chat-gpt",
+		"WhenSunset.chatgpt-china",
+		"statelyai.stately-vscode",
+		"streetsidesoftware.code-spell-checker",
+		"shd101wyy.markdown-preview-enhanced",
+		"DanielSanMedium.dscodegpt"
+	],
+	"shutdownAction": "stopCompose",
+	"remoteUser": "${localEnv:USER}"
+}

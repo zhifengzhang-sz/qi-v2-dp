@@ -1,0 +1,42 @@
+services:
+  dp_js:
+    build:
+      context: .
+      dockerfile: ./Dockerfile
+      args:
+        - USERNAME=${USERNAME}
+        - USER_UID=${UID}
+        - USER_GID=${GID}
+        - VERSSION=${VERSION}
+        - REGISTRY=${REGISTRY}
+    image: qi/data-platform-dev-container:${VERSION}
+    container_name: data-platform-dev-container
+    hostname: data-platform-dev.local
+    working_dir: /home/${USERNAME}
+    ports:
+      - 3001:3001
+    volumes:
+      - ../:/workspace:cached
+      - ../js:/home/${USERNAME}/js:cached
+      - ../docs/js:/home/${USERNAME}/docs/js:cached
+      - ../docs/sketch:/home/${USERNAME}/docs/sketch:cached
+      - ./shared:/shared:cached  # Host-relative path to ensure the same 'shared' access
+    links:
+      - "plantuml:plantuml"
+      - "pandoc-texlive"  # Link to pandoc service
+    command: sleep infinity
+
+  plantuml:
+    image: plantuml/plantuml-server:v1.2024.7
+    ports:
+      - "7070:7070"
+
+  pandoc-texlive:
+    image: ${REGISTRY}/pandoc-texlive:${VERSION}
+    ports:
+      - "5000:5000"  # Expose for REST API access
+    volumes:
+      - shared:/shared
+
+volumes:
+  shared: {}

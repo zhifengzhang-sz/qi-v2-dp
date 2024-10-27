@@ -1,0 +1,162 @@
+digraph QISystemEnhanced {
+  //--------------------------------------------------------------------------
+  // Global Graph Properties
+  //--------------------------------------------------------------------------
+  graph [rankdir="TB"
+        ,ranksep="1"
+        ,nodesep="0.8"
+        ,pad="0.5"
+        ,splines=ortho
+        ,concentrate=true
+        ,layout="dot"
+        ,bgcolor="#F0F0F0"
+        ,fontname="Helvetica"
+        ,fontsize=16
+        ,labelloc="t"
+        ,labeljust="l"
+        ,label="Enhanced Quantitative Investment (QI) System"
+        ];
+
+  node [style=filled
+        ,fontname="Helvetica"
+        ,fontsize=12
+        ,shape=rectangle
+        ,fillcolor="#FFFFFF"
+        ,color="#999999"
+        ,fontcolor="#333333"];
+
+  edge [color="#555555"
+        ,arrowhead="vee"
+        ,arrowsize=0.7];
+
+  //--------------------------------------------------------------------------
+  // Defining Nodes
+  //--------------------------------------------------------------------------
+  // External Entities
+  DataSources [label="External Data Sources" shape=component fillcolor="#D9E8FB"];
+  Applications [label="Applications" shape=tab fillcolor="#D9E8FB"];
+  Databases [label="Databases (TimescaleDB,\nQuestDB, etc.)" shape=cylinder fillcolor="#D9E8FB"];
+  Brokers [label="Brokers/Exchanges" shape=component fillcolor="#D9E8FB"];
+
+  // Core Components
+  DataStore [label="Data Store" fillcolor="#FFD966"];
+  Producer [label="Producers\n(IDataProvider Interface)" fillcolor="#FFD966"];
+  DataStream [label="Data Stream\n(Redpanda/Kafka)" shape=component fillcolor="#FFD966"];
+  Consumer [label="Consumers\n(IConsumer Interface)" fillcolor="#FFD966"];
+  DataWorker [label="Data Workers\n(IDataWorker Interface)" fillcolor="#FFD966"];
+  BacktestingEngine [label="Backtesting Engine\n(IAlgorithm Interface)" fillcolor="#FFD966"];
+  Visualization [label="Visualization Tools\n(TradingView, Grafana)" shape=tab fillcolor="#FFD966"];
+  Monitors [label="Monitors & Managers" fillcolor="#FFD966"];
+
+  // Interfaces
+  subgraph cluster_interfaces {
+    label="Interfaces (Inspired by Eclipse Trader & Lean)";
+    fontsize=14;
+    fontcolor="#333333";
+    style=dashed;
+    color="#BBBBBB";
+    InterfaceDataProvider [label="IDataProvider" shape=note fillcolor="#EFEFEF"];
+    InterfaceConsumer [label="IConsumer" shape=note fillcolor="#EFEFEF"];
+    InterfaceDataWorker [label="IDataWorker" shape=note fillcolor="#EFEFEF"];
+    InterfaceAlgorithm [label="IAlgorithm" shape=note fillcolor="#EFEFEF"];
+    InterfacePortfolio [label="IPortfolio" shape=note fillcolor="#EFEFEF"];
+    InterfaceOrder [label="IOrder" shape=note fillcolor="#EFEFEF"];
+    InterfaceSecurity [label="ISecurity" shape=note fillcolor="#EFEFEF"];
+    InterfaceScheduler [label="IScheduler" shape=note fillcolor="#EFEFEF"];
+  }
+
+  //--------------------------------------------------------------------------
+  // Defining Edges (Data Flow and Interactions)
+  //--------------------------------------------------------------------------
+  // External to Producers
+  DataSources -> Producer [label="Fetch Data"];
+
+  // Producers to Data Stream
+  Producer -> DataStream [label="Publish Data"];
+
+  // Data Stream to Consumers and Data Workers
+  DataStream -> Consumer [label="Consume Data"];
+  DataStream -> DataWorker [label="Process Data"];
+
+  // Data Workers back to Data Stream
+  DataWorker -> DataStream [label="Publish Cleaned Data"];
+
+  // Consumers to Databases
+  Consumer -> Databases [label="Store Data"];
+
+  // Data Store Orchestrates Components
+  DataStore -> Producer [label="Configure\nIDataProvider"];
+  DataStore -> Consumer [label="Configure\nIConsumer"];
+  DataStore -> DataWorker [label="Configure\nIDataWorker"];
+  DataStore -> DataStream [label="Manage Topics"];
+
+  // Applications Interact with Data Store
+  Applications -> DataStore [label="Data Requests"];
+  DataStore -> Applications [label="Provide Data"];
+
+  // Backtesting Engine Interactions
+  Applications -> BacktestingEngine [label="Submit Strategies\n(IAlgorithm)"];
+  BacktestingEngine -> DataStore [label="Request Data"];
+  BacktestingEngine -> Databases [label="Store Results"];
+  BacktestingEngine -> Visualization [label="Provide Data"];
+
+  // Visualization Tools Access Data
+  Visualization -> Databases [label="Query Data"];
+  Visualization -> DataStore [label="Real-Time Data"];
+
+  // Monitors and Managers
+  Monitors -> Producer [label="Monitor"];
+  Monitors -> Consumer [label="Monitor"];
+  Monitors -> DataWorker [label="Monitor"];
+  Monitors -> DataStore [label="Monitor"];
+  Monitors -> DataStream [label="Monitor"];
+
+  // Brokers Interaction (For Future Live Trading Integration)
+  BacktestingEngine -> Brokers [label="Simulate Trades"];
+  Applications -> Brokers [label="Execute Trades"];
+
+  // Interfaces Connected to Components
+  InterfaceDataProvider -> Producer [style=dashed];
+  InterfaceConsumer -> Consumer [style=dashed];
+  InterfaceDataWorker -> DataWorker [style=dashed];
+  InterfaceAlgorithm -> BacktestingEngine [style=dashed];
+  InterfacePortfolio -> BacktestingEngine [style=dashed];
+  InterfaceOrder -> BacktestingEngine [style=dashed];
+  InterfaceSecurity -> BacktestingEngine [style=dashed];
+  InterfaceScheduler -> BacktestingEngine [style=dashed];
+
+  //--------------------------------------------------------------------------
+  // Grouping Nodes (Clusters)
+  //--------------------------------------------------------------------------
+  subgraph cluster_core_platform {
+    label="Core Data Platform";
+    fontsize=14;
+    fontcolor="#333333";
+    style=filled;
+    color="#E8E8E8";
+    bgcolor="#FFFFFF";
+
+    Producer;
+    DataStream;
+    Consumer;
+    DataWorker;
+    DataStore;
+    BacktestingEngine;
+    Monitors;
+  }
+
+  // External Entities Cluster
+  subgraph cluster_external_entities {
+    label="External Entities";
+    fontsize=14;
+    fontcolor="#333333";
+    style=dashed;
+    color="#BBBBBB";
+
+    DataSources;
+    Applications;
+    Databases;
+    Brokers;
+    Visualization;
+  }
+}
