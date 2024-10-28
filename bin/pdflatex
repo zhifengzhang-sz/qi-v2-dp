@@ -1,0 +1,47 @@
+#!/bin/bash
+
+# Function to display usage
+function usage() {
+    echo "Usage: $0 <tex-file> [pdflatex options]"
+    echo "Example: $0 myfile.tex"
+    echo "To see pdflatex options: $0 --help"
+}
+
+# If no arguments are provided, show usage and exit
+if [ "$#" -eq 0 ]; then
+    usage
+    exit 1
+fi
+
+# Retrieve the arguments users pass in
+ARGS=("$@")
+REGISTRY="blackgolfer"
+VERSION="latest"
+IMAGE="$REGISTRY/pandoc-texlive:$VERSION"
+
+# Determine file extension
+FILE_EXTENSION="${ARGS[0]##*.}"
+
+if [[ "${ARGS[@]}" =~ "--help" ]]; then
+    # Run pdflatex --help within the container
+    docker run --rm \
+        "$IMAGE" \
+        pdflatex --help
+elif [[ "$FILE_EXTENSION" == "tex" ]]; then
+    TEX_FILE="${ARGS[0]}"
+    shift  # Remove the file argument so you can use ARGS for pdflatex options
+    OUTPUT_DIR="$(dirname "$TEX_FILE")"
+
+    # Run pdflatex with the .tex file
+    docker run --rm \
+        -v "$(pwd):/workspace" \
+        -w /workspace \
+        "$IMAGE" \
+        pdflatex -output-directory="/workspace/$OUTPUT_DIR" "/workspace/$TEX_FILE" "${ARGS[@]}"
+
+    echo "pdflatex conversion completed for: $TEX_FILE"
+else
+    echo "Error: The provided file extension is not supported by this script. Please provide a .tex file."
+    usage
+    exit 1
+fi

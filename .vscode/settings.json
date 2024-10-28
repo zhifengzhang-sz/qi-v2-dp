@@ -1,4 +1,22 @@
 {
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.profiles.linux": {
+    "zsh": {
+      "path": "/usr/bin/zsh",
+      "args": [
+        "-c", "source ${workspaceFolder}/.zshrc; exec zsh -i"
+      ]
+    }
+  },
+  // If you're on macOS, use "osx" instead of "linux" in keys:
+  "terminal.integrated.profiles.osx": {
+    "zsh": {
+      "path": "/bin/zsh",
+      "args": [
+        "-c", "source ${workspaceFolder}/.zshrc; exec zsh -i"
+      ]
+    }
+  },
   "cSpell.words": [
     "lightolivegreen"
   ]

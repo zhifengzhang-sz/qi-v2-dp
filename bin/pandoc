@@ -1,0 +1,51 @@
+#!/bin/bash
+
+# Function to display usage
+function usage() {
+    echo "Usage: $0 <pandoc-args>"
+    echo "Example: $0 myfile.md"
+    echo "To see Pandoc options: $0 --help"
+}
+
+# If no arguments are provided, show usage and exit
+if [ "$#" -eq 0 ]; then
+    usage
+    exit 1
+fi
+
+# Retrieve the arguments users pass in
+ARGS=("$@")
+REGISTRY="blackgolfer"
+VERSION="latest"
+IMAGE="$REGISTRY/pandoc-texlive:$VERSION"
+
+# Determine if the user requested help
+if [[ " ${ARGS[@]} " =~ " --help " ]]; then
+    # Run simply pandoc --help within the container
+    docker run --rm \
+        "$IMAGE" \
+        pandoc --help
+else
+    # Check if a file with a .md extension is provided, else deal with the ARGS as options
+    if [[ "${ARGS[0]}" == *.md ]]; then
+        MARKDOWN_FILE="${ARGS[0]}"
+        shift  # Remove this argument from the array
+        OUTPUT_FILE="${MARKDOWN_FILE%.md}.pdf"
+
+        # Run Pandoc with the markdown file
+        docker run --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            "$IMAGE" \
+            pandoc "$MARKDOWN_FILE" -o "$OUTPUT_FILE" "${ARGS[@]}"
+        
+        echo "Conversion completed: $OUTPUT_FILE"
+    else
+        # No file given, directly execute Pandoc with the arguments
+        docker run --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            "$IMAGE" \
+            pandoc "${ARGS[@]}"
+    fi
+fi

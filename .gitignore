@@ -4,3 +4,5 @@
 docs/sketch
 assets
 docker_images
+**/*.pdf
+**/*.html
