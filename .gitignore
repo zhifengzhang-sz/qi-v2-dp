@@ -6,3 +6,6 @@ assets
 docker_images
 **/*.pdf
 **/*.html
+**/*.out
+**/*.log
+***.aux

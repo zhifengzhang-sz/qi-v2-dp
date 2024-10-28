@@ -1,0 +1,113 @@
+\begin{thebibliography}{21}
+\providecommand{\natexlab}[1]{#1}
+\providecommand{\url}[1]{\texttt{#1}}
+\expandafter\ifx\csname urlstyle\endcsname\relax
+  \providecommand{\doi}[1]{doi: #1}\else
+  \providecommand{\doi}{doi: \begingroup \urlstyle{rm}\Url}\fi
+
+\bibitem[Avellaneda and Lee(2010)]{avellaneda2010statistical}
+Marco Avellaneda and Jeong-Hyun Lee.
+\newblock Statistical arbitrage in the us equities market.
+\newblock \emph{Quantitative Finance}, 10\penalty0 (7):\penalty0 761--782, 2010.
+
+\bibitem[Chang et~al.(2021)Chang, Man, Xu, and Hsu]{chang2021pairs}
+Victor Chang, Xiaowen Man, Qianwen Xu, and Ching-Hsien Hsu.
+\newblock Pairs trading on different portfolios based on machine learning.
+\newblock \emph{Expert Systems}, 38\penalty0 (3):\penalty0 e12649, 2021.
+
+\bibitem[Do and Faff(2012)]{do2012pairs}
+Binh Do and Robert Faff.
+\newblock Are pairs trading profits robust to trading costs?
+\newblock \emph{Journal of Financial Research}, 35\penalty0 (2):\penalty0 261--287, 2012.
+
+\bibitem[Do et~al.(2006)Do, Faff, and Hamza]{do2006new}
+Binh Do, Robert Faff, and Kais Hamza.
+\newblock A new approach to modeling and estimation for pairs trading.
+\newblock In \emph{Proceedings of 2006 financial management association European conference}, volume~1, pages 87--99. Citeseer, 2006.
+
+\bibitem[Elliott et~al.(2005)Elliott, Van Der~Hoek, and Malcolm]{elliott2005pairs}
+R.J. Elliott, J.~Van Der~Hoek, and W.P. Malcolm.
+\newblock Pairs trading.
+\newblock \emph{Quantitative Finance}, 5\penalty0 (3):\penalty0 271--276, 2005.
+
+\bibitem[Engle and Granger(1987)]{engle1987co}
+Robert~F Engle and Clive~WJ Granger.
+\newblock Co-integration and error correction: representation, estimation, and testing.
+\newblock \emph{Econometrica}, 55\penalty0 (2):\penalty0 251--276, 1987.
+
+\bibitem[Fink and Gandhi(2007)]{fink2007important}
+Eugene Fink and Harith~Suman Gandhi.
+\newblock Important extrema of time series.
+\newblock 2007.
+
+\bibitem[Galenko et~al.(2012)Galenko, Popova, and Popova]{galenko2012trading}
+Alexander Galenko, Elmira Popova, and Ivilina Popova.
+\newblock Trading in the presence of cointegration.
+\newblock \emph{The Journal of Alternative Investments}, 15\penalty0 (1):\penalty0 85--97, 2012.
+
+\bibitem[Gatev et~al.(2006)Gatev, Goetzmann, and Rouwenhorst]{gatev2006pairs}
+Evan Gatev, William~N Goetzmann, and K~Geert Rouwenhorst.
+\newblock Pairs trading: Performance of a relative-value arbitrage rule.
+\newblock \emph{Review of Financial Studies}, 19\penalty0 (3):\penalty0 797--827, 2006.
+
+\bibitem[Guijarro-Ordonez et~al.(2021)Guijarro-Ordonez, Pelger, and Zanotti]{guijarro2021deep}
+Jorge Guijarro-Ordonez, Markus Pelger, and Greg Zanotti.
+\newblock Deep learning statistical arbitrage.
+\newblock \emph{Available at SSRN 3862004}, 2021.
+
+\bibitem[Huck and Afawubo(2015)]{huck2015pairs}
+Nicolas Huck and Komivi Afawubo.
+\newblock Pairs trading and selection methods: is cointegration superior?
+\newblock \emph{Applied Economics}, 47\penalty0 (6):\penalty0 599--613, 2015.
+
+\bibitem[Kanamura et~al.(2010)Kanamura, Rachev, and Fabozzi]{kanamura2010profit}
+T.~Kanamura, S.T. Rachev, and F.J. Fabozzi.
+\newblock A profit model for spread trading with an application to energy futures.
+\newblock \emph{The Journal of Trading}, 5\penalty0 (1):\penalty0 48--62, 2010.
+
+\bibitem[Leung and Li(2015)]{leung2015optimal}
+Tim Leung and Xin Li.
+\newblock Optimal mean reversion trading with transaction costs and stop-loss exit.
+\newblock \emph{International Journal of Theoretical and Applied Finance}, 18\penalty0 (03):\penalty0 1550020, 2015.
+
+\bibitem[Leung and Li(2016)]{meanReversionBook}
+Tim Leung and Xin Li.
+\newblock \emph{Optimal Mean Reversion Trading: Mathematical Analysis and Practical Applications}.
+\newblock Modern Trends in Financial Engineering. World Scientific Publishing Company, 2016.
+
+\bibitem[Leung and Nguyen(2019)]{leung2019constructing}
+Tim Leung and Hung Nguyen.
+\newblock Constructing cointegrated cryptocurrency portfolios for statistical arbitrage.
+\newblock \emph{Studies in Economics and Finance}, 2019.
+
+\bibitem[Liew and Wu(2013)]{liew2013pairs}
+Rong~Qi Liew and Yuan Wu.
+\newblock Pairs trading: A copula approach.
+\newblock \emph{Journal of Derivatives \& Hedge Funds}, 19\penalty0 (1):\penalty0 12--30, 2013.
+
+\bibitem[Montana and Triantafyllopoulos(2011)]{Montana2011}
+G.~Montana and K.~Triantafyllopoulos.
+\newblock Dynamic modeling of mean reverting spreads for statistical arbitrage.
+\newblock \emph{Computational Management Science}, 8:\penalty0 23--49, 2011.
+
+\bibitem[Sarmento and Horta(2020)]{sarmento2020enhancing}
+Sim{\~a}o~Moraes Sarmento and Nuno Horta.
+\newblock Enhancing a pairs trading strategy with the application of machine learning.
+\newblock \emph{Expert Systems with Applications}, 158:\penalty0 113490, 2020.
+
+\bibitem[Vidyamurthy(2004)]{vidyamurthy2004pairs}
+Ganapathy Vidyamurthy.
+\newblock \emph{Pairs Trading: quantitative methods and analysis}, volume 217.
+\newblock John Wiley \& Sons, 2004.
+
+\bibitem[Xie et~al.(2016)Xie, Liew, Wu, and Zou]{xie2016pairs}
+Wenjun Xie, Rong~Qi Liew, Yuan Wu, and Xi~Zou.
+\newblock Pairs trading with copulas.
+\newblock \emph{The Journal of Trading}, 11\penalty0 (3):\penalty0 41--52, 2016.
+
+\bibitem[Zhang et~al.(2020)Zhang, Leung, and Aravkin]{zhang2020sparse}
+Jize Zhang, Tim Leung, and Aleksandr Aravkin.
+\newblock Sparse mean-reverting portfolios via penalized likelihood optimization.
+\newblock \emph{Automatica}, 111:\penalty0 108651, 2020.
+
+\end{thebibliography}
