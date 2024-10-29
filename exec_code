@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Source the zshrc file
+zsh -c "source ./.zshrc"
+
+# Run the Docker container
+docker run --rm --name plantuml-server -d -p 8082:8080 plantuml/plantuml-server
+
+# Function to stop the Docker container
+cleanup() {
+    docker stop plantuml-server
+}
+
+# Trap EXIT signal to call the cleanup function
+trap cleanup EXIT
+
+# Start Visual Studio Code with the --wait option
+code --wait .
+
+# The script will pause execution here until VSCode is closed

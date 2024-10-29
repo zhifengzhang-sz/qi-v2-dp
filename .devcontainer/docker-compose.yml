@@ -20,11 +20,5 @@ services:
       - ../js:/home/${USERNAME}/js:cached
       - ../docs/js:/home/${USERNAME}/docs/js:cached
       - ../docs/sketch:/home/${USERNAME}/docs/sketch:cached
-    links:
-      - "plantuml:plantuml"
     command: sleep infinity
 
-  plantuml:
-    image: plantuml/plantuml-server:v1.2024.7
-    ports:
-      - "7070:7070"

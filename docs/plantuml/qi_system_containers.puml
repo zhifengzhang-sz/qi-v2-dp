@@ -1,0 +1,91 @@
+@startuml
+'==================================================================================================================================================================================
+' Global Theme, Packages, Layout and Styles
+'==================================================================================================================================================================================
+!theme C4_superhero from <C4/themes>
+!include <C4/C4_Container>
+HIDE_STEREOTYPE()
+LAYOUT_TOP_DOWN()
+'LAYOUT_LANDSCAPE()
+scale 1350 width
+skinparam linetype ortho
+skinparam backgroundcolor transparent
+<style>
+element {
+  MinimumWidth 100
+  MaximumWidth 400
+  Fontcolor green
+}
+</style>
+UpdateSystemBoundaryStyle($bgColor="#445",$fontColor="white",$borderStyle=SolidLine(),$borderColor="#445")
+UpdateElementStyle(container,$bgColor="gray",$fontColor="#fdd",$borderColor="gray")
+UpdateRelStyle(#fdd, #fdd)
+
+'==================================================================================================================================================================================
+' Title
+'==================================================================================================================================================================================
+title Container View for QI V2 System
+'==================================================================================================================================================================================
+' Data stream
+'==================================================================================================================================================================================
+AddBoundaryTag("Data Stream",$bgColor="black",$fontColor="white")
+System_Boundary(data_stream, "Data Stream",$tags="Data Stream") {
+  Container(kafka,"Apache Kafka Docker Image")
+  SetPropertyHeader("API","Description")
+  Container(flink,"Apache Flink Docker Image")
+}
+'==================================================================================================================================================================================
+' Data system
+'==================================================================================================================================================================================
+System_Boundary(data,"Market Data") {
+  Container(market_data_cpp,"Market Data C++ App/Lib")
+  'Container(market_data_python,"Market Data Python App/Lib")
+}
+'==================================================================================================================================================================================
+' Research
+'==================================================================================================================================================================================
+System_Boundary(research,"Research") {
+  Container(market_model_cpp,"Market Model C++ App/Lib")
+  Container(strategy_cpp,"Strategy C++ App/Lib")
+  Container(back_test_cpp,"C++ Back Test App/Lib")
+  Container(factor_db,"Factor Database")
+  Container(feature_db,"Features Database")
+  Container(strategy_deployment,"Asset Level Strategy Deployment")
+  Container(portfolio_construction,"Portfolio Construction")
+}
+'==================================================================================================================================================================================
+' Execution
+'==================================================================================================================================================================================
+System_Boundary(execution,"Execution Manager") {
+  Container(execution_crypto,"cryto-market OMS")
+  Container(tradingview,"tradingview paper trading OMS")
+}
+'==================================================================================================================================================================================
+' Simulator
+'==================================================================================================================================================================================
+System_Boundary(simulator,"Simulator") {
+  Container(market_data_simulation,"Market Data Simulation and Replay App/Lib")
+}
+
+'==================================================================================================================================================================================
+' layout
+'==================================================================================================================================================================================
+'Lay_D(kafka,flink)
+Lay_D(back_test_cpp,market_data_simulation)
+'Lay_D(market_data_cpp,market_data_python)
+'==================================================================================================================================================================================
+' relationships
+'==================================================================================================================================================================================
+Rel_R(market_data_cpp,flink,"publish")
+'Rel_R(market_data_python,flink,"publish")
+Rel_D(data_stream,research,"consume")
+Rel_U(research,data_stream,"publish")
+'Rel_D(flink,market_model_cpp,"consume")
+'Rel_U(market_model_cpp,flink,"publish")
+Rel_D(simulator,data_stream,"publish")
+'Rel_D(flink,back_test_cpp,"consume")
+'Rel_U(back_test_cpp,flink,"publish")
+Rel_U(data_stream,execution,"consume")
+Rel_D(execution,data_stream,"publish")
+
+@enduml

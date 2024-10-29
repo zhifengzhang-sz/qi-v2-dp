@@ -1,0 +1,125 @@
+@startuml
+!theme C4_brown from <C4/themes>
+'!include <C4/C4_Container>
+'!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+!include <C4/C4_Context>
+<style>
+element {
+  MinimumWidth 200
+  MaximumWidth 1200
+  Fontcolor green
+}
+</style>
+LAYOUT_TOP_DOWN()
+scale 1500 width
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam backgroundcolor transparent
+title System Context for QI V2 System
+
+AddSystemTag("Data Platform", $bgColor="MediumSeaGreen",$fontColor="#fff")
+AddSystemTag("Execution Manager",$bgColor="DarkSlateGrey")
+AddSystemTag("Fund Manager",$bgColor="DarkSlateGrey")
+AddSystemTag("Portfolio Manager",$bgColor="DarkSlateGrey")
+AddSystemTag("Simulation System",$bgColor="DarkSlateGrey")
+AddSystemTag("Research",$bgColor="DarkSlateGrey")
+AddSystemTag("Data Sources",$bgColor="MediumSlateBlue")
+AddSystemTag("Databases",$bgColor="MediumSlateBlue")
+'skinparam defaultTextAlignment center
+
+'==================================================================================================================================================================================
+' begin systems
+'==================================================================================================================================================================================
+System(data_platform, "Data Platform", "(1) Market data; (2) model derived data; (3) forecasting data; (4) strategy signals; (5) execution data; (6) portfolio data; (7) fund data; (8) simulation data, etc.",$tags="Data Platform")
+'==================================================================================================================================================================================
+'WithoutPropertyHeader()
+SetPropertyHeader("Module","Description")
+AddProperty("cryptocompare","restapi")
+AddProperty("cryptocompare","websocket")
+AddProperty("twelvedata","restapi")
+AddProperty("twelvedata","websocket")
+System(market_data,"External Data Sources", $tags="Data Sources")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("consume market data","obtain market data from data stream")
+AddProperty("market model","price multi-time scale state model")
+AddProperty("market patterns","behavioral pattern based on market model")
+AddProperty("forecasting model","forecasting in various time scales")
+AddProperty("factor database","used for classification of market patterns")
+AddProperty("strategy database","strategies for different market states")
+AddProperty("risk model","market risk")
+AddProperty("portfolio analysis","portfolio and strategy efficiency evaluation")
+AddProperty("portfolio construction","asset based strategy deployment and asset composition")
+AddProperty("Publish model data","publish data to data stream")
+System(research,"Research System","The core of the QI V2 system",$tags="Research")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("consume fund portfolio data","obtain data from data stream")
+AddProperty("portfolio construction","constructing and update portfolio for funds")
+AddProperty("construct execution orders","compute execution list for each portfolio")
+AddProperty("publish execution order","publish data to data stream")
+System(portfolio,"Portfolio Manager","Portfolio manager uses models developed from research\l to perform portfolio management (PMS).",$tags="Portfolio Manager")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("consume order lists","obtain data from data stream")
+AddProperty("OMS","algorithm order placement and order management")
+AddProperty("publishing execution progress","publish data to data stream")
+System(execution,"Execution Manager","Algorithm order placement and management system (OMS)",$tags="Execution Manager")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("consume market and model data","obtains data fromm data stream")
+AddProperty("market data","market data simulation based on market model")
+AddProperty("strategy usage","for examine the effectiveness of strategy deployment")
+AddProperty("portfolio construction","simulate other possible portfolio construction scenarios")
+AddProperty("publish simulation data","push simulated data to data stream")
+System(simulator,"Simulation System","Simulate market data as well as strategy and \lportfolio deployment for various possible scenarios",$tags="Simulation System")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("consume market data","obtains data from data stream")
+AddProperty("external data","obtain data from external entities (custodian banks)")
+AddProperty("fund valuation","compute net value of each fund including investment performances")
+AddProperty("fund validation","validate fund data (including execution data) with custodian banks or similar entities")
+AddProperty("publish fund data","push data to data stream")
+System(fund,"Fund Manager","Management of funds targets on monitoring and reporting",$tags="Fund Manager")
+'==================================================================================================================================================================================
+SetPropertyHeader("Module","Description")
+AddProperty("market data","market data charts")
+AddProperty("model data","model data charts (usually with market data)")
+AddProperty("portfolio","portfolio performance chart and summaries")
+AddProperty("execution","execution performance charts and summaries")
+AddProperty("fund","fund performance charts and summaries")
+AddProperty("research","strategy, portfolio performance charts and summaries")
+System(visualization,"Visualization and Monitoring System","Visualizing and monitoring market data,model data, \land various data from other systems",$tags="Visualization and Monitoring System")
+'==================================================================================================================================================================================
+SetPropertyHeader("/Module","Description")
+AddProperty("market database","level1, level2 and kline data")
+AddProperty("model database","market model, strategy and features")
+AddProperty("execution database","execution data for each fund")
+AddProperty("portfolio database","composition and performance data")
+AddProperty("fund database","external and internal fund data")
+System(data_store,"Databases","Warehouse for various data",$tags="Databases")
+'==================================================================================================================================================================================
+' end systems
+'==================================================================================================================================================================================
+
+'==================================================================================================================================================================================
+' begin relationships
+'==================================================================================================================================================================================
+Rel_R(market_data,data_platform,"fetch")
+Rel_D(data_platform,research,"consume")
+Rel_U(research,data_platform,"publish")
+'Rel_Neighbor(research, portfolio, "models", "library")
+Rel_D(data_platform,portfolio,"consume")
+Rel_U(portfolio,data_platform,"publish")
+Rel_U(execution,data_platform,"publish")
+Rel_D(data_platform,execution,"consume")
+Rel_D(simulator,data_platform,"publish")
+Rel_U(data_platform,simulator,"consume")
+Rel_D(fund,data_platform,"publish")
+Rel_U(data_platform,fund,"consume")
+Rel_U(data_platform,visualization,"consume")
+Rel_R(data_platform,data_store,"consume")
+'==================================================================================================================================================================================
+' end relationships
+'==================================================================================================================================================================================
+@enduml

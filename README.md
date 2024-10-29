@@ -33,7 +33,7 @@
 
 1. Open the project in vscode: in the root project directory, run:
    ```bash
-   code .
+   ./exec_code
    ```
 2. Using devcontainer
    In vscode, to open the devcontainer, press `F1` and type `Dev Containers: Rebuild and Reopen in Container...`.
