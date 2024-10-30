@@ -1,0 +1,27 @@
+{
+  "name": "qi",
+  "version": "1.0.0",
+  "description": "The data platform",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/node": "^22.8.4",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.3"
+  },
+  "exports": {
+    "./common/cli/*": "./common/src/cli/*.js",
+    "./common/utils/*": "./common/src/utils/*.js",
+    "./common/restapi/cryptocompoare/*": "./common/src/restapi/cryptocompaare/*.js"
+  },
+  "dependencies": {
+    "ajv": "^8.17.1",
+    "chalk": "^5.3.0",
+    "fs-extra": "^11.2.0"
+  }
+}

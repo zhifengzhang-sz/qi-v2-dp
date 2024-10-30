@@ -1,0 +1,101 @@
+{
+  "cmd": {
+    "param_cmd": [
+      {
+        "name": "cryptocompare",
+        "title": "a table operator",
+        "usage": "table_op [run|set|ls] [options]",
+        "params": [
+          {
+            "name": "source",
+            "option": {
+              "type": "string",
+              "short": "s",
+              "default": "file"
+            },
+            "range": [
+              "file",
+              "table",
+              "url"
+            ],
+            "title": "change source",
+            "usage": "the valid values are 'file', 'table' or 'url'",
+            "class": "param"
+          },
+          {
+            "name": "target",
+            "option": {
+              "type": "string",
+              "short": "t",
+              "default": "table"
+            },
+            "range": [
+              "file",
+              "table"
+            ],
+            "title": "change target",
+            "usage": "target must be 'file' or 'table'",
+            "class": "param"
+          },
+          {
+            "name": "action",
+            "option": {
+              "type": "string",
+              "short": "a",
+              "default": "create"
+            },
+            "range": [
+              "create",
+              "find_or_create",
+              "update"
+            ],
+            "title": "change action",
+            "usage": "the valid actions are 'create', 'find_or_create' or 'update'",
+            "class": "param"
+          },
+          {
+            "name": "model",
+            "option": {
+              "type": "string",
+              "short": "m",
+              "default": "SummaryList"
+            },
+            "range": [
+              "SummaryList"
+            ],
+            "title": "change model",
+            "usage": "model name must be a valid model in the sequelize",
+            "class": "param"
+          }
+        ]
+      },
+      {
+        "name": "query",
+        "title": "query database a table",
+        "usage": "query <sql> or query set -m <model name>",
+        "params": [
+          {
+            "name": "model",
+            "option": {
+              "type": "string",
+              "short": "m",
+              "default": "coin_list"
+            },
+            "title": "table model used in query",
+            "usage": "table model must be a valid model",
+            "class": "param"
+          }
+        ]
+      }
+    ],
+    "user_cmd": [
+      {
+        "name": "ls",
+        "title": "list of files",
+        "usage": "ls [OPTION]... [FILE]... (see linux help for more details)",
+        "class": "user_cmd"
+      }
+    ]
+  },
+  "prompt": "QI> "
+}
