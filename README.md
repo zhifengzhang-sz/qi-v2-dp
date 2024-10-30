@@ -23,7 +23,7 @@
    ```bash
    npm run config
    ```
-3. Bring up the services:
+3. Bring up the services (this step can be skipped if your work does not communicate with the data platform):
    ```bash
    cd services
    docker-compose up

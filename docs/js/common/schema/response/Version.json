@@ -1,0 +1,17 @@
+{
+  "Data": {
+    "type": "object",
+    "description": "The current API version. It helps clients to be aware of any API updates or changes.",
+    "properties": {
+      "VERSION": {
+        "type": "string",
+        "description": "The version of the API consists of three parts: the first number (2) represents the main version tied to the base URL, which only changes if the base URL changes, ensuring no breaking changes occur without a URL update. The second number (1) indicates breaking changes to the format while keeping the same URL; however, this number should never really change. If a breaking change is needed, it would be announced at least 6 months in advance, though due to our deprecation policy and individual endpoint versioning, this scenario should rarely, if ever, occur. The last number (21356) is our internal package version, incremented with each system deployment, primarily for internal tracking, and will always increase, though it may have gaps.",
+        "example": "2.1.21356"
+      }
+    }
+   },
+  "Err": {
+    "type": "object",
+    "properties": {}
+  }
+}

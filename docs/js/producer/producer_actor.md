@@ -148,11 +148,13 @@ The **action** (next-output function in automata) $\lambda: Q\times\Sigma\righta
 \documentclass{standalone}
 \usepackage[svgnames]{xcolor} % Enables a wide range of color names
 \usepackage{tikz}
-\usetikzlibrary{arrows,automata,positioning,shapes}
+\usetikzlibrary{arrows,automata,positioning,shapes,backgrounds}
 \usepackage{amsmath,amssymb,amsfonts}
 
 \begin{document}
 \begin{tikzpicture}[
+                    background rectangle/.style={fill=white},
+                    show background rectangle,
                     scale=2,
                     >=stealth',
                     shorten > = 1pt,
