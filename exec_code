@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Source the zshrc file
-zsh -c "source ./.zshrc"
+export PATH=$PWD/bin:$PATH
 
 # Run the Docker container
 docker run --rm --name plantuml-server -d -p 8082:8080 plantuml/plantuml-server

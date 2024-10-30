@@ -36,5 +36,5 @@
    ./exec_code
    ```
 2. Using devcontainer
-   In vscode, to open the devcontainer, press `F1` and type `Dev Containers: Rebuild and Reopen in Container...`.
-
+   - First time using devcontainer or need to rebuild devcontainer: in vscode, to open the devcontainer, press `F1` and type `Dev Containers: Rebuild and Reopen in Container...`.
+   - If the devcontainer is already build: in vscode, to open the devcontainer, press `F1` and type `Dev Containers: Open Folder in Container...`.
