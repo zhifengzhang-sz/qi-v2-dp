@@ -3,6 +3,14 @@
  * @module
  *
  * @author zhifengzhang-sz
+ * @date 2024-11-05
+ */
+
+/**
+ * @fileoverview
+ * @module
+ *
+ * @author zhifengzhang-sz
  * @date 2024-11-03
  */
 
@@ -14,8 +22,7 @@
  * @date 2024-10-31
  */
 
-import { CliConfig } from "qi/core/cli/CliConfig";
-import SpecHandler from "qi/core/cli/SpecHandler";
+import { CliConfig, SpecHandler } from "qi/core/cli";
 
 // Usage example
 try {

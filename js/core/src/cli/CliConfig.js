@@ -3,14 +3,12 @@
  * @module
  *
  * @author zhifengzhang-sz
- * @date 2024-11-03
+ * @date 2024-11-05
  */
 
 /**
- * @fileoverview
- * @module
  *
- * @author zhifengzhang-sz
+ * @date 2024-11-03
  * @date 2024-10-31
  */
 
@@ -20,7 +18,7 @@
  */
 import * as fs from "fs";
 import * as S from "./CliSpecSchema.js";
-import { zip } from "qi/core/utils/utils";
+import { zip } from "@qi/core/utils/utils.js";
 
 /**
  * @class UserSpecLoader
@@ -163,6 +161,7 @@ export class CliConfig {
   getSpec() {
     return this.spec;
   }
+
   /**
    * @method getValidationSchema
    * @description Returns the validation schemas
@@ -170,5 +169,15 @@ export class CliConfig {
    */
   getValidationSchema() {
     return this.schemas;
+  }
+
+  /**
+   * @method getValidator
+   * @description Retrieves the validator function for a given schema name
+   * @param {string} schemaName - The name of the schema to retrieve
+   * @returns {Function} The AJV validator function
+   */
+  getValidator(schemaName) {
+    return this.schemas[schemaName];
   }
 }

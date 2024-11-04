@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "lib": ["ESNext"],
+    "outDir": "./dist",
+    "rootDirs": ["./core/src", "./api/src", "./producer/src", "./consumer/src"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "declaration": true,
+    "baseUrl": "./",
+    "paths": {
+      "@qi/core/*": ["./core/src/*"],
+      "@qi/api/*": ["./api/src/*"],
+      "@qi/producer/*": ["./producer/src/*"],
+      "@qi/consumer/*": ["./consumer/src/*"]
+    },
+    "resolveJsonModule": true,
+    "types": ["jest", "node", "@testing-library/jest-dom"]
+  },
+  "include": ["core/src/**/*", "api/src/**/*", "producer/src/**/*", "consumer/src/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
+  "ts-node": {
+    "esm": true
+  }
+}

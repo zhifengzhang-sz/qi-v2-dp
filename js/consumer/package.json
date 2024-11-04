@@ -1,0 +1,15 @@
+{
+  "name": "@qi/consumer",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@qi/core": "1.0.0",
+    "kafkajs": "^2.2.4"
+  }
+}

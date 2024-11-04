@@ -94,6 +94,12 @@
         "title": "list of files",
         "usage": "ls [OPTION]... [FILE]... (see linux help for more details)",
         "class": "user_cmd"
+      },
+      {
+        "name": "pwd",
+        "title": "print working directory",
+        "usage": "pwd",
+        "class": "user_cmd"
       }
     ]
   },

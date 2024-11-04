@@ -1,0 +1,27 @@
+{
+  "development": {
+    "app": {
+      "nodeEnv": "development",
+      "logLevel": "info",
+      "apiPort": 3000
+    },
+    "database": {
+      "dbHost": "timescaledb",
+      "dbPort": 5432,
+      "dbName": "postgres",
+      "dbUser": "postgres",
+      "dbPassword": "wYD1mt6tgwh5",
+      "pgData": "/var/lib/postgresql/data"
+    },
+    "redis": {
+      "redisHost": "redis",
+      "redisPort": 6379,
+      "redisPassword": "h8EwKn77ac0d"
+    },
+    "kafka": {
+      "kafkaBrokers": ["redpanda:9092"],
+      "kafkaClientId": "qi-client",
+      "kafkaGroupId": "qi-group"
+    }
+  }
+}

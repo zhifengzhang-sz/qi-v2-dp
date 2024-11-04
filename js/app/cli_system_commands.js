@@ -3,6 +3,14 @@
  * @module
  *
  * @author zhifengzhang-sz
+ * @date 2024-11-05
+ */
+
+/**
+ * @fileoverview
+ * @module
+ *
+ * @author zhifengzhang-sz
  * @date 2024-11-03
  */
 
@@ -27,9 +35,7 @@
  * systemCommandHandler("?", ['quit', 'ls'], specHandler, rl);
  */
 
-import { CliConfig } from "qi/core/cli/CliConfig";
-import SpecHandler from "qi/core/cli/SpecHandler";
-import { systemCommandHandler } from "qi/core/cli/CliSystemCommands";
+import { CliConfig, SpecHandler, systemCommandHandler } from "@qi/core/cli";
 import readline from "readline";
 
 // Usage example

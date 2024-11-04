@@ -3,6 +3,14 @@
  * @module
  *
  * @author zhifengzhang-sz
+ * @date 2024-11-05
+ */
+
+/**
+ * @fileoverview
+ * @module
+ *
+ * @author zhifengzhang-sz
  * @date 2024-11-03
  */
 
@@ -18,25 +26,7 @@
  * @fileoverview Defines JSON schema validation for CLI specifications
  * @module CliSpecSchema
  * 
- * @typedef {Object} Schemas
- * @property {Object} Param - Schema for command parameter definitions
- * @property {Object} QICliSystemValue - Schema for system value properties
- * @property {Object} QICliSystemCommand - Schema for system command definitions
- * @property {Object} QICliParamCommand - Schema for parameter command array
- * @property {Object} QICliUserCommand - Schema for user command array
- * @property {Object} QICliUserSpec - Schema for user CLI specifications
- * @property {Object} QICliCommand - Schema for combined command types
- * @property {Object} QICliMain - Schema for main CLI configuration
- * 
  * @requires ajv
- * 
- * @function install
- * @param {Object} schema - JSON schema to compile
- * @returns {Function} Compiled validation function
- * 
- * @function init
- * @description Initializes all schemas and returns compiled validators
- * @returns {Object.<string, Function>} Map of schema name to validator function
  */
 import Ajv from "ajv";
 
@@ -55,6 +45,7 @@ const schemas = {
           default: { type: "string" },
         },
         required: ["type", "short", "default"],
+        additionalProperties: false,
       },
       range: { type: "array", items: { type: "string" } },
       title: { type: "string" },
@@ -62,6 +53,7 @@ const schemas = {
       class: { type: "string" },
     },
     required: ["name", "option", "title", "usage", "class"],
+    additionalProperties: false,
   },
   /*
     anyOf: [
@@ -157,14 +149,40 @@ const schemas = {
       prompt: { type: "string" },
     },
   },
+
+  // Schema for the 'set' command arguments
+  SetCommandArgs: {
+    $id: "qi://core/cli/set.command.args.schema",
+    type: "object",
+    properties: {
+      name: { type: "string" },
+      value: { type: "string" }, // Adjust type as needed
+    },
+    required: ["name", "value"],
+    additionalProperties: false,
+  },
+
+  // Schema for the 'get' and 'reset' command arguments
+  GetResetCommandArgs: {
+    $id: "qi://core/cli/get.reset.command.args.schema",
+    type: "object",
+    properties: {
+      name: { type: "string" },
+    },
+    required: ["name"],
+    additionalProperties: false,
+  },
 };
 
-const ajv = new Ajv();
+const ajv = new Ajv({ allErrors: true });
 
+// Function to compile and install a schema
 export const install = (schema) => ajv.compile(schema);
 
-// given the dependencies, the order of the `schemas` is important
+// Initialize all schemas and return compiled validators
 export const init = () =>
   Object.fromEntries(
     Object.entries(schemas).map(([name, schema]) => [name, install(schema)])
   );
+
+export { schemas };

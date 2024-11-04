@@ -3,6 +3,14 @@
  * @module
  *
  * @author zhifengzhang-sz
+ * @date 2024-11-05
+ */
+
+/**
+ * @fileoverview
+ * @module
+ *
+ * @author zhifengzhang-sz
  * @date 2024-11-03
  */
 
@@ -15,9 +23,7 @@
  * @requires userCmdHandler
  */
 
-import { CliConfig } from "qi/core/cli/CliConfig";
-import SpecHandler from "qi/core/cli/SpecHandler";
-import { userCommandHandler } from "qi/core/cli/CliUserCommands";
+import { CliConfig, SpecHandler, userCommandHandler } from "@qi/core/cli";
 
 // Usage example
 try {
