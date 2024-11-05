@@ -3,7 +3,9 @@
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
-    "types": ["@testing-library/jest-dom"]
+    "declaration": true,
+    "declarationDir": "./dist",
+    "sourceMap": true
   },
   "include": ["src/**/*"],
   "exclude": [

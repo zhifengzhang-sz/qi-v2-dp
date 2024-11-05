@@ -6,6 +6,14 @@
  * @date 2024-11-05
  */
 
+/**
+ * @fileoverview
+ * @module
+ *
+ * @author zhifengzhang-sz
+ * @date 2024-11-05
+ */
+
 // js/tests/unit/SpecHandler.test.js
 
 import { SpecHandler, CliConfig } from '@qi/core/cli';

@@ -1,15 +1,10 @@
-// src/config/schemas/CliSpecSchema.ts
+// src/cli/schemas/CliSpecSchema.ts
 
-import Ajv, { ValidateFunction } from "ajv";
-import { BaseConfig } from "../BaseConfig.js";
-
-/**
- * @fileoverview Defines JSON schema validation for CLI specifications
- * @module CliSpecSchema
- */
+import { Ajv, ValidateFunction } from "ajv";
+import { BaseConfig } from "@qi/core/config";
 
 /**
- * Interfaces for CLI Configuration
+ * @interface QICliSystemValue
  */
 export interface QICliSystemValue {
   title: string;
@@ -17,6 +12,9 @@ export interface QICliSystemValue {
   class: "info" | "exec";
 }
 
+/**
+ * @interface QICliParam
+ */
 export interface QICliParam {
   name: string;
   option: {
@@ -27,6 +25,9 @@ export interface QICliParam {
   range?: string[];
 }
 
+/**
+ * @interface QICliParamCommand
+ */
 export interface QICliParamCommand {
   name: string;
   title: string;
@@ -35,6 +36,9 @@ export interface QICliParamCommand {
   params: QICliParam[];
 }
 
+/**
+ * @interface QICliUserCommand
+ */
 export interface QICliUserCommand {
   name: string;
   title: string;
@@ -42,6 +46,10 @@ export interface QICliUserCommand {
   class: "info" | "exec";
 }
 
+/**
+ * @interface CliConfig
+ * @extends BaseConfig
+ */
 interface CliConfig extends BaseConfig {
   type: "cli";
   prompt: string;
@@ -94,9 +102,9 @@ const schemas = {
     type: "object",
     required: ["quit", "?", "param"],
     properties: {
-      quit: { $ref: "system.value.schema" },
-      "?": { $ref: "system.value.schema" },
-      param: { $ref: "system.value.schema" },
+      quit: { $ref: "qi://core/cli/system.value.schema" },
+      "?": { $ref: "qi://core/cli/system.value.schema" },
+      param: { $ref: "qi://core/cli/system.value.schema" },
     },
   },
   QICliParamCommand: {
@@ -147,4 +155,4 @@ export const init = (): Record<string, ValidateFunction> =>
 
 export { schemas };
 
-export type { CliConfig }; // Export the interface
+export type { CliConfig }; // Export the interface as a type

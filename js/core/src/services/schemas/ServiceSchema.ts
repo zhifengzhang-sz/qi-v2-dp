@@ -1,7 +1,7 @@
 // src/config/schemas/ServiceSchema.ts
 
-import Ajv, { ValidateFunction } from "ajv";
-import { BaseConfig } from "../BaseConfig.js";
+import { Ajv, ValidateFunction } from "ajv";
+import { BaseConfig } from "@qi/core/config";
 
 /**
  * @fileoverview Defines JSON schema validation for Service configurations

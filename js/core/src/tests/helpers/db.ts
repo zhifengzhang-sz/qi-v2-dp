@@ -1,11 +1,7 @@
 import { Pool } from 'pg';
 import { Sequelize } from 'sequelize';
-import { logger } from '../../logger/index.js';
-import { OHLCV } from '../../db/models/cryptocompare/ohlcv.js';
-import { Market } from '../../db/models/cryptocompare/market.js';
-import { Tick } from '../../db/models/cryptocompare/tick.js';
-import { Instrument } from '../../db/models/cryptocompare/instrument.js';
-import { AssetSummary } from '../../db/models/cryptocompare/summary.js';
+import { logger } from '@qi/core/logger';
+import { OHLCV, Market, Tick, Instrument, AssetSummary } from '@qi/core/services/timescaledb/models/cryptocompare';
 
 export const testPool = new Pool({
   host: process.env.DB_HOST,

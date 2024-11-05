@@ -34,15 +34,40 @@
     "typescript": "^5.6.3"
   },
   "exports": {
-    "./cache": "./dist/cache/index.js",
+    "./": "./dist/index.js",
+
+    "./core": "./dist/core/index.js",
+    "./core/*": "./dist/core/*/index.js",
+
     "./cli": "./dist/cli/index.js",
+    "./cli/*": "./dist/cli/*/index.js",
+    "./cli/schemas/*": "./dist/cli/schemas/*.js",
+
     "./config": "./dist/config/index.js",
-    "./db": "./dist/db/index.js",
-    "./db/models": "./dist/db/models/index.js",
-    "./db/models/*": "./dist/db/models/*/index.js",
+    "./config/schemas/*": "./dist/config/schemas/*.js",
+    
     "./errors": "./dist/errors/index.js",
+    "./errors/*": "./dist/errors/*/index.js",
+
     "./logger": "./dist/logger/index.js",
+
+    "./services": "./dist/services/index.js",
+    "./services/*": "./dist/services/*/index.js",
+    "./services/kafka": "./dist/services/kafka/index.js",
+    "./services/kafka/*": "./dist/services/kafka/*/index.js",
+    "./services/redis": "./dist/services/redis/index.js",
+    "./services/schemas/*": "./dist/services/schemas/*.js",
+    "./services/timescaledb": "./dist/services/timescaledb/index.js",
+    "./services/timescaledb/models": "./dist/services/timescaledb/models/index.js",
+    "./services/timescaledb/models/*": "./dist/services/timescaledb/models/*/index.js",
+
+    "./cache": "./dist/cache/index.js",
+    "./cache/*": "./dist/cache/*/index.js",
+
     "./utils": "./dist/utils/index.js",
-    "./utils/*.js": "./dist/utils/*.js"
+    "./utils/*": "./dist/utils/*/index.js",
+
+    "./websocket": "./dist/websocket/index.js",
+    "./websocket/*": "./dist/websocket/*/index.js"
   }
 }

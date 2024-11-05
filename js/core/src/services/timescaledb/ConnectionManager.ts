@@ -1,27 +1,27 @@
 /**
  * @module db/connection
- * @description Database connection manager implementing the singleton pattern
+ * @description Timescaledb Database connection manager implementing the singleton pattern
  */
 
 import { Sequelize } from 'sequelize';
 import { logger } from '@qi/core/logger';
 import { ConfigHandler } from '@qi/core/config';
-import { initInstrument, initMarket, initOHLCV, initTick } from '@qi/core/db/models/cryptocompare';
-import { ServiceConfig } from '@qi/core/config/schemas/ServiceSchema.js'; // Adjust path as needed
+import { initInstrument, initMarket, initOHLCV, initTick } from './models/cryptocompare/index.js';
+import { ServiceConfig } from '../schemas/ServiceSchema.js'; // Adjust path as needed
 
 /**
- * @class DatabaseConnection
+ * @class TSDBConnection
  * @description Manages database connections and model initialization
  * 
  * @example
- * const db = DatabaseConnection.getInstance();
+ * const db = TSDBConnection.getInstance();
  * await db.initialize();
  * // Use db.getSequelize() to access Sequelize instance
  * await db.close();
  */
-export class DatabaseConnection {
+export class TSDBConnection {
   /** Singleton instance */
-  private static instance: DatabaseConnection;
+  private static instance: TSDBConnection;
   /** Sequelize instance */
   private sequelize!: Sequelize;
   /** Initialization state */
@@ -55,14 +55,14 @@ export class DatabaseConnection {
   }
 
   /**
-   * Gets the singleton instance of DatabaseConnection
-   * @returns DatabaseConnection instance
+   * Gets the singleton instance of TSDBConnection
+   * @returns TSDBConnection instance
    */
-  public static getInstance(): DatabaseConnection {
-    if (!DatabaseConnection.instance) {
-      DatabaseConnection.instance = new DatabaseConnection();
+  public static getInstance(): TSDBConnection {
+    if (!TSDBConnection.instance) {
+      TSDBConnection.instance = new TSDBConnection();
     }
-    return DatabaseConnection.instance;
+    return TSDBConnection.instance;
   }
 
   /**

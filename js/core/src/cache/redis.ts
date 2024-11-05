@@ -1,14 +1,14 @@
 /**
  * @module cache/redis
- * @description Redis cache implementation using singleton pattern
+ * @description Redis cache implementation using singleton pattern and connection manager
  */
 
-import { createClient } from 'redis';
-import { logger } from '../logger/index.js';
+import { RedisConnectionManager } from '@qi/core/services/redis';
+import { logger } from '@qi/core/logger';
 
 /**
  * @class RedisCache
- * @description Manages Redis cache connections and operations
+ * @description Manages Redis cache operations
  * 
  * @example
  * const cache = RedisCache.getInstance();
@@ -21,25 +21,12 @@ export class RedisCache {
   /** Singleton instance */
   private static instance: RedisCache;
   /** Redis client instance */
-  private client: ReturnType<typeof createClient>;
+  private client = RedisConnectionManager.getInstance().getClient();
 
   /**
    * Private constructor to enforce singleton pattern
-   * Initializes Redis client and sets up event handlers
    */
-  private constructor() {
-    this.client = createClient({
-      url: `redis://${process.env.REDIS_HOST}:${process.env.REDIS_PORT}`
-    });
-
-    this.client.on('error', error => {
-      logger.error('Redis Client Error:', error);
-    });
-
-    this.client.on('connect', () => {
-      logger.info('Redis Client Connected');
-    });
-  }
+  private constructor() {}
 
   /**
    * Gets the singleton instance of RedisCache
@@ -57,7 +44,7 @@ export class RedisCache {
    * @throws Will throw an error if connection fails
    */
   public async connect(): Promise<void> {
-    await this.client.connect();
+    await RedisConnectionManager.getInstance().connect();
   }
 
   /**
@@ -65,7 +52,7 @@ export class RedisCache {
    * @throws Will throw an error if disconnection fails
    */
   public async disconnect(): Promise<void> {
-    await this.client.disconnect();
+    await RedisConnectionManager.getInstance().disconnect();
   }
 
   /**
@@ -80,7 +67,12 @@ export class RedisCache {
    * }
    */
   public async get(key: string): Promise<string | null> {
-    return await this.client.get(key);
+    try {
+      return await this.client.get(key);
+    } catch (error) {
+      logger.error(`Failed to get key "${key}" from Redis:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -94,10 +86,15 @@ export class RedisCache {
    * await cache.set('user:123', JSON.stringify(userData), 3600);
    */
   public async set(key: string, value: string, ttlSeconds?: number): Promise<void> {
-    if (ttlSeconds) {
-      await this.client.set(key, value, { EX: ttlSeconds });
-    } else {
-      await this.client.set(key, value);
+    try {
+      if (ttlSeconds) {
+        await this.client.set(key, value, { EX: ttlSeconds });
+      } else {
+        await this.client.set(key, value);
+      }
+    } catch (error) {
+      logger.error(`Failed to set key "${key}" in Redis:`, error);
+      throw error;
     }
   }
 
@@ -106,7 +103,12 @@ export class RedisCache {
    * @param key Cache key to delete
    */
   public async del(key: string): Promise<void> {
-    await this.client.del(key);
+    try {
+      await this.client.del(key);
+    } catch (error) {
+      logger.error(`Failed to delete key "${key}" from Redis:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -115,8 +117,13 @@ export class RedisCache {
    * @returns Promise resolving to boolean indicating if key exists
    */
   public async exists(key: string): Promise<boolean> {
-    const result = await this.client.exists(key);
-    return result === 1;
+    try {
+      const result = await this.client.exists(key);
+      return result === 1;
+    } catch (error) {
+      logger.error(`Failed to check existence of key "${key}" in Redis:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -125,7 +132,12 @@ export class RedisCache {
    * @returns Promise resolving to remaining TTL in seconds, -1 if no TTL, -2 if key doesn't exist
    */
   public async ttl(key: string): Promise<number> {
-    return await this.client.ttl(key);
+    try {
+      return await this.client.ttl(key);
+    } catch (error) {
+      logger.error(`Failed to get TTL for key "${key}" in Redis:`, error);
+      throw error;
+    }
   }
 
   /**
@@ -134,6 +146,11 @@ export class RedisCache {
    * @warning Use with caution - this will clear all data
    */
   public async flush(): Promise<void> {
-    await this.client.flushAll();
+    try {
+      await this.client.flushAll();
+    } catch (error) {
+      logger.error('Failed to flush Redis cache:', error);
+      throw error;
+    }
   }
 }

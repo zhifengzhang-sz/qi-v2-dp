@@ -5,7 +5,7 @@ import path from "path";
 import { ConfigHandler } from "./ConfigHandler.js";
 import { BaseConfig, ConfigValidator } from "./BaseConfig.js";
 import { logger } from "@qi/core/logger";
-import { SchemaModule } from "./SchemaModule.js"; // Adjust path if necessary
+import { SchemaModule, ajvInstance } from "./schemas/SchemaModule.js"; // Adjust path if necessary
 import { ValidateFunction } from "ajv";
 
 /**
@@ -23,26 +23,23 @@ export class ConfigLoader {
     schemaModule: SchemaModule<T>,
     type: string
   ): void {
-    // Initialize AJV and compile schemas
-    const validators: Record<string, ValidateFunction> = schemaModule.init();
-
     // Determine the main schema based on type
-    let mainSchemaKey: string;
+    let mainSchemaId: string;
     switch (type) {
       case "cli":
-        mainSchemaKey = "QICliMain";
+        mainSchemaId = "qi://core/cli/main.schema";
         break;
       case "service":
-        mainSchemaKey = "ServiceConfig";
+        mainSchemaId = "qi://core/service/main.schema";
         break;
       default:
         throw new Error(`Unknown configuration type: ${type}`);
     }
 
-    const validate = validators[mainSchemaKey];
+    const validate = ajvInstance.getValidateFunction(mainSchemaId);
     if (!validate) {
       throw new Error(
-        `ConfigSchema validator for "${mainSchemaKey}" is not available in the schema module`
+        `ConfigSchema validator for "${mainSchemaId}" is not available in the schema module`
       );
     }
 

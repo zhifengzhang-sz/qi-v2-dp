@@ -1,9 +1,9 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Node",
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "lib": ["ESNext"],
     "outDir": "./dist",
     "rootDirs": ["./core/src", "./api/src", "./producer/src", "./consumer/src"],
@@ -13,15 +13,24 @@
     "forceConsistentCasingInFileNames": true,
     "allowJs": true,
     "declaration": true,
-    "baseUrl": "./",
+    "baseUrl": ".", // Base URL is the root `js/` directory
     "paths": {
-      "@qi/core/*": ["./core/src/*"],
+      "@qi/core/*": ["core/src/*"],
       "@qi/api/*": ["./api/src/*"],
       "@qi/producer/*": ["./producer/src/*"],
-      "@qi/consumer/*": ["./consumer/src/*"]
+      "@qi/consumer/*": ["./consumer/src/*"],
+      "@qi/cache/*": ["core/src/cache/*"],
+      "@qi/cli/*": ["core/src/cli/*"],
+      "@qi/config/*": ["core/src/config/*"],
+      "@qi/errors/*": ["errors/src/*"],
+      "@qi/logger/*": ["core/src/logger/*"],
+      "@qi/services/*": ["core/src/services/*"],
+      "@qi/utils/*": ["core/src/utils/*"]
     },
     "resolveJsonModule": true,
-    "types": ["jest", "node", "@testing-library/jest-dom"]
+    "types": ["jest", "node", "@testing-library/jest-dom"],
+    "declarationDir": "./dist", // Declaration files will be placed in `dist/`
+    "sourceMap": true
   },
   "include": ["core/src/**/*", "api/src/**/*", "producer/src/**/*", "consumer/src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"],
