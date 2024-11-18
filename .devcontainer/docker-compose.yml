@@ -17,8 +17,7 @@ services:
       - 7001:7001
     volumes:
       - ../:/workspace:cached
-      - ../js:/home/${USERNAME}/js:cached
-      - ../docs/js:/home/${USERNAME}/docs/js:cached
-      - ../docs/sketch:/home/${USERNAME}/docs/sketch:cached
+      - ../qi:/home/${USERNAME}/qi:cached
+      - ../docs:/home/${USERNAME}/docs:cached
     command: sleep infinity
 

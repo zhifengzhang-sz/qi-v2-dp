@@ -1,0 +1,49 @@
+{
+  "type": "service",
+  "version": "1.0",
+  "databases": {
+    "postgres": {
+      "host": "timescaledb",
+      "port": 5432,
+      "database": "postgres",
+      "user": "postgres",
+      "maxConnections": 100
+    },
+    "questdb": {
+      "host": "questdb",
+      "httpPort": 9000,
+      "pgPort": 8812,
+      "influxPort": 9009
+    },
+    "redis": {
+      "host": "redis",
+      "port": 6379,
+      "maxRetries": 3
+    }
+  },
+  "messageQueue": {
+    "redpanda": {
+      "kafkaPort": 9092,
+      "schemaRegistryPort": 8081,
+      "adminPort": 9644,
+      "pandaproxyPort": 8082
+    }
+  },
+  "monitoring": {
+    "grafana": {
+      "host": "grafana",
+      "port": 3000
+    },
+    "pgAdmin": {
+      "host": "pgadmin",
+      "port": 8000
+    }
+  },
+  "networking": {
+    "networks": {
+      "db": "qi_db",
+      "redis": "redis_network",
+      "redpanda": "redpanda_network"
+    }
+  }
+}

@@ -9,4 +9,9 @@ docker_images
 **/*.out
 **/*.log
 ***.aux
+**/dist
 docs/ml/lm
+docs/claude\ 3.5\ sonnet\ preview
+docs/config_test
+docs/claude.ai
+js.v1

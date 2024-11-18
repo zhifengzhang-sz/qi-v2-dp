@@ -1,0 +1,14 @@
+---
+title: "The Config Module"
+author: Zhifeng Zhang
+date: Nov. 13, 2024
+output: 
+  pdf_document:
+    path: ./config_module.pdf
+    highlight: tango
+    toc: true
+    latex_engine: xelatex
+    pandoc_args: ["--variable=monofont:'DejaVu Sans Mono'"]
+fontsize: 10pt
+geometry: margin=.75in
+---

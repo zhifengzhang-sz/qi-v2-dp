@@ -1,0 +1,22 @@
+{
+  "name": "@qi/app",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "tsc -b",
+    "clean": "rm -rf dist",
+    "lint": "eslint './src/**/*.ts'",
+    "format": "prettier --write './src/**/*.{ts,js}'",
+    "start:cli": "node --loader ts-node/esm --experimental-specifier-resolution=node src/cli_config_loader.ts",
+    "start:services": "node --loader ts-node/esm --experimental-specifier-resolution=node src/services_config_loader.ts"
+  },
+  "dependencies": {
+    "@qi/core": "*",
+    "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.6.3"
+  }
+}

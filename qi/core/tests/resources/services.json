@@ -1,0 +1,78 @@
+{
+  "type": "service",
+  "version": "1.0.0",
+  
+  "databases": {
+    "postgres": {
+      "host": "timescaledb",
+      "port": 5432,
+      "database": "postgres",
+      "user": "postgres",
+      "maxConnections": 20
+    },
+    "questdb": {
+      "host": "questdb",
+      "httpPort": 9000,
+      "pgPort": 8812,
+      "influxPort": 9009,
+      "telemetryEnabled": false,
+      "port": 8812
+    },
+    "redis": {
+      "host": "redis",
+      "port": 6379,
+      "maxRetries": 3
+    }
+  },
+  
+  "messageQueue": {
+    "redpanda": {
+      "brokerId": 0,
+      "kafkaPort": 9092,
+      "schemaRegistryPort": 8081,
+      "pandaproxyPort": 8082,
+      "adminPort": 9644,
+      "advertisedKafkaApi": "localhost",
+      "advertisedSchemaRegistryApi": "localhost",
+      "advertisedPandaproxyApi": "localhost"
+    }
+  },
+  
+  "monitoring": {
+    "grafana": {
+      "host": "grafana",
+      "port": 3000,
+      "plugins": "questdb-questdb-datasource;grafana-postgresql-datasource"
+    },
+    "pgAdmin": {
+      "host": "pgadmin",
+      "port": 8000,
+      "email": "admin@qi.com"
+    }
+  },
+  
+  "networking": {
+    "networks": [
+      {
+        "name": "qi_db",
+        "driver": "bridge"
+      },
+      {
+        "name": "redis_network",
+        "driver": "bridge"
+      },
+      {
+        "name": "redpanda_network",
+        "driver": "bridge"
+      }
+    ],
+    "volumes": [
+      { "name": "questdb_data" },
+      { "name": "timescaledb_data" },
+      { "name": "pgadmin_data" },
+      { "name": "grafana_data" },
+      { "name": "redis_data" },
+      { "name": "redpanda_data" }
+    ]
+  }
+}

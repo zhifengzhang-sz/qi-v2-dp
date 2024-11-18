@@ -1,0 +1,32 @@
+{
+  "compilerOptions": {
+    "target": "ES2023",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": ["ES2023"],
+    "types": ["node"],
+    "outDir": "./dist",
+    "rootDirs": [
+      "./core/src",
+      "./producers/src",
+      "./consumers/src"
+    ],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true, // Allow synthetic default imports
+    "declaration": true,
+    "sourceMap": true,
+    "baseUrl": ".",
+    "paths": {
+      "@qi/core/*": ["core/src/*"],
+      "@qi/producers/*": ["producers/src/*"],
+      "@qi/consumers/*": ["consumers/src/*"],
+      "@qi/app/*": ["app/src/*"]
+    }
+  },
+  "include": ["core/src/**/*", "producers/src/**/*", "consumers/src/**/*", "app/src/**/*"],
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.spec.ts"]
+}

@@ -1,0 +1,26 @@
+{
+  "name": "qi",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "core",
+    "producers",
+    "consumers",
+    "app"
+  ],
+  "type": "module",
+  "scripts": {
+    "clean": "npm run clean --workspaces",
+    "build": "npm run build --workspaces",
+    "lint": "npm run lint --workspaces",
+    "format": "npm run format --workspaces",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
+  },
+  "devDependencies": {
+    "eslint": "^9.14.0",
+    "prettier": "^3.0.3",
+    "typescript": "^5.6.3"
+  }
+}

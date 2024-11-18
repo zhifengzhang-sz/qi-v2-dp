@@ -4,10 +4,14 @@
   "description": "Data platform for the QI system",
   "type": "module",
   "scripts": {
-    "config": "node scripts/generate-envs.js"
+    "config": "node scripts/generate-envs.v1.js"
   },
-  "dependencies": {},
-  "devDependencies": {},
   "author": "Zhifeng Zhang",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "tsconfig-paths": "^4.2.0"
+  }
 }
