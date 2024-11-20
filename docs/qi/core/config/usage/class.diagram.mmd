@@ -1,0 +1,91 @@
+classDiagram
+    class IConfigFactory {
+        <<interface>>
+        +createLoader(options) IConfigLoader
+        +createValidator(schema) IConfigValidator
+    }
+
+    class IConfigLoader {
+        <<interface>>
+        +load() Promise~T~
+        +watch(callback) void
+        +unwatch() void
+    }
+
+    class IConfigValidator {
+        <<interface>>
+        +validate(config) void
+        +getSchema() JsonSchema
+    }
+
+    class ISchema {
+        <<interface>>
+        +validate(config, schemaId) void
+        +validateSchema(schema) void
+        +getSchema(name) JsonSchema
+        +registerSchema(name, schema) void
+        +removeSchema(name) void
+        +hasSchema(name) boolean
+    }
+
+    class BaseLoader {
+        <<abstract>>
+        #watcher FSWatcher
+        #callbacks Set
+        #currentConfig T
+        +load() Promise~T~
+        +watch(callback) void
+        +unwatch() void
+        #initializeWatcher() void
+        #notifyChange() void
+    }
+
+    class ConfigFactory {
+        -schema ISchema
+        -cache IConfigCache
+        +createLoader(options) IConfigLoader
+        +createValidator(schema) IConfigValidator
+    }
+
+    class JsonLoader {
+        -source string|Record
+        -schema ISchema
+        -schemaId string
+        +load() Promise~T~
+        #initializeWatcher() void
+    }
+
+    class EnvLoader {
+        -schema ISchema
+        -schemaId string
+        -options EnvOptions
+        +load() Promise~T~
+        #initializeWatcher() void
+    }
+
+    class ConfigCache {
+        -cache Map
+        -options CacheOptions
+        +get(key) Promise~T~
+        +set(key, value) Promise~void~
+        +has(key) Promise~boolean~
+        +delete(key) Promise~boolean~
+        +clear() Promise~void~
+    }
+
+    class Schema {
+        -ajv Ajv
+        -schemas Map
+        -validators Map
+        +validate(config, schemaId) void
+        +validateSchema(schema) void
+        +registerSchema(name, schema) void
+        +removeSchema(name) void
+    }
+
+    IConfigFactory <|.. ConfigFactory
+    IConfigLoader <|.. BaseLoader
+    BaseLoader <|-- JsonLoader
+    BaseLoader <|-- EnvLoader
+    ISchema <|.. Schema
+    IConfigLoader <|.. CachedConfigLoader

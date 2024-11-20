@@ -14,10 +14,28 @@ services:
     hostname: data-platform-dev.local
     working_dir: /home/${USERNAME}
     ports:
-      - 7001:7001
+      - 7071:7071
     volumes:
       - ../:/workspace:cached
       - ../qi:/home/${USERNAME}/qi:cached
       - ../docs:/home/${USERNAME}/docs:cached
+      - ./shared:/shared:cached  # Host-relative path to ensure the same 'shared' access
+    links:
+      - "plantuml:plantuml"
+      - "pandoc-texlive"  # Link to pandoc service
     command: sleep infinity
 
+  plantuml:
+    image: plantuml/plantuml-server:v1.2024.7
+    ports:
+      - "8082:8080"
+
+  pandoc-texlive:
+    image: ${REGISTRY}/pandoc-texlive:${VERSION}
+    ports:
+      - "7072:7072"  # Expose for REST API access
+    volumes:
+      - shared:/shared
+
+volumes:
+  shared: {}

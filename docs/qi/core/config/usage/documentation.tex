@@ -1,0 +1,1283 @@
+\hypertarget{configuration-management-system-documentation}{%
+\section{Configuration Management System
+Documentation}\label{configuration-management-system-documentation}}
+
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{overview}{Overview}
+\item
+  \protect\hyperlink{features}{Features}
+\item
+  \protect\hyperlink{installation}{Installation}
+\item
+  \protect\hyperlink{quick-start}{Quick Start}
+\item
+  \protect\hyperlink{architecture}{Architecture}
+\item
+  \protect\hyperlink{usage-guide}{Usage Guide}
+\item
+  \protect\hyperlink{api-reference}{API Reference}
+\end{itemize}
+
+\hypertarget{overview}{%
+\subsection{Overview}\label{overview}}
+
+A robust, type-safe configuration management system for
+TypeScript/Node.js applications with JSON Schema validation, environment
+variable support, and caching capabilities.
+
+\hypertarget{features}{%
+\subsection{Features}\label{features}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Type-Safe Configuration}: Full TypeScript support with
+  interface-based configuration definitions
+\item
+  \textbf{Schema Validation}: JSON Schema-based validation with custom
+  validation rules
+\item
+  \textbf{Multiple Sources}: Support for JSON files and environment
+  variables
+\item
+  \textbf{Caching}: Built-in caching system with TTL and refresh
+  policies
+\item
+  \textbf{Change Detection}: Watch for configuration changes with event
+  notifications
+\item
+  \textbf{Extensible}: Plugin-based architecture for custom loaders and
+  validators
+\item
+  \textbf{Error Handling}: Comprehensive error types and detailed error
+  messages
+\end{itemize}
+
+\hypertarget{installation}{%
+\subsection{Installation}\label{installation}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{npm}\NormalTok{ install @qi/core}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{quick-start}{%
+\subsection{Quick Start}\label{quick-start}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ \{ ConfigFactory}\OperatorTok{,}\NormalTok{ Schema}\OperatorTok{,}\NormalTok{ JsonSchema \} }\ImportTok{from} \StringTok{\textquotesingle{}@qi/core/config\textquotesingle{}}\OperatorTok{;}
+
+\CommentTok{// Define your configuration schema}
+\KeywordTok{const}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  $id}\OperatorTok{:} \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    port}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,}\NormalTok{ minimum}\OperatorTok{:} \DecValTok{1024}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{    host}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{    database}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{        url}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\OperatorTok{,}\NormalTok{ format}\OperatorTok{:} \StringTok{\textquotesingle{}uri\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{        pool}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,} \ControlFlowTok{default}\OperatorTok{:} \DecValTok{5}\NormalTok{ \}}
+\NormalTok{      \}}\OperatorTok{,}
+\NormalTok{      required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}url\textquotesingle{}}\NormalTok{]}
+\NormalTok{    \}}
+\NormalTok{  \}}\OperatorTok{,}
+\NormalTok{  required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}port\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}host\textquotesingle{}}\NormalTok{]}
+\NormalTok{\}}\OperatorTok{;}
+
+\CommentTok{// Create configuration factory}
+\KeywordTok{const}\NormalTok{ factory }\OperatorTok{=} \KeywordTok{new} \FunctionTok{ConfigFactory}\NormalTok{(}\KeywordTok{new} \FunctionTok{Schema}\NormalTok{())}\OperatorTok{;}
+
+\CommentTok{// Create and use configuration loader}
+\KeywordTok{const}\NormalTok{ loader }\OperatorTok{=}\NormalTok{ factory}\OperatorTok{.}\FunctionTok{createLoader}\NormalTok{(\{}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}app\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  version}\OperatorTok{:} \StringTok{\textquotesingle{}1.0\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  schema}
+\NormalTok{\})}\OperatorTok{;}
+
+\CommentTok{// Load configuration}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ loader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{architecture}{%
+\subsection{Architecture}\label{architecture}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{classDiagram}
+\NormalTok{    class IConfigFactory \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +createLoader(options) IConfigLoader}
+\NormalTok{        +createValidator(schema) IConfigValidator}
+\NormalTok{    \}}
+
+\NormalTok{    class IConfigLoader \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +watch(callback) void}
+\NormalTok{        +unwatch() void}
+\NormalTok{    \}}
+
+\NormalTok{    class IConfigValidator \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +validate(config) void}
+\NormalTok{        +getSchema() JsonSchema}
+\NormalTok{    \}}
+
+\NormalTok{    class ISchema \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +validate(config, schemaId) void}
+\NormalTok{        +validateSchema(schema) void}
+\NormalTok{        +getSchema(name) JsonSchema}
+\NormalTok{        +registerSchema(name, schema) void}
+\NormalTok{        +removeSchema(name) void}
+\NormalTok{        +hasSchema(name) boolean}
+\NormalTok{    \}}
+
+\NormalTok{    class BaseLoader \{}
+\NormalTok{        \textless{}\textless{}abstract\textgreater{}\textgreater{}}
+\NormalTok{        \#watcher FSWatcher}
+\NormalTok{        \#callbacks Set}
+\NormalTok{        \#currentConfig T}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +watch(callback) void}
+\NormalTok{        +unwatch() void}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{        \#notifyChange() void}
+\NormalTok{    \}}
+
+\NormalTok{    class ConfigFactory \{}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}cache IConfigCache}
+\NormalTok{        +createLoader(options) IConfigLoader}
+\NormalTok{        +createValidator(schema) IConfigValidator}
+\NormalTok{    \}}
+
+\NormalTok{    class JsonLoader \{}
+\NormalTok{        {-}source string|Record}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}schemaId string}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{    \}}
+
+\NormalTok{    class EnvLoader \{}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}schemaId string}
+\NormalTok{        {-}options EnvOptions}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{    \}}
+
+\NormalTok{    class ConfigCache \{}
+\NormalTok{        {-}cache Map}
+\NormalTok{        {-}options CacheOptions}
+\NormalTok{        +get(key) Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +set(key, value) Promise\textasciitilde{}void\textasciitilde{}}
+\NormalTok{        +has(key) Promise\textasciitilde{}boolean\textasciitilde{}}
+\NormalTok{        +delete(key) Promise\textasciitilde{}boolean\textasciitilde{}}
+\NormalTok{        +clear() Promise\textasciitilde{}void\textasciitilde{}}
+\NormalTok{    \}}
+
+\NormalTok{    class Schema \{}
+\NormalTok{        {-}ajv Ajv}
+\NormalTok{        {-}schemas Map}
+\NormalTok{        {-}validators Map}
+\NormalTok{        +validate(config, schemaId) void}
+\NormalTok{        +validateSchema(schema) void}
+\NormalTok{        +registerSchema(name, schema) void}
+\NormalTok{        +removeSchema(name) void}
+\NormalTok{    \}}
+
+\NormalTok{    IConfigFactory \textless{}|.. ConfigFactory}
+\NormalTok{    IConfigLoader \textless{}|.. BaseLoader}
+\NormalTok{    BaseLoader \textless{}|{-}{-} JsonLoader}
+\NormalTok{    BaseLoader \textless{}|{-}{-} EnvLoader}
+\NormalTok{    ISchema \textless{}|.. Schema}
+\NormalTok{    IConfigLoader \textless{}|.. CachedConfigLoader}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{usage-guide}{%
+\subsection{Usage Guide}\label{usage-guide}}
+
+\hypertarget{schema-definition}{%
+\subsubsection{Schema Definition}\label{schema-definition}}
+
+Define your configuration schema using JSON Schema:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  $id}\OperatorTok{:} \StringTok{\textquotesingle{}database{-}config\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    connections}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}array\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      items}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{        type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{        properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{          host}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{          port}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{          credentials}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{            type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{            properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{              username}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{              password}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}
+\NormalTok{            \}}\OperatorTok{,}
+\NormalTok{            required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}username\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}password\textquotesingle{}}\NormalTok{]}
+\NormalTok{          \}}
+\NormalTok{        \}}\OperatorTok{,}
+\NormalTok{        required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}host\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}port\textquotesingle{}}\NormalTok{]}
+\NormalTok{      \}}\OperatorTok{,}
+\NormalTok{      minItems}\OperatorTok{:} \DecValTok{1}
+\NormalTok{    \}}\OperatorTok{,}
+\NormalTok{    poolSize}\OperatorTok{:}\NormalTok{ \{ }
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      minimum}\OperatorTok{:} \DecValTok{1}\OperatorTok{,}
+\NormalTok{      maximum}\OperatorTok{:} \DecValTok{100}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{loading-configurations}{%
+\subsubsection{Loading Configurations}\label{loading-configurations}}
+
+Using JsonLoader:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// Load from file}
+\KeywordTok{const}\NormalTok{ jsonLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{JsonLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+  \StringTok{\textquotesingle{}config/app.json\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  schema}\OperatorTok{,}
+  \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}
+\NormalTok{)}\OperatorTok{;}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ jsonLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+
+\CommentTok{// Load from object}
+\KeywordTok{const}\NormalTok{ configObject }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  port}\OperatorTok{:} \DecValTok{3000}\OperatorTok{,}
+\NormalTok{  host}\OperatorTok{:} \StringTok{\textquotesingle{}localhost\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  database}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    url}\OperatorTok{:} \StringTok{\textquotesingle{}postgresql://localhost:5432/mydb\textquotesingle{}}\OperatorTok{,}
+\NormalTok{    pool}\OperatorTok{:} \DecValTok{10}
+\NormalTok{  \}}
+\NormalTok{\}}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ objectLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{JsonLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+\NormalTok{  configObject}\OperatorTok{,}
+\NormalTok{  schema}\OperatorTok{,}
+  \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}
+\NormalTok{)}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{environment-variables}{%
+\subsubsection{Environment Variables}\label{environment-variables}}
+
+Using EnvLoader:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ envLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{EnvLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(schema}\OperatorTok{,} \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}\OperatorTok{,}\NormalTok{ \{}
+\NormalTok{  path}\OperatorTok{:} \StringTok{\textquotesingle{}.env\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  override}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  extraFiles}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}.env.local\textquotesingle{}}\NormalTok{]}\OperatorTok{,}
+\NormalTok{  required}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  watch}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  refreshInterval}\OperatorTok{:} \DecValTok{60000}
+\NormalTok{\})}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ envLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{caching}{%
+\subsubsection{Caching}\label{caching}}
+
+Implementing cache:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ cache }\OperatorTok{=} \KeywordTok{new} \FunctionTok{ConfigCache}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(\{}
+\NormalTok{  ttl}\OperatorTok{:} \DecValTok{3600000}\OperatorTok{,} \CommentTok{// 1 hour}
+\NormalTok{  refreshOnAccess}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  onExpire}\OperatorTok{:}\NormalTok{ (key) }\KeywordTok{=\textgreater{}}\NormalTok{ \{}
+    \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\VerbatimStringTok{\textasciigrave{}Cache expired for }\SpecialCharTok{$\{}\NormalTok{key}\SpecialCharTok{\}}\VerbatimStringTok{\textasciigrave{}}\NormalTok{)}\OperatorTok{;}
+\NormalTok{  \}}
+\NormalTok{\})}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ cachedLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{CachedConfigLoader}\NormalTok{(jsonLoader}\OperatorTok{,}\NormalTok{ cache)}\OperatorTok{;}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ cachedLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{change-detection}{%
+\subsubsection{Change Detection}\label{change-detection}}
+
+Watching for changes:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{loader}\OperatorTok{.}\FunctionTok{watch}\NormalTok{((}\BuiltInTok{event}\NormalTok{) }\KeywordTok{=\textgreater{}}\NormalTok{ \{}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Previous config:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{previous}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}New config:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{current}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Change timestamp:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{timestamp}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Change source:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{source}\NormalTok{)}\OperatorTok{;}
+\NormalTok{\})}\OperatorTok{;}
+
+\CommentTok{// Stop watching}
+\NormalTok{loader}\OperatorTok{.}\FunctionTok{unwatch}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-handling}{%
+\subsubsection{Error Handling}\label{error-handling}}
+
+Handling configuration errors:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{try}\NormalTok{ \{}
+  \KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ loader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\NormalTok{\} }\ControlFlowTok{catch}\NormalTok{ (error) \{}
+  \ControlFlowTok{if}\NormalTok{ (error }\KeywordTok{instanceof}\NormalTok{ ConfigError) \{}
+    \ControlFlowTok{switch}\NormalTok{ (error}\OperatorTok{.}\AttributeTok{code}\NormalTok{) \{}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{INVALID\_SCHEMA}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Schema validation failed:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{CONFIG\_LOAD\_ERROR}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Failed to load config:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{ENV\_LOAD\_ERROR}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Failed to load environment variables:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{api-reference}{%
+\subsection{API Reference}\label{api-reference}}
+
+\hypertarget{core-interfaces}{%
+\subsubsection{Core Interfaces}\label{core-interfaces}}
+
+\hypertarget{iconfigfactory}{%
+\paragraph{IConfigFactory}\label{iconfigfactory}}
+
+Factory interface for creating configuration loaders and validators.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ IConfigFactory \{}
+  \FunctionTok{createLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(options}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}\OperatorTok{;}
+\NormalTok{  \})}\OperatorTok{:}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  
+  \FunctionTok{createValidator}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:}\NormalTok{ IConfigValidator}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{iconfigloader}{%
+\paragraph{IConfigLoader}\label{iconfigloader}}
+
+Interface for loading configuration data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{  watch}\OperatorTok{?}\NormalTok{(callback}\OperatorTok{:}\NormalTok{ (event}\OperatorTok{:}\NormalTok{ ConfigChangeEvent}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{) }\KeywordTok{=\textgreater{}} \DataTypeTok{void}\NormalTok{)}\OperatorTok{:} \KeywordTok{void}\OperatorTok{;}
+\NormalTok{  unwatch}\OperatorTok{?}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{ischema}{%
+\paragraph{ISchema}\label{ischema}}
+
+Interface for schema management and validation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ ISchema \{}
+  \FunctionTok{validate}\NormalTok{(config}\OperatorTok{:} \DataTypeTok{unknown}\OperatorTok{,}\NormalTok{ schemaId}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{validateSchema}\NormalTok{(schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{getSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{|} \DataTypeTok{undefined}\OperatorTok{;}
+  \FunctionTok{registerSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{removeSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{hasSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{classes}{%
+\subsubsection{Classes}\label{classes}}
+
+\hypertarget{configfactory}{%
+\paragraph{ConfigFactory}\label{configfactory}}
+
+Main factory class for creating configuration components.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigFactory }\KeywordTok{implements}\NormalTok{ IConfigFactory \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    cache}\OperatorTok{?:}\NormalTok{ IConfigCache}\OperatorTok{\textless{}}\NormalTok{BaseConfig}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{createLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(options}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}\OperatorTok{;}
+\NormalTok{  \})}\OperatorTok{:}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  
+  \FunctionTok{createValidator}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ IConfigValidator}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{jsonloader}{%
+\paragraph{JsonLoader}\label{jsonloader}}
+
+Loads configuration from JSON files or objects.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ JsonLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{extends}\NormalTok{ BaseLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    source}\OperatorTok{:} \DataTypeTok{string} \OperatorTok{|} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{},}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  \KeywordTok{protected} \FunctionTok{initializeWatcher}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{envloader}{%
+\paragraph{EnvLoader}\label{envloader}}
+
+Loads configuration from environment variables.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ EnvLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{extends}\NormalTok{ BaseLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    options}\OperatorTok{?:}\NormalTok{ EnvOptions}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  \KeywordTok{protected} \FunctionTok{initializeWatcher}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configcache}{%
+\paragraph{ConfigCache}\label{configcache}}
+
+Caches configuration data with TTL support.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigCache}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{implements}\NormalTok{ IConfigCache}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(options}\OperatorTok{:}\NormalTok{ CacheOptions)}\OperatorTok{;}
+  
+  \KeywordTok{get}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T }\OperatorTok{|} \DataTypeTok{undefined}\OperatorTok{\textgreater{};}
+  \KeywordTok{set}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}\NormalTok{ value}\OperatorTok{:}\NormalTok{ T)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{void}\OperatorTok{\textgreater{};}
+  \FunctionTok{has}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{boolean}\OperatorTok{\textgreater{};}
+  \KeywordTok{delete}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{boolean}\OperatorTok{\textgreater{};}
+  \FunctionTok{clear}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{void}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{types}{%
+\subsubsection{Types}\label{types}}
+
+\hypertarget{baseconfig}{%
+\paragraph{BaseConfig}\label{baseconfig}}
+
+Base interface for all configuration objects.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ BaseConfig \{}
+  \KeywordTok{readonly}\NormalTok{ type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+  \KeywordTok{readonly}\NormalTok{ version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+  \KeywordTok{readonly}\NormalTok{ schemaVersion}\OperatorTok{?:}\NormalTok{ SchemaVersion}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configchangeevent}{%
+\paragraph{ConfigChangeEvent}\label{configchangeevent}}
+
+Event type for configuration changes.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{type}\NormalTok{ ConfigChangeEvent}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}} \OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  previous}\OperatorTok{:}\NormalTok{ T}\OperatorTok{;}
+\NormalTok{  current}\OperatorTok{:}\NormalTok{ T}\OperatorTok{;}
+\NormalTok{  timestamp}\OperatorTok{:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{  source}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{envoptions}{%
+\paragraph{EnvOptions}\label{envoptions}}
+
+Options for environment variable loading.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ EnvOptions \{}
+\NormalTok{  path}\OperatorTok{?:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{  override}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  extraFiles}\OperatorTok{?:} \DataTypeTok{string}\NormalTok{[]}\OperatorTok{;}
+\NormalTok{  required}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  watch}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  refreshInterval}\OperatorTok{?:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{cacheoptions}{%
+\paragraph{CacheOptions}\label{cacheoptions}}
+
+Options for configuration caching.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ CacheOptions \{}
+\NormalTok{  ttl}\OperatorTok{:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{  refreshOnAccess}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  onExpire}\OperatorTok{?:}\NormalTok{ (key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{) }\KeywordTok{=\textgreater{}} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-handling-1}{%
+\subsubsection{Error Handling}\label{error-handling-1}}
+
+\hypertarget{configerror}{%
+\paragraph{ConfigError}\label{configerror}}
+
+Base error class for configuration-related errors.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigError }\KeywordTok{extends}\NormalTok{ ValidationError \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    code}\OperatorTok{:}\NormalTok{ ConfigErrorCode}\OperatorTok{,}
+\NormalTok{    context}\OperatorTok{:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{schemaError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{validationError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{envError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    path}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{loadError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    source}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-codes}{%
+\paragraph{Error Codes}\label{error-codes}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ CONFIG\_ERROR\_CODES }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  INVALID\_SCHEMA}\OperatorTok{:} \StringTok{"INVALID\_SCHEMA"}\OperatorTok{,}
+\NormalTok{  SCHEMA\_NOT\_FOUND}\OperatorTok{:} \StringTok{"SCHEMA\_NOT\_FOUND"}\OperatorTok{,}
+\NormalTok{  VALIDATION\_FAILED}\OperatorTok{:} \StringTok{"VALIDATION\_FAILED"}\OperatorTok{,}
+\NormalTok{  ENV\_LOAD\_ERROR}\OperatorTok{:} \StringTok{"ENV\_LOAD\_ERROR"}\OperatorTok{,}
+\NormalTok{  CONFIG\_LOAD\_ERROR}\OperatorTok{:} \StringTok{"CONFIG\_LOAD\_ERROR"}\OperatorTok{,}
+\NormalTok{  CONFIG\_PARSE\_ERROR}\OperatorTok{:} \StringTok{"CONFIG\_PARSE\_ERROR"}
+\NormalTok{\} }\ImportTok{as} \KeywordTok{const}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configuration-management-system-documentation-1}{%
+\section{Configuration Management System
+Documentation}\label{configuration-management-system-documentation-1}}
+
+\begin{itemize}
+\tightlist
+\item
+  \protect\hyperlink{overview}{Overview}
+\item
+  \protect\hyperlink{features}{Features}
+\item
+  \protect\hyperlink{installation}{Installation}
+\item
+  \protect\hyperlink{quick-start}{Quick Start}
+\item
+  \protect\hyperlink{architecture}{Architecture}
+\item
+  \protect\hyperlink{usage-guide}{Usage Guide}
+\item
+  \protect\hyperlink{api-reference}{API Reference}
+\end{itemize}
+
+\hypertarget{overview-1}{%
+\subsection{Overview}\label{overview-1}}
+
+A robust, type-safe configuration management system for
+TypeScript/Node.js applications with JSON Schema validation, environment
+variable support, and caching capabilities.
+
+\hypertarget{features-1}{%
+\subsection{Features}\label{features-1}}
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Type-Safe Configuration}: Full TypeScript support with
+  interface-based configuration definitions
+\item
+  \textbf{Schema Validation}: JSON Schema-based validation with custom
+  validation rules
+\item
+  \textbf{Multiple Sources}: Support for JSON files and environment
+  variables
+\item
+  \textbf{Caching}: Built-in caching system with TTL and refresh
+  policies
+\item
+  \textbf{Change Detection}: Watch for configuration changes with event
+  notifications
+\item
+  \textbf{Extensible}: Plugin-based architecture for custom loaders and
+  validators
+\item
+  \textbf{Error Handling}: Comprehensive error types and detailed error
+  messages
+\end{itemize}
+
+\hypertarget{installation-1}{%
+\subsection{Installation}\label{installation-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ExtensionTok{npm}\NormalTok{ install @qi/core}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{quick-start-1}{%
+\subsection{Quick Start}\label{quick-start-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ImportTok{import}\NormalTok{ \{ ConfigFactory}\OperatorTok{,}\NormalTok{ Schema}\OperatorTok{,}\NormalTok{ JsonSchema \} }\ImportTok{from} \StringTok{\textquotesingle{}@qi/core/config\textquotesingle{}}\OperatorTok{;}
+
+\CommentTok{// Define your configuration schema}
+\KeywordTok{const}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  $id}\OperatorTok{:} \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    port}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,}\NormalTok{ minimum}\OperatorTok{:} \DecValTok{1024}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{    host}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{    database}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{        url}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\OperatorTok{,}\NormalTok{ format}\OperatorTok{:} \StringTok{\textquotesingle{}uri\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{        pool}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,} \ControlFlowTok{default}\OperatorTok{:} \DecValTok{5}\NormalTok{ \}}
+\NormalTok{      \}}\OperatorTok{,}
+\NormalTok{      required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}url\textquotesingle{}}\NormalTok{]}
+\NormalTok{    \}}
+\NormalTok{  \}}\OperatorTok{,}
+\NormalTok{  required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}port\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}host\textquotesingle{}}\NormalTok{]}
+\NormalTok{\}}\OperatorTok{;}
+
+\CommentTok{// Create configuration factory}
+\KeywordTok{const}\NormalTok{ factory }\OperatorTok{=} \KeywordTok{new} \FunctionTok{ConfigFactory}\NormalTok{(}\KeywordTok{new} \FunctionTok{Schema}\NormalTok{())}\OperatorTok{;}
+
+\CommentTok{// Create and use configuration loader}
+\KeywordTok{const}\NormalTok{ loader }\OperatorTok{=}\NormalTok{ factory}\OperatorTok{.}\FunctionTok{createLoader}\NormalTok{(\{}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}app\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  version}\OperatorTok{:} \StringTok{\textquotesingle{}1.0\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  schema}
+\NormalTok{\})}\OperatorTok{;}
+
+\CommentTok{// Load configuration}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ loader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{architecture-1}{%
+\subsection{Architecture}\label{architecture-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{classDiagram}
+\NormalTok{    class IConfigFactory \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +createLoader(options) IConfigLoader}
+\NormalTok{        +createValidator(schema) IConfigValidator}
+\NormalTok{    \}}
+
+\NormalTok{    class IConfigLoader \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +watch(callback) void}
+\NormalTok{        +unwatch() void}
+\NormalTok{    \}}
+
+\NormalTok{    class IConfigValidator \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +validate(config) void}
+\NormalTok{        +getSchema() JsonSchema}
+\NormalTok{    \}}
+
+\NormalTok{    class ISchema \{}
+\NormalTok{        \textless{}\textless{}interface\textgreater{}\textgreater{}}
+\NormalTok{        +validate(config, schemaId) void}
+\NormalTok{        +validateSchema(schema) void}
+\NormalTok{        +getSchema(name) JsonSchema}
+\NormalTok{        +registerSchema(name, schema) void}
+\NormalTok{        +removeSchema(name) void}
+\NormalTok{        +hasSchema(name) boolean}
+\NormalTok{    \}}
+
+\NormalTok{    class BaseLoader \{}
+\NormalTok{        \textless{}\textless{}abstract\textgreater{}\textgreater{}}
+\NormalTok{        \#watcher FSWatcher}
+\NormalTok{        \#callbacks Set}
+\NormalTok{        \#currentConfig T}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +watch(callback) void}
+\NormalTok{        +unwatch() void}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{        \#notifyChange() void}
+\NormalTok{    \}}
+
+\NormalTok{    class ConfigFactory \{}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}cache IConfigCache}
+\NormalTok{        +createLoader(options) IConfigLoader}
+\NormalTok{        +createValidator(schema) IConfigValidator}
+\NormalTok{    \}}
+
+\NormalTok{    class JsonLoader \{}
+\NormalTok{        {-}source string|Record}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}schemaId string}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{    \}}
+
+\NormalTok{    class EnvLoader \{}
+\NormalTok{        {-}schema ISchema}
+\NormalTok{        {-}schemaId string}
+\NormalTok{        {-}options EnvOptions}
+\NormalTok{        +load() Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        \#initializeWatcher() void}
+\NormalTok{    \}}
+
+\NormalTok{    class ConfigCache \{}
+\NormalTok{        {-}cache Map}
+\NormalTok{        {-}options CacheOptions}
+\NormalTok{        +get(key) Promise\textasciitilde{}T\textasciitilde{}}
+\NormalTok{        +set(key, value) Promise\textasciitilde{}void\textasciitilde{}}
+\NormalTok{        +has(key) Promise\textasciitilde{}boolean\textasciitilde{}}
+\NormalTok{        +delete(key) Promise\textasciitilde{}boolean\textasciitilde{}}
+\NormalTok{        +clear() Promise\textasciitilde{}void\textasciitilde{}}
+\NormalTok{    \}}
+
+\NormalTok{    class Schema \{}
+\NormalTok{        {-}ajv Ajv}
+\NormalTok{        {-}schemas Map}
+\NormalTok{        {-}validators Map}
+\NormalTok{        +validate(config, schemaId) void}
+\NormalTok{        +validateSchema(schema) void}
+\NormalTok{        +registerSchema(name, schema) void}
+\NormalTok{        +removeSchema(name) void}
+\NormalTok{    \}}
+
+\NormalTok{    IConfigFactory \textless{}|.. ConfigFactory}
+\NormalTok{    IConfigLoader \textless{}|.. BaseLoader}
+\NormalTok{    BaseLoader \textless{}|{-}{-} JsonLoader}
+\NormalTok{    BaseLoader \textless{}|{-}{-} EnvLoader}
+\NormalTok{    ISchema \textless{}|.. Schema}
+\NormalTok{    IConfigLoader \textless{}|.. CachedConfigLoader}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{usage-guide-1}{%
+\subsection{Usage Guide}\label{usage-guide-1}}
+
+\hypertarget{schema-definition-1}{%
+\subsubsection{Schema Definition}\label{schema-definition-1}}
+
+Define your configuration schema using JSON Schema:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  $id}\OperatorTok{:} \StringTok{\textquotesingle{}database{-}config\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    connections}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}array\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      items}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{        type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{        properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{          host}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{          port}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{          credentials}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{            type}\OperatorTok{:} \StringTok{\textquotesingle{}object\textquotesingle{}}\OperatorTok{,}
+\NormalTok{            properties}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{              username}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}\OperatorTok{,}
+\NormalTok{              password}\OperatorTok{:}\NormalTok{ \{ type}\OperatorTok{:} \StringTok{\textquotesingle{}string\textquotesingle{}}\NormalTok{ \}}
+\NormalTok{            \}}\OperatorTok{,}
+\NormalTok{            required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}username\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}password\textquotesingle{}}\NormalTok{]}
+\NormalTok{          \}}
+\NormalTok{        \}}\OperatorTok{,}
+\NormalTok{        required}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}host\textquotesingle{}}\OperatorTok{,} \StringTok{\textquotesingle{}port\textquotesingle{}}\NormalTok{]}
+\NormalTok{      \}}\OperatorTok{,}
+\NormalTok{      minItems}\OperatorTok{:} \DecValTok{1}
+\NormalTok{    \}}\OperatorTok{,}
+\NormalTok{    poolSize}\OperatorTok{:}\NormalTok{ \{ }
+\NormalTok{      type}\OperatorTok{:} \StringTok{\textquotesingle{}number\textquotesingle{}}\OperatorTok{,}
+\NormalTok{      minimum}\OperatorTok{:} \DecValTok{1}\OperatorTok{,}
+\NormalTok{      maximum}\OperatorTok{:} \DecValTok{100}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{loading-configurations-1}{%
+\subsubsection{Loading Configurations}\label{loading-configurations-1}}
+
+Using JsonLoader:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{// Load from file}
+\KeywordTok{const}\NormalTok{ jsonLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{JsonLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+  \StringTok{\textquotesingle{}config/app.json\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  schema}\OperatorTok{,}
+  \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}
+\NormalTok{)}\OperatorTok{;}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ jsonLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+
+\CommentTok{// Load from object}
+\KeywordTok{const}\NormalTok{ configObject }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  port}\OperatorTok{:} \DecValTok{3000}\OperatorTok{,}
+\NormalTok{  host}\OperatorTok{:} \StringTok{\textquotesingle{}localhost\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  database}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    url}\OperatorTok{:} \StringTok{\textquotesingle{}postgresql://localhost:5432/mydb\textquotesingle{}}\OperatorTok{,}
+\NormalTok{    pool}\OperatorTok{:} \DecValTok{10}
+\NormalTok{  \}}
+\NormalTok{\}}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ objectLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{JsonLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+\NormalTok{  configObject}\OperatorTok{,}
+\NormalTok{  schema}\OperatorTok{,}
+  \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}
+\NormalTok{)}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{environment-variables-1}{%
+\subsubsection{Environment Variables}\label{environment-variables-1}}
+
+Using EnvLoader:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ envLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{EnvLoader}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(schema}\OperatorTok{,} \StringTok{\textquotesingle{}app{-}config\textquotesingle{}}\OperatorTok{,}\NormalTok{ \{}
+\NormalTok{  path}\OperatorTok{:} \StringTok{\textquotesingle{}.env\textquotesingle{}}\OperatorTok{,}
+\NormalTok{  override}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  extraFiles}\OperatorTok{:}\NormalTok{ [}\StringTok{\textquotesingle{}.env.local\textquotesingle{}}\NormalTok{]}\OperatorTok{,}
+\NormalTok{  required}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  watch}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  refreshInterval}\OperatorTok{:} \DecValTok{60000}
+\NormalTok{\})}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ envLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{caching-1}{%
+\subsubsection{Caching}\label{caching-1}}
+
+Implementing cache:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ cache }\OperatorTok{=} \KeywordTok{new} \FunctionTok{ConfigCache}\OperatorTok{\textless{}}\NormalTok{AppConfig}\OperatorTok{\textgreater{}}\NormalTok{(\{}
+\NormalTok{  ttl}\OperatorTok{:} \DecValTok{3600000}\OperatorTok{,} \CommentTok{// 1 hour}
+\NormalTok{  refreshOnAccess}\OperatorTok{:} \KeywordTok{true}\OperatorTok{,}
+\NormalTok{  onExpire}\OperatorTok{:}\NormalTok{ (key) }\KeywordTok{=\textgreater{}}\NormalTok{ \{}
+    \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\VerbatimStringTok{\textasciigrave{}Cache expired for }\SpecialCharTok{$\{}\NormalTok{key}\SpecialCharTok{\}}\VerbatimStringTok{\textasciigrave{}}\NormalTok{)}\OperatorTok{;}
+\NormalTok{  \}}
+\NormalTok{\})}\OperatorTok{;}
+
+\KeywordTok{const}\NormalTok{ cachedLoader }\OperatorTok{=} \KeywordTok{new} \FunctionTok{CachedConfigLoader}\NormalTok{(jsonLoader}\OperatorTok{,}\NormalTok{ cache)}\OperatorTok{;}
+\KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ cachedLoader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{change-detection-1}{%
+\subsubsection{Change Detection}\label{change-detection-1}}
+
+Watching for changes:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{loader}\OperatorTok{.}\FunctionTok{watch}\NormalTok{((}\BuiltInTok{event}\NormalTok{) }\KeywordTok{=\textgreater{}}\NormalTok{ \{}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Previous config:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{previous}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}New config:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{current}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Change timestamp:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{timestamp}\NormalTok{)}\OperatorTok{;}
+  \BuiltInTok{console}\OperatorTok{.}\FunctionTok{log}\NormalTok{(}\StringTok{\textquotesingle{}Change source:\textquotesingle{}}\OperatorTok{,} \BuiltInTok{event}\OperatorTok{.}\AttributeTok{source}\NormalTok{)}\OperatorTok{;}
+\NormalTok{\})}\OperatorTok{;}
+
+\CommentTok{// Stop watching}
+\NormalTok{loader}\OperatorTok{.}\FunctionTok{unwatch}\NormalTok{()}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-handling-2}{%
+\subsubsection{Error Handling}\label{error-handling-2}}
+
+Handling configuration errors:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\ControlFlowTok{try}\NormalTok{ \{}
+  \KeywordTok{const}\NormalTok{ config }\OperatorTok{=} \ControlFlowTok{await}\NormalTok{ loader}\OperatorTok{.}\FunctionTok{load}\NormalTok{()}\OperatorTok{;}
+\NormalTok{\} }\ControlFlowTok{catch}\NormalTok{ (error) \{}
+  \ControlFlowTok{if}\NormalTok{ (error }\KeywordTok{instanceof}\NormalTok{ ConfigError) \{}
+    \ControlFlowTok{switch}\NormalTok{ (error}\OperatorTok{.}\AttributeTok{code}\NormalTok{) \{}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{INVALID\_SCHEMA}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Schema validation failed:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{CONFIG\_LOAD\_ERROR}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Failed to load config:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+      \ControlFlowTok{case}\NormalTok{ CONFIG\_ERROR\_CODES}\OperatorTok{.}\AttributeTok{ENV\_LOAD\_ERROR}\OperatorTok{:}
+        \BuiltInTok{console}\OperatorTok{.}\FunctionTok{error}\NormalTok{(}\StringTok{\textquotesingle{}Failed to load environment variables:\textquotesingle{}}\OperatorTok{,}\NormalTok{ error}\OperatorTok{.}\AttributeTok{message}\NormalTok{)}\OperatorTok{;}
+        \ControlFlowTok{break}\OperatorTok{;}
+\NormalTok{    \}}
+\NormalTok{  \}}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{api-reference-1}{%
+\subsection{API Reference}\label{api-reference-1}}
+
+\hypertarget{core-interfaces-1}{%
+\subsubsection{Core Interfaces}\label{core-interfaces-1}}
+
+\hypertarget{iconfigfactory-1}{%
+\paragraph{IConfigFactory}\label{iconfigfactory-1}}
+
+Factory interface for creating configuration loaders and validators.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ IConfigFactory \{}
+  \FunctionTok{createLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(options}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}\OperatorTok{;}
+\NormalTok{  \})}\OperatorTok{:}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  
+  \FunctionTok{createValidator}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:}\NormalTok{ IConfigValidator}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{iconfigloader-1}{%
+\paragraph{IConfigLoader}\label{iconfigloader-1}}
+
+Interface for loading configuration data.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{  watch}\OperatorTok{?}\NormalTok{(callback}\OperatorTok{:}\NormalTok{ (event}\OperatorTok{:}\NormalTok{ ConfigChangeEvent}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{) }\KeywordTok{=\textgreater{}} \DataTypeTok{void}\NormalTok{)}\OperatorTok{:} \KeywordTok{void}\OperatorTok{;}
+\NormalTok{  unwatch}\OperatorTok{?}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{ischema-1}{%
+\paragraph{ISchema}\label{ischema-1}}
+
+Interface for schema management and validation.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ ISchema \{}
+  \FunctionTok{validate}\NormalTok{(config}\OperatorTok{:} \DataTypeTok{unknown}\OperatorTok{,}\NormalTok{ schemaId}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{validateSchema}\NormalTok{(schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{getSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:}\NormalTok{ JsonSchema }\OperatorTok{|} \DataTypeTok{undefined}\OperatorTok{;}
+  \FunctionTok{registerSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}\NormalTok{ schema}\OperatorTok{:}\NormalTok{ JsonSchema)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{removeSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+  \FunctionTok{hasSchema}\NormalTok{(name}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{classes-1}{%
+\subsubsection{Classes}\label{classes-1}}
+
+\hypertarget{configfactory-1}{%
+\paragraph{ConfigFactory}\label{configfactory-1}}
+
+Main factory class for creating configuration components.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigFactory }\KeywordTok{implements}\NormalTok{ IConfigFactory \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    cache}\OperatorTok{?:}\NormalTok{ IConfigCache}\OperatorTok{\textless{}}\NormalTok{BaseConfig}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{createLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(options}\OperatorTok{:}\NormalTok{ \{}
+\NormalTok{    type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}\OperatorTok{;}
+\NormalTok{  \})}\OperatorTok{:}\NormalTok{ IConfigLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  
+  \FunctionTok{createValidator}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ JsonSchema}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ IConfigValidator}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{jsonloader-1}{%
+\paragraph{JsonLoader}\label{jsonloader-1}}
+
+Loads configuration from JSON files or objects.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ JsonLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{extends}\NormalTok{ BaseLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    source}\OperatorTok{:} \DataTypeTok{string} \OperatorTok{|} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{},}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  \KeywordTok{protected} \FunctionTok{initializeWatcher}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{envloader-1}{%
+\paragraph{EnvLoader}\label{envloader-1}}
+
+Loads configuration from environment variables.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ EnvLoader}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{extends}\NormalTok{ BaseLoader}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    schema}\OperatorTok{:}\NormalTok{ ISchema}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    options}\OperatorTok{?:}\NormalTok{ EnvOptions}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \FunctionTok{load}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{};}
+  \KeywordTok{protected} \FunctionTok{initializeWatcher}\NormalTok{()}\OperatorTok{:} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configcache-1}{%
+\paragraph{ConfigCache}\label{configcache-1}}
+
+Caches configuration data with TTL support.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigCache}\OperatorTok{\textless{}}\NormalTok{T }\KeywordTok{extends}\NormalTok{ BaseConfig}\OperatorTok{\textgreater{}} \KeywordTok{implements}\NormalTok{ IConfigCache}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}}\NormalTok{ \{}
+  \KeywordTok{constructor}\NormalTok{(options}\OperatorTok{:}\NormalTok{ CacheOptions)}\OperatorTok{;}
+  
+  \KeywordTok{get}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\NormalTok{T }\OperatorTok{|} \DataTypeTok{undefined}\OperatorTok{\textgreater{};}
+  \KeywordTok{set}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}\NormalTok{ value}\OperatorTok{:}\NormalTok{ T)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{void}\OperatorTok{\textgreater{};}
+  \FunctionTok{has}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{boolean}\OperatorTok{\textgreater{};}
+  \KeywordTok{delete}\NormalTok{(key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{)}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{boolean}\OperatorTok{\textgreater{};}
+  \FunctionTok{clear}\NormalTok{()}\OperatorTok{:} \BuiltInTok{Promise}\OperatorTok{\textless{}}\DataTypeTok{void}\OperatorTok{\textgreater{};}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{types-1}{%
+\subsubsection{Types}\label{types-1}}
+
+\hypertarget{baseconfig-1}{%
+\paragraph{BaseConfig}\label{baseconfig-1}}
+
+Base interface for all configuration objects.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ BaseConfig \{}
+  \KeywordTok{readonly}\NormalTok{ type}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+  \KeywordTok{readonly}\NormalTok{ version}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+  \KeywordTok{readonly}\NormalTok{ schemaVersion}\OperatorTok{?:}\NormalTok{ SchemaVersion}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{configchangeevent-1}{%
+\paragraph{ConfigChangeEvent}\label{configchangeevent-1}}
+
+Event type for configuration changes.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{type}\NormalTok{ ConfigChangeEvent}\OperatorTok{\textless{}}\NormalTok{T}\OperatorTok{\textgreater{}} \OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  previous}\OperatorTok{:}\NormalTok{ T}\OperatorTok{;}
+\NormalTok{  current}\OperatorTok{:}\NormalTok{ T}\OperatorTok{;}
+\NormalTok{  timestamp}\OperatorTok{:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{  source}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{\}}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{envoptions-1}{%
+\paragraph{EnvOptions}\label{envoptions-1}}
+
+Options for environment variable loading.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ EnvOptions \{}
+\NormalTok{  path}\OperatorTok{?:} \DataTypeTok{string}\OperatorTok{;}
+\NormalTok{  override}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  extraFiles}\OperatorTok{?:} \DataTypeTok{string}\NormalTok{[]}\OperatorTok{;}
+\NormalTok{  required}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  watch}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  refreshInterval}\OperatorTok{?:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{cacheoptions-1}{%
+\paragraph{CacheOptions}\label{cacheoptions-1}}
+
+Options for configuration caching.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{interface}\NormalTok{ CacheOptions \{}
+\NormalTok{  ttl}\OperatorTok{:} \DataTypeTok{number}\OperatorTok{;}
+\NormalTok{  refreshOnAccess}\OperatorTok{?:} \DataTypeTok{boolean}\OperatorTok{;}
+\NormalTok{  onExpire}\OperatorTok{?:}\NormalTok{ (key}\OperatorTok{:} \DataTypeTok{string}\NormalTok{) }\KeywordTok{=\textgreater{}} \DataTypeTok{void}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-handling-3}{%
+\subsubsection{Error Handling}\label{error-handling-3}}
+
+\hypertarget{configerror-1}{%
+\paragraph{ConfigError}\label{configerror-1}}
+
+Base error class for configuration-related errors.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{class}\NormalTok{ ConfigError }\KeywordTok{extends}\NormalTok{ ValidationError \{}
+  \KeywordTok{constructor}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    code}\OperatorTok{:}\NormalTok{ ConfigErrorCode}\OperatorTok{,}
+\NormalTok{    context}\OperatorTok{:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{schemaError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{validationError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    schemaId}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{envError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    path}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+  
+  \KeywordTok{static} \FunctionTok{loadError}\NormalTok{(}
+\NormalTok{    message}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    source}\OperatorTok{:} \DataTypeTok{string}\OperatorTok{,}
+\NormalTok{    details}\OperatorTok{?:} \BuiltInTok{Record}\OperatorTok{\textless{}}\DataTypeTok{string}\OperatorTok{,} \DataTypeTok{unknown}\OperatorTok{\textgreater{}}
+\NormalTok{  )}\OperatorTok{:}\NormalTok{ ConfigError}\OperatorTok{;}
+\NormalTok{\}}
+\end{Highlighting}
+\end{Shaded}
+
+\hypertarget{error-codes-1}{%
+\paragraph{Error Codes}\label{error-codes-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{const}\NormalTok{ CONFIG\_ERROR\_CODES }\OperatorTok{=}\NormalTok{ \{}
+\NormalTok{  INVALID\_SCHEMA}\OperatorTok{:} \StringTok{"INVALID\_SCHEMA"}\OperatorTok{,}
+\NormalTok{  SCHEMA\_NOT\_FOUND}\OperatorTok{:} \StringTok{"SCHEMA\_NOT\_FOUND"}\OperatorTok{,}
+\NormalTok{  VALIDATION\_FAILED}\OperatorTok{:} \StringTok{"VALIDATION\_FAILED"}\OperatorTok{,}
+\NormalTok{  ENV\_LOAD\_ERROR}\OperatorTok{:} \StringTok{"ENV\_LOAD\_ERROR"}\OperatorTok{,}
+\NormalTok{  CONFIG\_LOAD\_ERROR}\OperatorTok{:} \StringTok{"CONFIG\_LOAD\_ERROR"}\OperatorTok{,}
+\NormalTok{  CONFIG\_PARSE\_ERROR}\OperatorTok{:} \StringTok{"CONFIG\_PARSE\_ERROR"}
+\NormalTok{\} }\ImportTok{as} \KeywordTok{const}\OperatorTok{;}
+\end{Highlighting}
+\end{Shaded}
