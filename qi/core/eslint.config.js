@@ -2,9 +2,9 @@
  * @fileoverview
  * @module eslint.config
  *
- * @author zhifengzhang-sz
+ * @author Zhifeng Zhang
  * @created 2024-11-19
- * @modified 2024-11-19
+ * @modified 2024-11-21
  */
 
 import js from "@eslint/js";
@@ -75,7 +75,7 @@ export default [
       },
       globals: {
         ...globals.node,
-        jest: true,
+        vitest: true,
       },
     },
     plugins: {

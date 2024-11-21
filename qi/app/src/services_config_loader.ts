@@ -1,371 +1,154 @@
 /**
- * @fileoverview
- * @module services_config_loader.ts
+ * @fileoverview Application configuration loader
+ * @module app/services_config_loader
  *
- * @author zhifengzhang-sz
- * @created 2024-11-19
- * @modified 2024-11-19
+ * @author Zhifeng Zhang
+ * @modified 2024-11-21
+ * @created 2024-11-20
  */
 
-import { Schema, JsonLoader, EnvLoader } from "@qi/core/config";
-import { ServiceConfigHandler } from "@qi/core/services/config/handler";
-import {
-  serviceConfigSchema,
-  envConfigSchema,
-  mergedConfigSchema,
-} from "@qi/core/services/config/schemas";
-import { join } from "path";
+import { fileURLToPath } from "url";
+import { dirname, join } from "path";
 import { logger } from "@qi/core/logger";
-import { formatJsonWithColor, retryOperation } from "@qi/core/utils";
-import {
-  ConfigurationError,
-  ValidationError,
-  NotFoundError,
-  ApplicationError,
-} from "@qi/core/errors";
-import {
-  ServiceConfig,
-  EnvConfig,
-  ServiceDSL,
-} from "@qi/core/services/config/types";
+import { ServiceConfigLoader } from "@qi/core/services/config/loader";
+import type { ServiceDSL } from "@qi/core/services/config/types";
+import { formatJsonWithColor } from "@qi/core/utils";
+import { ApplicationError } from "@qi/core/errors";
+import { existsSync, readdirSync } from "fs";
 
-const registerSchemas = (schema: Schema) => {
-  // Register json config schema
-  try {
-    schema.registerSchema("service-config", serviceConfigSchema);
-    logger.info("Service config schema registered successfully");
-  } catch (error) {
-    logger.error("Service config schema registration failed", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-  // Register environment config schema
-  try {
-    schema.registerSchema("env-config", envConfigSchema);
-    logger.info("Environment config schema registered successfully");
-  } catch (error) {
-    logger.error("Environment config schema registration failed", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new ConfigurationError(
-      "Failed to register environment config schema",
-      {
-        error: error instanceof Error ? error.message : String(error),
-      }
-    );
+// Get the directory path for the current module
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Global configuration instance
+let globalConfig: ServiceDSL | null = null;
+let configLoader: ServiceConfigLoader | null = null;
+
+/**
+ * Gets the project root directory (where package.json is located)
+ */
+function getProjectRoot(): string {
+  const projectRoot = process.cwd();
+  const packageJsonPath = join(projectRoot, "package.json");
+
+  if (!existsSync(packageJsonPath)) {
+    throw new Error(`No package.json found at ${projectRoot}`);
   }
 
-  // Register merged config schema
+  logger.debug("Found project root:", { projectRoot, packageJsonPath });
+  return projectRoot;
+}
+
+/**
+ * Initializes the application configuration
+ */
+export async function initializeAppConfig(): Promise<ServiceDSL> {
+  logger.debug("Starting config initialization...");
+
   try {
-    schema.registerSchema("merged-config", mergedConfigSchema);
-    logger.info("Merged config schema registered successfully");
-  } catch (error) {
-    logger.error("Merged config schema registration failed", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    throw new ConfigurationError("Failed to register merged config schema", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-  }
-};
+    if (globalConfig) {
+      logger.debug("Using cached global configuration");
+      return globalConfig;
+    }
 
-async function loadAndProcessConfig() {
-  try {
-    const schema = new Schema({
-      formats: true, // Enable email and other formats
-      strict: false, // Be less strict about format validation
-    });
+    // Get project root and config paths
+    const projectRoot = getProjectRoot();
+    const configDir = join(projectRoot, "config");
 
-    logger.info("Starting configuration loading process...");
+    if (!existsSync(configDir)) {
+      throw new Error(`Config directory not found: ${configDir}`);
+    }
 
-    // Register schemas
-    registerSchemas(schema);
+    // Log available config files
+    const configFiles = readdirSync(configDir);
+    logger.debug("Found config files:", { configDir, files: configFiles });
 
-    const serviceConfigPath = join(process.cwd(), "config", "services.json");
-    const envConfigPath = join(process.cwd(), "config", "services.env");
+    const serviceConfigPath = join(configDir, "services.json");
+    const envConfigPath = join(configDir, "services.env");
 
-    logger.info("Creating config loaders", {
+    // Create loader if needed
+    if (!configLoader) {
+      configLoader = new ServiceConfigLoader();
+    }
+
+    // Load configuration
+    const result = await configLoader.load({
       serviceConfigPath,
       envConfigPath,
+      cacheTTL: 5 * 60 * 1000, // 5 minutes
     });
 
-    const serviceLoader = new JsonLoader<ServiceConfig>(
-      serviceConfigPath,
-      schema,
-      "service-config"
-    );
+    // Log non-sensitive parts of config in development
+    if (process.env.NODE_ENV !== "production") {
+      const configSummary = {
+        databases: Object.keys(result.dsl.databases),
+        messaging: Object.keys(result.dsl.messageQueue),
+        monitoring: Object.keys(result.dsl.monitoring.endpoints),
+        networks: result.dsl.networking.networks,
+      };
 
-    const envLoader = new EnvLoader<EnvConfig>(schema, "env-config", {
-      path: envConfigPath,
-      required: true,
-      watch: true,
-    });
-
-    // Load configurations
-    logger.info("Loading configurations...");
-
-    const [serviceConfig, envConfig] = await Promise.all([
-      retryOperation(
-        async () => {
-          const config = await serviceLoader.load();
-          logger.info("Service config loaded successfully");
-          return config;
-        },
-        { retries: 3, minTimeout: 1000 }
-      ),
-      retryOperation(
-        async () => {
-          const config = await envLoader.load();
-          logger.info("Environment config loaded successfully");
-          return config;
-        },
-        { retries: 3, minTimeout: 1000 }
-      ),
-    ]);
-
-    if (!serviceConfig) {
-      throw new NotFoundError("Service configuration file not found", {
-        path: serviceConfigPath,
-        resource: "service-config",
-      });
+      console.log("\nConfiguration Summary:");
+      console.log(formatJsonWithColor(configSummary));
     }
 
-    if (!envConfig) {
-      throw new NotFoundError("Environment configuration not found", {
-        path: envConfigPath,
-        resource: "env-config",
-      });
-    }
-
-    logger.info("Merging configurations...");
-
-    // Merge configurations with environment variables
-    const mergedConfig: ServiceConfig = {
-      ...serviceConfig,
-      databases: {
-        ...serviceConfig.databases,
-        postgres: {
-          ...serviceConfig.databases.postgres,
-          password: envConfig.POSTGRES_PASSWORD,
-        },
-        questdb: {
-          ...serviceConfig.databases.questdb,
-          telemetryEnabled: process.env.QDB_TELEMETRY_ENABLED === "true",
-        },
-        redis: {
-          ...serviceConfig.databases.redis,
-          password: envConfig.REDIS_PASSWORD,
-        },
-      },
-      messageQueue: {
-        ...serviceConfig.messageQueue,
-        redpanda: {
-          ...serviceConfig.messageQueue.redpanda,
-          brokerId: Number(process.env.REDPANDA_BROKER_ID) || 0,
-          advertisedKafkaApi:
-            process.env.REDPANDA_ADVERTISED_KAFKA_API || "localhost",
-          advertisedSchemaRegistryApi:
-            process.env.REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API || "localhost",
-          advertisedPandaproxyApi:
-            process.env.REDPANDA_ADVERTISED_PANDAPROXY_API || "localhost",
-        },
-      },
-      monitoring: {
-        ...serviceConfig.monitoring,
-        grafana: {
-          ...serviceConfig.monitoring.grafana,
-          adminPassword: envConfig.GF_SECURITY_ADMIN_PASSWORD,
-          plugins: process.env.GF_INSTALL_PLUGINS || "",
-        },
-        pgAdmin: {
-          ...serviceConfig.monitoring.pgAdmin,
-          email: envConfig.PGADMIN_DEFAULT_EMAIL,
-          password: envConfig.PGADMIN_DEFAULT_PASSWORD,
-        },
-      },
-    };
-
-    try {
-      logger.info("Validating merged configuration...");
-      schema.validate(mergedConfig, "merged-config");
-      logger.info("Merged configuration validation successful");
-    } catch (error) {
-      throw new ValidationError("Merged configuration validation failed", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-
-    logger.info("Processing configuration through handler...");
-
-    // Process configuration through handler
-    const handler = new ServiceConfigHandler();
-    const processedConfig: ServiceDSL = handler.handle(mergedConfig);
-
-    logger.info("Configuration processing completed successfully");
-
-    return {
-      serviceConfig,
-      envConfig,
-      mergedConfig,
-      processedConfig,
-    };
+    // Cache and return the DSL
+    globalConfig = result.dsl;
+    return result.dsl;
   } catch (error) {
-    logger.error("Configuration processing failed", {
+    logger.error("Failed to initialize application configuration", {
       error: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
+      context: {
+        cwd: process.cwd(),
+        dirname: __dirname,
+        configDir: join(process.cwd(), "config"),
+        files: existsSync(join(process.cwd(), "config"))
+          ? readdirSync(join(process.cwd(), "config"))
+          : [],
+      },
     });
-
-    if (error instanceof Error) {
-      if (error.name === "ValidationError") {
-        throw new ValidationError("Configuration validation failed", {
-          details: error.message,
-        });
-      } else if (error.name === "ConfigurationError") {
-        throw new ConfigurationError("Invalid configuration structure", {
-          details: error.message,
-        });
-      }
-
-      throw new ApplicationError(
-        "Failed to load and process configuration",
-        "CONFIG_PROCESSING_ERROR",
-        500,
-        { originalError: error.message }
-      );
-    }
 
     throw new ApplicationError(
-      "Unknown error occurred while processing configuration",
-      "UNKNOWN_ERROR",
-      500,
-      { error: String(error) }
+      `Configuration initialization failed: ${error instanceof Error ? error.message : String(error)}`,
+      "CONFIG_INIT_ERROR",
+      500
     );
   }
 }
 
-async function initializeConfig() {
-  try {
-    const result = await loadAndProcessConfig();
-    logger.info("Service configuration loaded successfully", {
-      serviceConfigPath: "config/services.json",
-      envConfigPath: "config/services.env",
-    });
-    return result;
-  } catch (error) {
-    if (error instanceof ApplicationError) {
-      logger.error("Failed to initialize service configuration", {
-        code: error.code,
-        statusCode: error.statusCode,
-        details: error.details,
+/**
+ * Gets the current configuration DSL
+ */
+export async function getConfig(): Promise<ServiceDSL> {
+  if (!globalConfig) {
+    return initializeAppConfig();
+  }
+  return globalConfig;
+}
+
+/**
+ * Clears the global configuration cache
+ */
+export function clearConfigCache(): void {
+  globalConfig = null;
+  configLoader = null;
+  logger.info("Configuration cache cleared");
+}
+
+// Auto-initialize if this is the main module
+if (import.meta.url === import.meta.resolve("./services_config_loader.ts")) {
+  initializeAppConfig()
+    .then((config) => {
+      logger.info("Configuration loaded successfully", {
+        databases: Object.keys(config.databases).length,
+        networks: Object.keys(config.networking.networks),
       });
-    } else {
-      logger.error(
-        "Unexpected error during service configuration initialization",
-        {
-          error: String(error),
-        }
-      );
-    }
-    throw error;
-  }
-}
-
-async function main() {
-  try {
-    const { serviceConfig, envConfig, mergedConfig, processedConfig } =
-      await initializeConfig();
-
-    console.log("\nService Configuration (Base):");
-    console.log(formatJsonWithColor(serviceConfig));
-
-    console.log("\nEnvironment Variables (Sensitive data redacted):");
-    const redactedEnvConfig = Object.fromEntries(
-      Object.entries(envConfig).map(([key, value]) => [
-        key,
-        key.includes("PASSWORD") ||
-        key.includes("SECRET") ||
-        key.includes("API_KEY")
-          ? "******"
-          : value,
-      ])
-    );
-    console.log(formatJsonWithColor(redactedEnvConfig));
-
-    console.log("\nMerged Configuration (Sensitive data redacted):");
-    const redactedMergedConfig = JSON.parse(JSON.stringify(mergedConfig));
-    // Redact sensitive information
-    if (redactedMergedConfig.databases) {
-      if (redactedMergedConfig.databases.postgres)
-        redactedMergedConfig.databases.postgres.password = "******";
-      if (redactedMergedConfig.databases.redis)
-        redactedMergedConfig.databases.redis.password = "******";
-      if (redactedMergedConfig.databases.questdb)
-        redactedMergedConfig.databases.questdb.password = "******";
-    }
-    if (redactedMergedConfig.monitoring) {
-      if (redactedMergedConfig.monitoring.grafana)
-        redactedMergedConfig.monitoring.grafana.adminPassword = "******";
-      if (redactedMergedConfig.monitoring.pgAdmin)
-        redactedMergedConfig.monitoring.pgAdmin.password = "******";
-    }
-    console.log(formatJsonWithColor(redactedMergedConfig));
-
-    console.log("\nProcessed Configuration (DSL):");
-    const redactedProcessedConfig = JSON.parse(JSON.stringify(processedConfig));
-    // Redact sensitive information in DSL output
-    if (redactedProcessedConfig.databases) {
-      if (redactedProcessedConfig.databases.postgres) {
-        redactedProcessedConfig.databases.postgres.connectionString =
-          redactedProcessedConfig.databases.postgres.connectionString.replace(
-            /:[^:@]+@/,
-            ":******@"
-          );
-      }
-      if (redactedProcessedConfig.databases.redis) {
-        redactedProcessedConfig.databases.redis.connectionString =
-          redactedProcessedConfig.databases.redis.connectionString.replace(
-            /:[^:@]+@/,
-            ":******@"
-          );
-      }
-    }
-    if (redactedProcessedConfig.monitoring?.endpoints) {
-      if (redactedProcessedConfig.monitoring.endpoints.grafana) {
-        redactedProcessedConfig.monitoring.endpoints.grafana.auth.password =
-          "******";
-      }
-      if (redactedProcessedConfig.monitoring.endpoints.pgAdmin) {
-        redactedProcessedConfig.monitoring.endpoints.pgAdmin.auth.password =
-          "******";
-      }
-    }
-    console.log(formatJsonWithColor(redactedProcessedConfig));
-
-    logger.info("Configuration processing completed", {
-      serviceType: serviceConfig.type,
-      version: serviceConfig.version,
+    })
+    .catch((error) => {
+      logger.error("Fatal error loading configuration", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+      });
+      process.exit(1);
     });
-
-    return { serviceConfig, envConfig, mergedConfig, processedConfig };
-  } catch (error) {
-    logger.error("Failed to process configuration", {
-      error: error instanceof Error ? error.message : String(error),
-    });
-    process.exit(1);
-  }
 }
-
-// Clean up when the process exits
-process.on("SIGINT", () => {
-  logger.info("Shutting down configuration watchers...");
-  process.exit(0);
-});
-
-// Execute the main function
-main().catch((error) => {
-  logger.error("Fatal error", {
-    error: error instanceof Error ? error.message : String(error),
-    stack: error instanceof Error ? error.stack : undefined,
-  });
-  process.exit(1);
-});

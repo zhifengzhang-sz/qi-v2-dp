@@ -8,7 +8,7 @@
  * configuration files for changes, ensuring that configurations adhere to the defined schema.
  *
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-21
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -19,54 +19,15 @@ import { BaseLoader } from "./BaseLoader.js";
 import { loadEnv } from "@qi/core/utils";
 import { EnvOptions, BaseConfig } from "./types.js";
 import { ISchema } from "./IConfig.js";
-import { CONFIG_ERROR_CODES, ConfigError } from "./errors.js";
+import { ConfigLoaderError, CONFIG_LOADER_CODES } from "./errors.js";
 import { watch } from "fs";
 
-/**
- * EnvLoader class.
- *
- * @class EnvLoader
- * @extends {BaseLoader<T>}
- * @template T - The type of the configuration object, extending BaseConfig and including environment variables.
- * @description
- * Loads configuration objects from environment files, supports watching for file changes,
- * and periodically refreshes the configuration based on specified intervals.
- */
 export class EnvLoader<
   T extends BaseConfig & Record<string, string | undefined>,
 > extends BaseLoader<T> {
-  /**
-   * Configuration loader options.
-   *
-   * @private
-   * @type {EnvOptions}
-   */
   private readonly options: EnvOptions;
-
-  /**
-   * Timer reference for periodic configuration refresh.
-   *
-   * @private
-   * @type {NodeJS.Timeout | undefined}
-   */
   private refreshTimer?: NodeJS.Timeout;
 
-  /**
-   * Creates an instance of EnvLoader.
-   *
-   * @constructor
-   * @param {ISchema} schema - The schema used to validate the configuration.
-   * @param {string} schemaId - The identifier of the schema.
-   * @param {EnvOptions} [options={}] - Optional settings for the EnvLoader.
-   * @property {boolean} [options.override=false] - Whether to override existing environment variables.
-   * @property {string[]} [options.extraFiles=[]] - Additional environment files to load.
-   * @property {boolean} [options.required=false] - Whether the environment files are required.
-   * @property {boolean} [options.watch=false] - Whether to watch environment files for changes.
-   * @property {number} [options.refreshInterval] - Interval in milliseconds to refresh the configuration.
-   * @description
-   * Initializes the EnvLoader with the provided schema, schema ID, and optional settings.
-   * Sets default values for options if they are not provided.
-   */
   constructor(
     private readonly schema: ISchema,
     private readonly schemaId: string,
@@ -83,16 +44,6 @@ export class EnvLoader<
     };
   }
 
-  /**
-   * Initializes watchers and refresh timers based on the provided options.
-   *
-   * @protected
-   * @method initializeWatcher
-   * @returns {void}
-   * @description
-   * Sets up file watchers for the main environment file and any extra files.
-   * Initializes a refresh timer if a refresh interval is specified.
-   */
   protected initializeWatcher(): void {
     if (!this.options.watch) return;
 
@@ -111,16 +62,6 @@ export class EnvLoader<
     }
   }
 
-  /**
-   * Stops watching for configuration changes and clears the refresh timer if set.
-   *
-   * @override
-   * @method unwatch
-   * @returns {void}
-   * @description
-   * Invokes the superclass's unwatch method to close file watchers and clears the refresh timer,
-   * ensuring that no further configuration changes are monitored or loaded.
-   */
   override unwatch(): void {
     super.unwatch();
     if (this.refreshTimer) {
@@ -129,18 +70,6 @@ export class EnvLoader<
     }
   }
 
-  /**
-   * Loads and validates the configuration from environment files or process.env.
-   *
-   * @async
-   * @method load
-   * @returns {Promise<T>} - A promise that resolves to the loaded and validated configuration.
-   * @throws {ConfigError} - Throws an error if loading or validation fails.
-   * @description
-   * Attempts to load configuration variables from specified environment files.
-   * Validates the loaded variables against the provided schema. If a previous configuration exists,
-   * it notifies registered callbacks of the change. Updates the current configuration with the new values.
-   */
   async load(): Promise<T> {
     try {
       const vars = await this.loadFromEnvFiles();
@@ -158,25 +87,16 @@ export class EnvLoader<
 
       return config;
     } catch (error) {
-      throw ConfigError.fromError(error, CONFIG_ERROR_CODES.ENV_LOAD_ERROR, {
-        source: this.options.path || "process.env",
-      });
+      throw ConfigLoaderError.fromError(
+        error,
+        CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
+        {
+          source: this.options.path || "process.env",
+        }
+      );
     }
   }
 
-  /**
-   * Loads environment variables from the main and extra environment files.
-   *
-   * @private
-   * @async
-   * @method loadFromEnvFiles
-   * @returns {Promise<Record<string, string | undefined>>} - A promise that resolves to the merged environment variables.
-   * @throws {ConfigError} - Throws an error if required environment files are missing or fail to load.
-   * @description
-   * Reads environment variables from the specified main environment file and any additional files.
-   * If the main file or any extra files are required but not found, it throws a ConfigError.
-   * Merges all loaded environment variables with process.env before returning.
-   */
   private async loadFromEnvFiles(): Promise<
     Record<string, string | undefined>
   > {
@@ -188,10 +108,10 @@ export class EnvLoader<
       });
 
       if (!mainEnvVars && this.options?.required) {
-        throw new ConfigError(
+        throw ConfigLoaderError.create(
           "Required environment file not found",
-          CONFIG_ERROR_CODES.ENV_LOAD_ERROR,
-          { path: this.options.path }
+          CONFIG_LOADER_CODES.ENV_MISSING_ERROR,
+          this.options.path
         );
       }
 
@@ -201,19 +121,23 @@ export class EnvLoader<
         });
 
         if (!extraVars && this.options?.required) {
-          throw new ConfigError(
+          throw ConfigLoaderError.create(
             "Required extra environment file not found",
-            CONFIG_ERROR_CODES.ENV_LOAD_ERROR,
-            { path: file }
+            CONFIG_LOADER_CODES.ENV_MISSING_ERROR,
+            file
           );
         }
       }
 
       return process.env;
     } catch (error) {
-      throw ConfigError.fromError(error, CONFIG_ERROR_CODES.ENV_LOAD_ERROR, {
-        source: this.options?.path,
-      });
+      throw ConfigLoaderError.fromError(
+        error,
+        CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
+        {
+          source: this.options?.path,
+        }
+      );
     }
   }
 }

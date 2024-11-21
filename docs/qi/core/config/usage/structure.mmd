@@ -1,0 +1,91 @@
+classDiagram
+    class IConfigFactory {
+        <<interface>>
+        +createLoader()
+        +createValidator()
+    }
+    
+    class IConfigLoader {
+        <<interface>>
+        +load()
+        +watch()?
+        +unwatch()?
+    }
+    
+    class IConfigValidator {
+        <<interface>>
+        +validate()
+        +getSchema()
+    }
+    
+    class ISchema {
+        <<interface>>
+        +validate()
+        +validateSchema()
+        +registerSchema()
+        +removeSchema()
+        +hasSchema()
+        +getSchema()
+    }
+    
+    class ConfigFactory {
+        -schema: ISchema
+        -cache?: IConfigCache
+        +createLoader()
+        +createValidator()
+    }
+    
+    class BaseLoader {
+        #watcher?: FSWatcher
+        #callbacks: Set
+        #currentConfig?: T
+        +load()
+        +watch()
+        +unwatch()
+    }
+    
+    class JsonLoader {
+        -source: string
+        -schema: ISchema
+        -schemaId: string
+        +load()
+        +initializeWatcher()
+    }
+    
+    class EnvLoader {
+        -schema: ISchema
+        -schemaId: string
+        -options: EnvOptions
+        +load()
+        +initializeWatcher()
+    }
+    
+    class Schema {
+        -ajv: Ajv
+        -schemas: Map
+        -validators: Map
+        +validate()
+        +validateSchema()
+        +registerSchema()
+    }
+    
+    class ConfigCache {
+        -cache: Map
+        -options: CacheOptions
+        +get()
+        +set()
+        +has()
+        +delete()
+        +clear()
+    }
+
+    IConfigFactory <|.. ConfigFactory
+    IConfigLoader <|.. BaseLoader
+    BaseLoader <|-- JsonLoader
+    BaseLoader <|-- EnvLoader
+    ISchema <|.. Schema
+    
+    ConfigFactory --> ISchema
+    ConfigFactory --> IConfigCache
+    JsonLoader --> ISchema
+    EnvLoader --> ISchema

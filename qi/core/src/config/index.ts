@@ -29,7 +29,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-03-18
- * @modified 2024-11-19
+ * @modified 2024-11-21
  */
 
 // Configuration factory for creating loaders and validators
@@ -48,7 +48,7 @@ export { SchemaValidator } from "./SchemaValidator.js";
 export { Schema } from "./schema.js";
 
 // Error handling
-export { ConfigError, CONFIG_ERROR_CODES } from "./errors.js";
+export { ConfigLoaderError, CONFIG_LOADER_CODES } from "./errors.js";
 
 /**
  * Configuration type definitions:

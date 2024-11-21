@@ -2,9 +2,9 @@
  * @fileoverview
  * @module vitest.config.ts
  *
- * @author zhifengzhang-sz
+ * @author Zhifeng Zhang
  * @created 2024-11-19
- * @modified 2024-11-19
+ * @modified 2024-11-21
  */
 
 import { defineConfig } from "vite";

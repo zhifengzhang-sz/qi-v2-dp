@@ -7,7 +7,7 @@
  * managing and validating JSON Schemas using the AJV library.
  *
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-21
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -18,7 +18,7 @@ import { Ajv, ValidateFunction } from "ajv";
 import { ISchema } from "./IConfig.js";
 import { JsonSchema } from "./types.js";
 import { logger } from "@qi/core/logger";
-import { CONFIG_ERROR_CODES, ConfigError } from "./errors.js";
+import { CONFIG_LOADER_CODES, ConfigLoaderError } from "./errors.js";
 import addFormats from "ajv-formats";
 
 /**
@@ -65,23 +65,18 @@ export class Schema implements ISchema {
   validate(config: unknown, schemaId: string): void {
     const validator = this.validators.get(schemaId);
     if (!validator) {
-      throw new ConfigError(
+      throw ConfigLoaderError.create(
         "Schema not found",
-        CONFIG_ERROR_CODES.SCHEMA_NOT_FOUND,
-        {
-          schemaId,
-        }
+        CONFIG_LOADER_CODES.SCHEMA_NOT_FOUND,
+        schemaId
       );
     }
 
     if (!validator(config)) {
-      throw new ConfigError(
-        "Validation failed",
-        CONFIG_ERROR_CODES.CONFIG_PARSE_ERROR,
-        {
-          schemaId,
-          errors: validator.errors,
-        }
+      throw ConfigLoaderError.validationError(
+        "Schema validation failed",
+        schemaId,
+        validator.errors || []
       );
     }
   }
@@ -94,10 +89,10 @@ export class Schema implements ISchema {
    */
   validateSchema(schema: JsonSchema): void {
     if (!this.ajv.validateSchema(schema)) {
-      throw ConfigError.schemaError(
+      throw ConfigLoaderError.schemaError(
         "Invalid schema definition",
         schema.$id ?? "unknown",
-        { errors: this.ajv.errors }
+        { errors: this.ajv.errors || [] }
       );
     }
   }
@@ -111,19 +106,19 @@ export class Schema implements ISchema {
    */
   registerSchema(name: string, schema: JsonSchema): void {
     try {
-      // Check if schema already exists
       if (this.schemas.has(name)) {
-        throw ConfigError.schemaError(
-          "Schema with this name already exists",
+        throw ConfigLoaderError.create(
+          "Schema name already exists",
+          CONFIG_LOADER_CODES.SCHEMA_EXISTS,
           name,
           { existingSchema: true }
         );
       }
 
-      // Check if schema ID already exists in AJV
       if (schema.$id && this.ajv.getSchema(schema.$id)) {
-        throw ConfigError.schemaError(
-          "Schema with this $id already exists",
+        throw ConfigLoaderError.create(
+          "Schema ID already exists",
+          CONFIG_LOADER_CODES.SCHEMA_EXISTS,
           schema.$id,
           { existingId: true }
         );

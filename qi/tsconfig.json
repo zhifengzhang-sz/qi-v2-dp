@@ -6,17 +6,12 @@
     "lib": ["ES2023"],
     "types": ["node"],
     "outDir": "./dist",
-    "rootDirs": [
-      "./core/src",
-      "./producers/src",
-      "./consumers/src"
-    ],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "allowSyntheticDefaultImports": true, // Allow synthetic default imports
+    "allowSyntheticDefaultImports": true,
     "declaration": true,
     "sourceMap": true,
     "baseUrl": ".",
@@ -27,6 +22,12 @@
       "@qi/app/*": ["app/src/*"]
     }
   },
-  "include": ["core/src/**/*", "producers/src/**/*", "consumers/src/**/*", "app/src/**/*"],
-  "exclude": ["node_modules", "**/*.test.ts", "**/*.spec.ts"]
+  "references": [
+    { "path": "./core" },
+    { "path": "./producers" },
+    { "path": "./consumers" },
+    { "path": "./app" }
+  ],
+  "include": [],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts"]
 }

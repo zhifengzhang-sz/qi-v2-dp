@@ -7,8 +7,8 @@
     "clean": "rm -rf dist",
     "lint": "eslint './src/**/*.ts'",
     "format": "prettier --write './src/**/*.{ts,js}'",
-    "start:cli": "node --loader ts-node/esm --experimental-specifier-resolution=node src/cli_config_loader.ts",
-    "start:services": "node --loader ts-node/esm --experimental-specifier-resolution=node src/services_config_loader.ts"
+    "start:cli": "node --loader ts-node/esm --experimental-specifier-resolution=node src/cli.loader.main.ts",
+    "start:services": "node --loader ts-node/esm --experimental-specifier-resolution=node src/services.main.ts"
   },
   "dependencies": {
     "@qi/core": "*",

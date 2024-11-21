@@ -28,30 +28,9 @@
  * - HTTP status code for API responses
  * - Typed details object for additional context
  *
- * @example
- * ```typescript
- * // Throwing typed errors
- * throw new ValidationError(
- *   'Invalid email format',
- *   { field: 'email', constraint: 'format', value: 'invalid' }
- * );
- *
- * // Error handling with type guards
- * try {
- *   await processRequest();
- * } catch (error) {
- *   if (error instanceof ValidationError) {
- *     // Access typed details
- *     console.error(`Field ${error.details.field} failed validation`);
- *   } else if (error instanceof DatabaseError) {
- *     console.error(`DB operation ${error.details.operation} failed`);
- *   }
- * }
- * ```
- *
  * @author Zhifeng Zhang
  * @created 2024-03-18
- * @modified 2024-11-19
+ * @modified 2024-11-21
  */
 
 /**
@@ -61,20 +40,6 @@
  */
 export interface ErrorDetails {
   [key: string]: unknown;
-}
-
-/**
- * Details specific to validation errors
- * @interface ValidationErrorDetails
- * @extends ErrorDetails
- */
-export interface ValidationErrorDetails extends ErrorDetails {
-  /** The field that failed validation */
-  field?: string;
-  /** The specific validation constraint that failed */
-  constraint?: string;
-  /** The invalid value that was provided */
-  value?: unknown;
 }
 
 /**
@@ -136,20 +101,6 @@ export interface RateLimitErrorDetails extends ErrorDetails {
 }
 
 /**
- * Details specific to configuration errors
- * @interface ConfigurationErrorDetails
- * @extends ErrorDetails
- */
-export interface ConfigurationErrorDetails extends ErrorDetails {
-  /** The configuration key that caused the error */
-  key?: string;
-  /** The type that was expected */
-  expectedType?: string;
-  /** The type that was received */
-  receivedType?: string;
-}
-
-/**
  * Details specific to cache operation errors
  * @interface CacheErrorDetails
  * @extends ErrorDetails
@@ -194,26 +145,6 @@ export class ApplicationError extends Error {
   ) {
     super(message);
     this.name = "ApplicationError";
-  }
-}
-
-/**
- * Error class for validation failures
- * @class ValidationError
- * @extends ApplicationError
- *
- * @example
- * ```typescript
- * throw new ValidationError(
- *   'Invalid email format',
- *   { field: 'email', constraint: 'format', value: 'invalid-email' }
- * );
- * ```
- */
-export class ValidationError extends ApplicationError {
-  constructor(message: string, details?: ValidationErrorDetails) {
-    super(message, "VALIDATION_ERROR", 400, details);
-    this.name = "ValidationError";
   }
 }
 
@@ -334,26 +265,6 @@ export class RateLimitError extends ApplicationError {
   constructor(message: string, details?: RateLimitErrorDetails) {
     super(message, "RATE_LIMIT_ERROR", 429, details);
     this.name = "RateLimitError";
-  }
-}
-
-/**
- * Error class for configuration related issues
- * @class ConfigurationError
- * @extends ApplicationError
- *
- * @example
- * ```typescript
- * throw new ConfigurationError(
- *   'Invalid configuration value',
- *   { key: 'API_URL', expectedType: 'string', receivedType: 'undefined' }
- * );
- * ```
- */
-export class ConfigurationError extends ApplicationError {
-  constructor(message: string, details?: ConfigurationErrorDetails) {
-    super(message, "CONFIGURATION_ERROR", 500, details);
-    this.name = "ConfigurationError";
   }
 }
 
