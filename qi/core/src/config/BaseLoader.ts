@@ -8,8 +8,9 @@
  * change notifications, ensuring that derived classes implement the specific loading
  * and watcher initialization logic.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

@@ -6,8 +6,9 @@
  * This module implements the Schema class which provides methods for
  * managing and validating JSON Schemas using the AJV library.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-21
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

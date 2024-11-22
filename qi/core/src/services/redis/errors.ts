@@ -1,38 +1,42 @@
 /**
  * @fileoverview
- * @module errors.ts
+ * @module errors
  *
- * @author zhifengzhang-sz
+ * @description
+ * This module defines Redis-specific error handling.
+ * It extends the base ApplicationError class to provide structured
+ * error handling for the Redis service.
+ *
+ * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-11-21
+ * @modified 2024-11-22
  */
 
-import { ApplicationError } from "@qi/core/errors";
-import { ErrorDetails } from "@qi/core/errors";
+import { ApplicationError, ErrorDetails } from "@qi/core/errors";
+import { ErrorCode } from "@qi/core/errors";
 
 export interface RedisErrorDetails extends ErrorDetails {
   operation?: string;
   timeout?: number;
   attempt?: number;
   error?: string;
-  [key: string]: unknown; // Add index signature to match ErrorDetails
+  [key: string]: unknown;
 }
 
 export const REDIS_ERROR_CODES = {
-  CONNECTION_ERROR: "CONNECTION_ERROR",
-  TIMEOUT_ERROR: "TIMEOUT_ERROR",
-  OPERATION_ERROR: "OPERATION_ERROR",
-  CLIENT_ERROR: "CLIENT_ERROR",
-  PING_ERROR: "PING_ERROR",
+  CONNECTION_ERROR: ErrorCode.CONNECTION_ERROR,
+  TIMEOUT_ERROR: ErrorCode.TIMEOUT_ERROR,
+  OPERATION_ERROR: ErrorCode.OPERATION_ERROR,
+  CLIENT_ERROR: ErrorCode.CLIENT_ERROR,
+  PING_ERROR: ErrorCode.PING_ERROR,
 } as const;
 
-export type RedisErrorCode =
-  (typeof REDIS_ERROR_CODES)[keyof typeof REDIS_ERROR_CODES];
+export type RedisErrorCode = ErrorCode;
 
 export class RedisError extends ApplicationError {
   constructor(
     message: string,
-    code: RedisErrorCode,
+    code: RedisErrorCode = ErrorCode.REDIS_ERROR,
     details?: RedisErrorDetails
   ) {
     super(message, code, 500, details);

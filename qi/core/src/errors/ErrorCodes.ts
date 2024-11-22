@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-11-21
- * @modified 2024-11-21
+ * @modified 2024-11-22
  */
 
 // src/errors/ErrorCodes.ts
@@ -16,16 +16,20 @@
 export enum ErrorCode {
   // Generic Errors
   APPLICATION_ERROR = 1000,
-  CACHE_ERROR = 1001,
+  READ_ERROR = 1001,
+  PARSE_ERROR = 1002,
+  WATCH_ERROR = 1003,
+  OPERATION_ERROR = 1004,
+  CONNECTION_ERROR = 1101,
+  TIMEOUT_ERROR = 1102,
+  CLIENT_ERROR = 1103,
+  PING_ERROR = 1104,
 
   // Configuration Errors
   CONFIGURATION_ERROR = 2000,
   INVALID_SCHEMA = 2001,
   SCHEMA_NOT_FOUND = 2002,
   SCHEMA_VALIDATION_FAILED = 2003,
-  READ_ERROR = 2004,
-  PARSE_ERROR = 2005,
-  WATCH_ERROR = 2006,
   ENV_LOAD_ERROR = 2007,
   ENV_MISSING_ERROR = 2008,
   CONFIG_LOAD_ERROR = 2009,
@@ -33,11 +37,6 @@ export enum ErrorCode {
 
   // Redis Errors
   REDIS_ERROR = 3000,
-  CONNECTION_ERROR = 3001,
-  TIMEOUT_ERROR = 3002,
-  OPERATION_ERROR = 3003,
-  CLIENT_ERROR = 3004,
-  PING_ERROR = 3005,
 
   // CLI Configuration Errors
   CLI_INVALID_ARGUMENT = 4000,
@@ -46,6 +45,9 @@ export enum ErrorCode {
   // Services Configuration Errors
   SERVICE_CONFIG_INVALID = 5000,
   SERVICE_CONFIG_MISSING = 5001,
+
+  // Cache Errors
+  CACHE_ERROR = 6001,
 
   // Add more categories and error codes as needed
 }

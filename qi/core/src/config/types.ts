@@ -7,8 +7,9 @@
  * It includes types for JSON Schema validation, configuration change events,
  * environment variable loading options, and base configuration interfaces.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

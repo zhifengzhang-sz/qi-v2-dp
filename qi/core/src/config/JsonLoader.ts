@@ -7,8 +7,9 @@
  * from JSON sources. It provides functionality to read, parse, validate, and monitor JSON
  * configuration files for changes, ensuring that configurations adhere to the defined schema.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-21
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

@@ -8,8 +8,9 @@
  * and schemas. The factory leverages caching mechanisms to optimize configuration retrieval
  * and ensures that configurations adhere to defined schemas through validation processes.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

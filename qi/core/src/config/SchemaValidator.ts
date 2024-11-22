@@ -8,8 +8,9 @@
  * a schema validator. The class ensures that configurations conform to the defined schema,
  * throwing errors if validation fails.
  *
+ * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-19
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure

@@ -10,7 +10,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-21
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -18,31 +18,24 @@
  */
 
 import { ApplicationError, ErrorDetails } from "@qi/core/errors";
+import { ErrorCode } from "@qi/core/errors";
 import { ErrorObject } from "ajv";
 
 export const CONFIG_LOADER_CODES = {
-  // Schema errors
-  INVALID_SCHEMA: "INVALID_SCHEMA",
-  SCHEMA_NOT_FOUND: "SCHEMA_NOT_FOUND",
-  SCHEMA_EXISTS: "SCHEMA_EXISTS",
-  SCHEMA_VALIDATION_FAILED: "SCHEMA_VALIDATION_FAILED",
-
-  // File operations
-  READ_ERROR: "READ_ERROR",
-  PARSE_ERROR: "PARSE_ERROR",
-  WATCH_ERROR: "WATCH_ERROR",
-
-  // Environment
-  ENV_LOAD_ERROR: "ENV_LOAD_ERROR",
-  ENV_MISSING_ERROR: "ENV_MISSING_ERROR",
-
-  // General
-  CONFIG_LOAD_ERROR: "CONFIG_LOAD_ERROR",
-  CONFIG_PARSE_ERROR: "CONFIG_PARSE_ERROR",
+  INVALID_SCHEMA: ErrorCode.INVALID_SCHEMA,
+  SCHEMA_NOT_FOUND: ErrorCode.SCHEMA_NOT_FOUND,
+  SCHEMA_EXISTS: ErrorCode.CONFIGURATION_ERROR,
+  SCHEMA_VALIDATION_FAILED: ErrorCode.SCHEMA_VALIDATION_FAILED,
+  READ_ERROR: ErrorCode.READ_ERROR,
+  PARSE_ERROR: ErrorCode.PARSE_ERROR,
+  WATCH_ERROR: ErrorCode.WATCH_ERROR,
+  ENV_LOAD_ERROR: ErrorCode.ENV_LOAD_ERROR,
+  ENV_MISSING_ERROR: ErrorCode.ENV_MISSING_ERROR,
+  CONFIG_LOAD_ERROR: ErrorCode.CONFIG_LOAD_ERROR,
+  CONFIG_PARSE_ERROR: ErrorCode.CONFIG_PARSE_ERROR,
 } as const;
 
-export type ConfigLoaderCode =
-  (typeof CONFIG_LOADER_CODES)[keyof typeof CONFIG_LOADER_CODES];
+export type ConfigLoaderCode = ErrorCode;
 
 export interface SchemaValidationError {
   field?: string;
@@ -66,7 +59,7 @@ export interface ConfigLoaderErrorDetails extends ErrorDetails {
 export class ConfigLoaderError extends ApplicationError {
   constructor(
     message: string,
-    code: ConfigLoaderCode,
+    code: ConfigLoaderCode = ErrorCode.CONFIGURATION_ERROR,
     details?: ConfigLoaderErrorDetails
   ) {
     super(message, code, 500, details);
@@ -89,7 +82,7 @@ export class ConfigLoaderError extends ApplicationError {
   ): ConfigLoaderError {
     return ConfigLoaderError.create(
       message,
-      CONFIG_LOADER_CODES.INVALID_SCHEMA,
+      ErrorCode.INVALID_SCHEMA,
       schemaId,
       details
     );
@@ -102,7 +95,7 @@ export class ConfigLoaderError extends ApplicationError {
   ): ConfigLoaderError {
     return ConfigLoaderError.create(
       message,
-      CONFIG_LOADER_CODES.SCHEMA_VALIDATION_FAILED,
+      ErrorCode.SCHEMA_VALIDATION_FAILED,
       schemaId,
       { errors }
     );
