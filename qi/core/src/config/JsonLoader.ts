@@ -9,7 +9,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-22
+ * @modified 2024-11-23
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -44,11 +44,17 @@ export class JsonLoader<T extends BaseConfig> extends BaseLoader<T> {
       this.currentConfig = config as T;
       return this.currentConfig;
     } catch (error) {
-      throw ConfigLoaderError.fromError(
-        error,
+      // If it's already a ConfigLoaderError, re-throw it directly
+      if (error instanceof ConfigLoaderError) {
+        throw error;
+      }
+      // Otherwise, wrap it as a CONFIG_LOAD_ERROR
+      throw new ConfigLoaderError(
+        error instanceof Error ? error.message : String(error),
         CONFIG_LOADER_CODES.CONFIG_LOAD_ERROR,
         {
           source: typeof this.source === "string" ? this.source : "object",
+          error: String(error),
         }
       );
     }
@@ -85,20 +91,28 @@ export class JsonLoader<T extends BaseConfig> extends BaseLoader<T> {
       try {
         return JSON.parse(content);
       } catch (error) {
-        throw ConfigLoaderError.create(
+        // Use CONFIG_PARSE_ERROR (2010) instead of PARSE_ERROR (1002)
+        throw new ConfigLoaderError(
           "Invalid JSON syntax",
-          CONFIG_LOADER_CODES.PARSE_ERROR,
-          path,
-          { content, parseError: String(error) }
+          CONFIG_LOADER_CODES.CONFIG_PARSE_ERROR,
+          {
+            source: path,
+            content,
+            parseError: String(error),
+          }
         );
       }
     } catch (error) {
-      if (error instanceof ConfigLoaderError) throw error;
-      throw ConfigLoaderError.create(
+      if (error instanceof ConfigLoaderError) {
+        throw error;
+      }
+      throw new ConfigLoaderError(
         "Failed to read file",
-        CONFIG_LOADER_CODES.READ_ERROR,
-        path,
-        { error: String(error) }
+        CONFIG_LOADER_CODES.CONFIG_LOAD_ERROR,
+        {
+          source: path,
+          error: String(error),
+        }
       );
     }
   }

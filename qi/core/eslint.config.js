@@ -4,7 +4,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-19
- * @modified 2024-11-21
+ * @modified 2024-11-23
  */
 
 import js from "@eslint/js";
@@ -93,4 +93,11 @@ export default [
 
   // Prettier configuration to enforce formatting
   prettierConfig,
+
+  // Node.js-specific configuration
+  {
+    "env": {
+      "node": true
+    }
+  }
 ];

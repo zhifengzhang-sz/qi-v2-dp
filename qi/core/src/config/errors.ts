@@ -10,7 +10,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-22
+ * @modified 2024-11-23
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -27,7 +27,7 @@ export const CONFIG_LOADER_CODES = {
   SCHEMA_EXISTS: ErrorCode.CONFIGURATION_ERROR,
   SCHEMA_VALIDATION_FAILED: ErrorCode.SCHEMA_VALIDATION_FAILED,
   READ_ERROR: ErrorCode.READ_ERROR,
-  PARSE_ERROR: ErrorCode.PARSE_ERROR,
+  PARSE_ERROR: ErrorCode.CONFIG_PARSE_ERROR,
   WATCH_ERROR: ErrorCode.WATCH_ERROR,
   ENV_LOAD_ERROR: ErrorCode.ENV_LOAD_ERROR,
   ENV_MISSING_ERROR: ErrorCode.ENV_MISSING_ERROR,

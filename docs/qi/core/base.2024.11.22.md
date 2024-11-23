@@ -190,21 +190,21 @@ This setup ensures that the application has a robust and flexible logging mechan
 ---
   
 ### `qi/core/src/errors`
-  
+
 #### `qi/core/src/errors/ErrorCode.ts`
-  
-```ts
+
+```typescript
 /**
  * @fileoverview
  * @module ErrorCodes.ts
  *
  * @author zhifengzhang-sz
  * @created 2024-11-21
- * @modified 2024-11-21
+ * @modified 2024-11-22
  */
-  
+
 // src/errors/ErrorCodes.ts
-  
+
 /**
  * Centralized Error Codes Enumeration.
  * Each error code is a unique integer.
@@ -220,7 +220,7 @@ export enum ErrorCode {
   TIMEOUT_ERROR = 1102,
   CLIENT_ERROR = 1103,
   PING_ERROR = 1104,
-  
+
   // Configuration Errors
   CONFIGURATION_ERROR = 2000,
   INVALID_SCHEMA = 2001,
@@ -230,29 +230,28 @@ export enum ErrorCode {
   ENV_MISSING_ERROR = 2008,
   CONFIG_LOAD_ERROR = 2009,
   CONFIG_PARSE_ERROR = 2010,
-  
+
   // Redis Errors
   REDIS_ERROR = 3000,
-  
+
   // CLI Configuration Errors
   CLI_INVALID_ARGUMENT = 4000,
   CLI_MISSING_ARGUMENT = 4001,
-  
+
   // Services Configuration Errors
   SERVICE_CONFIG_INVALID = 5000,
   SERVICE_CONFIG_MISSING = 5001,
-  
+
   // Cache Errors
   CACHE_ERROR = 6001,
-  
+
   // Add more categories and error codes as needed
 }
-  
-```  
-  
+```
+
 #### `qi/core/src/errors/ApplicationError.ts`
-  
-```ts
+
+```typescript
 /**
  * @fileoverview
  * @module ApplicationError
@@ -264,23 +263,23 @@ export enum ErrorCode {
  * preparation.
  *
  * @created 2024-11-21
- * @modified 2024-11-21
+ * @modified 2024-11-22
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
  * that file headers are up-to-date with the author's name and modification date.
  */
-  
+
 import { ErrorCode } from "./ErrorCodes.js";
 import { logger } from "@qi/core/logger";
-  
+
 /**
  * Interface for error details providing additional context.
  */
 export interface ErrorDetails {
   [key: string]: unknown;
 }
-  
+
 /**
  * Base error class for all application-specific errors.
  *
@@ -307,7 +306,7 @@ export class ApplicationError extends Error {
     this.name = "ApplicationError";
     Error.captureStackTrace(this, this.constructor);
   }
-  
+
   /**
    * Handles the error by logging it and preparing a standardized response.
    *
@@ -328,12 +327,369 @@ export class ApplicationError extends Error {
    */
   handle() {
     // Log the error details
-    logger.error(`<img src="https://latex.codecogs.com/gif.latex?{this.name}%20["/>{this.code}]: <img src="https://latex.codecogs.com/gif.latex?{this.message}`,%20{%20%20%20%20%20%20statusCode:%20this.statusCode,%20%20%20%20%20%20details:%20this.details,%20%20%20%20%20%20stack:%20this.stack,%20%20%20%20});%20%20%20%20//%20Prepare%20standardized%20response%20(example%20for%20an%20HTTP%20API)%20%20%20%20return%20{%20%20%20%20%20%20status:%20this.statusCode,%20%20%20%20%20%20error:%20{%20%20%20%20%20%20%20%20code:%20this.code,%20%20%20%20%20%20%20%20message:%20this.message,%20%20%20%20%20%20%20%20...(process.env.NODE_ENV%20===%20&quot;development&quot;%20&amp;&amp;%20{%20%20%20%20%20%20%20%20%20%20details:%20this.details,%20%20%20%20%20%20%20%20}),%20%20%20%20%20%20},%20%20%20%20};%20%20}}```%20%20####%20`qi/core/src/errors/index.ts````ts%20block_code=true%20class=&quot;line-numbers&quot;%20%20/**%20*%20@fileoverview%20Core%20error%20handling%20system%20providing%20strongly-typed%20error%20classes%20*%20for%20different%20categories%20of%20application%20failures.%20Includes%20detailed%20error%20tracking,%20*%20type-safe%20error%20details,%20and%20standardized%20error%20codes.%20*%20@module%20@qi/core/errors%20*%20*%20@author%20Zhifeng%20Zhang%20*%20@created%202024-03-18%20*%20@modified%202024-11-21%20*/export%20{%20ErrorDetails,%20ApplicationError%20}%20from%20&quot;./ApplicationError.js&quot;;export%20{%20ErrorCode%20}%20from%20&quot;./ErrorCodes.js&quot;;```%20%20####%20ApplicationError%20OverviewThe%20`ApplicationError`%20class%20is%20the%20cornerstone%20of%20the%20application&#39;s%20error%20handling%20mechanism.%20It%20provides%20a%20consistent%20and%20structured%20way%20to%20handle%20errors%20across%20the%20entire%20codebase,%20ensuring%20that%20all%20errors%20are%20managed%20uniformly%20and%20contain%20necessary%20contextual%20information.####%20Key%20Features1.%20**Centralized%20Error%20Codes:**%20%20%20-%20Utilizes%20the%20`ErrorCode`%20enumeration%20to%20assign%20standardized%20codes%20to%20errors,%20promoting%20consistency%20and%20ease%20of%20identification.2.%20**Structured%20Error%20Details:**%20%20%20-%20Incorporates%20an%20`ErrorDetails`%20interface%20to%20attach%20additional%20context%20to%20errors,%20facilitating%20easier%20debugging%20and%20more%20informative%20responses.3.%20**Standardized%20Handling%20Mechanism:**%20%20%20-%20Implements%20a%20`handle`%20method%20that%20logs%20error%20details%20and%20prepares%20a%20consistent%20response%20format,%20suitable%20for%20APIs%20or%20other%20interfaces.4.%20**Integration%20with%20Logging%20System:**%20%20%20-%20Leverages%20a%20centralized%20`logger`%20to%20record%20error%20information,%20including%20messages,%20codes,%20details,%20and%20stack%20traces.####%20Components1.%20**ErrorCode%20Enumeration%20(`ErrorCodes.ts`):**%20%20%20-%20Defines%20a%20comprehensive%20set%20of%20error%20codes%20used%20throughout%20the%20application.%20%20%20-%20Ensures%20that%20each%20error%20type%20is%20uniquely%20identifiable%20and%20standardized.%20%20%20```typescript%20%20%20//%20src/errors/ErrorCodes.ts%20%20%20export%20enum%20ErrorCode%20{%20%20%20%20%20APPLICATION_ERROR%20=%20&quot;APPLICATION_ERROR&quot;,%20%20%20%20%20INVALID_INPUT%20=%20&quot;INVALID_INPUT&quot;,%20%20%20%20%20AUTHENTICATION_FAILED%20=%20&quot;AUTHENTICATION_FAILED&quot;,%20%20%20%20%20//%20Add%20other%20error%20codes%20as%20needed%20%20%20}%20%20%20```2.%20**ErrorDetails%20Interface:**%20%20%20-%20Provides%20a%20flexible%20structure%20to%20include%20any%20additional%20information%20related%20to%20an%20error.%20%20%20-%20Allows%20for%20the%20inclusion%20of%20nested%20objects,%20arrays,%20or%20primitive%20values%20to%20convey%20detailed%20context.3.%20**ApplicationError%20Class:**%20%20%20-%20Serves%20as%20the%20base%20class%20for%20all%20application-specific%20errors.%20%20%20-%20Encapsulates%20common%20properties%20such%20as%20`message`,%20`code`,%20`statusCode`,%20and%20`details`.%20%20%20-%20Offers%20a%20`handle`%20method%20to%20process%20the%20error%20uniformly%20across%20different%20parts%20of%20the%20application.####%20Usage%20Guidelines1.%20**Creating%20Custom%20Errors:**%20%20%20-%20Extend%20the%20`ApplicationError`%20class%20to%20create%20specific%20error%20types%20tailored%20to%20different%20scenarios.%20%20%20-%20Assign%20appropriate%20`ErrorCode`%20values%20to%20each%20custom%20error%20to%20maintain%20clarity%20and%20consistency.%20%20%20```typescript%20%20%20//%20src/errors/CustomErrors.ts%20%20%20import%20{%20ApplicationError,%20ErrorDetails%20}%20from%20&quot;./ApplicationError&quot;;%20%20%20import%20{%20ErrorCode%20}%20from%20&quot;./ErrorCodes&quot;;%20%20%20/**%20%20%20%20*%20Error%20thrown%20when%20user%20authentication%20fails.%20%20%20%20*/%20%20%20export%20class%20AuthenticationError%20extends%20ApplicationError%20{%20%20%20%20%20constructor(%20%20%20%20%20%20%20message:%20string,%20%20%20%20%20%20%20details?:%20ErrorDetails%20%20%20%20%20)%20{%20%20%20%20%20%20%20super(message,%20ErrorCode.AUTHENTICATION_FAILED,%20401,%20details);%20%20%20%20%20%20%20this.name%20=%20&quot;AuthenticationError&quot;;%20%20%20%20%20}%20%20%20%20%20/**%20%20%20%20%20%20*%20Factory%20method%20to%20create%20a%20new%20AuthenticationError%20instance.%20%20%20%20%20%20*%20%20%20%20%20%20*%20@param%20{string}%20message%20-%20Error%20message.%20%20%20%20%20%20*%20@param%20{ErrorDetails}%20[details]%20-%20Additional%20error%20details.%20%20%20%20%20%20*%20@returns%20{AuthenticationError}%20New%20instance%20of%20AuthenticationError.%20%20%20%20%20%20*%20%20%20%20%20%20*%20@example%20%20%20%20%20%20*%20```typescript%20%20%20%20%20%20*%20throw%20AuthenticationError.create(&quot;Invalid%20credentials%20provided.&quot;,%20{%20username:%20&quot;john_doe&quot;%20});%20%20%20%20%20%20*%20```%20%20%20%20%20%20*/%20%20%20%20%20static%20create(message:%20string,%20details?:%20ErrorDetails):%20AuthenticationError%20{%20%20%20%20%20%20%20return%20new%20AuthenticationError(message,%20details);%20%20%20%20%20}%20%20%20}%20%20%20```2.%20**Throwing%20Errors:**%20%20%20-%20Instantiate%20and%20throw%20errors%20using%20either%20the%20constructor%20or%20factory%20methods%20provided%20by%20custom%20error%20classes.%20%20%20```typescript%20%20%20//%20src/controllers/UserController.ts%20%20%20import%20{%20AuthenticationError%20}%20from%20&quot;../errors/CustomErrors&quot;;%20%20%20export%20async%20function%20loginUser(req,%20res)%20{%20%20%20%20%20const%20{%20username,%20password%20}%20=%20req.body;%20%20%20%20%20const%20user%20=%20await%20findUserByUsername(username);%20%20%20%20%20if%20(!user%20||%20!validatePassword(user,%20password))%20{%20%20%20%20%20%20%20throw%20AuthenticationError.create(&quot;Invalid%20username%20or%20password.&quot;,%20{%20username%20});%20%20%20%20%20}%20%20%20%20%20//%20Proceed%20with%20generating%20token%20or%20session%20%20%20}%20%20%20```3.%20**Catching%20and%20Handling%20Errors:**%20%20%20-%20Use%20try-catch%20blocks%20to%20intercept%20errors%20and%20utilize%20the%20`handle`%20method%20for%20logging%20and%20response%20preparation.%20%20%20```typescript%20%20%20//%20src/middleware/errorHandler.ts%20%20%20import%20{%20ApplicationError%20}%20from%20&quot;../errors/ApplicationError&quot;;%20%20%20export%20function%20errorHandler(err,%20req,%20res,%20next)%20{%20%20%20%20%20if%20(err%20instanceof%20ApplicationError)%20{%20%20%20%20%20%20%20const%20response%20=%20err.handle();%20%20%20%20%20%20%20return%20res.status(response.status).json(response.error);%20%20%20%20%20}%20%20%20%20%20//%20Handle%20non-ApplicationError%20instances%20%20%20%20%20console.error(&quot;Unhandled%20error:&quot;,%20err);%20%20%20%20%20res.status(500).json({%20code:%20&quot;INTERNAL_SERVER_ERROR&quot;,%20message:%20&quot;An%20unexpected%20error%20occurred.&quot;%20});%20%20%20}%20%20%20```####%20Best%20Practices-%20**Consistent%20Error%20Codes:**%20%20-%20Always%20use%20predefined%20`ErrorCode`%20values%20when%20throwing%20errors%20to%20maintain%20consistency%20and%20facilitate%20easier%20error%20tracking.-%20**Comprehensive%20Error%20Details:**%20%20-%20Provide%20as%20much%20contextual%20information%20as%20possible%20within%20the%20`details`%20property%20to%20aid%20in%20debugging%20and%20user%20feedback.-%20**Avoid%20Sensitive%20Information:**%20%20-%20Ensure%20that%20sensitive%20data%20is%20not%20exposed%20in%20error%20messages%20or%20details,%20especially%20in%20production%20environments.-%20**Utilize%20Factory%20Methods:**%20%20-%20Prefer%20using%20factory%20methods%20for%20creating%20error%20instances,%20as%20they%20encapsulate%20the%20instantiation%20logic%20and%20enforce%20consistent%20usage%20patterns.-%20**Centralized%20Error%20Handling:**%20%20-%20Implement%20a%20centralized%20error%20handling%20middleware%20or%20mechanism%20to%20uniformly%20process%20and%20respond%20to%20errors%20across%20the%20application.####%20**Extending%20the%20Error%20Handling%20System**To%20extend%20the%20error%20handling%20system%20with%20new%20error%20types:1.%20**Define%20a%20New%20ErrorCode:**%20%20%20-%20Add%20a%20new%20entry%20to%20the%20`ErrorCode`%20enumeration%20in%20`ErrorCodes.ts`.%20%20%20```typescript%20%20%20export%20enum%20ErrorCode%20{%20%20%20%20%20//%20Existing%20codes...%20%20%20%20%20RESOURCE_NOT_FOUND%20=%20&quot;RESOURCE_NOT_FOUND&quot;,%20%20%20%20%20//%20Add%20new%20codes%20here%20%20%20}%20%20%20```2.%20**Create%20a%20Custom%20Error%20Class:**%20%20%20-%20Extend%20`ApplicationError`%20to%20create%20a%20new%20error%20class%20corresponding%20to%20the%20new%20error%20code.%20%20%20```typescript%20%20%20//%20src/errors/ResourceErrors.ts%20%20%20import%20{%20ApplicationError,%20ErrorDetails%20}%20from%20&quot;./ApplicationError&quot;;%20%20%20import%20{%20ErrorCode%20}%20from%20&quot;./ErrorCodes&quot;;%20%20%20/**%20%20%20%20*%20Error%20thrown%20when%20a%20requested%20resource%20is%20not%20found.%20%20%20%20*/%20%20%20export%20class%20ResourceNotFoundError%20extends%20ApplicationError%20{%20%20%20%20%20constructor(%20%20%20%20%20%20%20message:%20string,%20%20%20%20%20%20%20details?:%20ErrorDetails%20%20%20%20%20)%20{%20%20%20%20%20%20%20super(message,%20ErrorCode.RESOURCE_NOT_FOUND,%20404,%20details);%20%20%20%20%20%20%20this.name%20=%20&quot;ResourceNotFoundError&quot;;%20%20%20%20%20}%20%20%20%20%20/**%20%20%20%20%20%20*%20Factory%20method%20to%20create%20a%20new%20ResourceNotFoundError%20instance.%20%20%20%20%20%20*%20%20%20%20%20%20*%20@param%20{string}%20message%20-%20Error%20message.%20%20%20%20%20%20*%20@param%20{ErrorDetails}%20[details]%20-%20Additional%20error%20details.%20%20%20%20%20%20*%20@returns%20{ResourceNotFoundError}%20New%20instance%20of%20ResourceNotFoundError.%20%20%20%20%20%20*%20%20%20%20%20%20*%20@example%20%20%20%20%20%20*%20```typescript%20%20%20%20%20%20*%20throw%20ResourceNotFoundError.create(&quot;User%20not%20found.&quot;,%20{%20userId:%20123%20});%20%20%20%20%20%20*%20```%20%20%20%20%20%20*/%20%20%20%20%20static%20create(message:%20string,%20details?:%20ErrorDetails):%20ResourceNotFoundError%20{%20%20%20%20%20%20%20return%20new%20ResourceNotFoundError(message,%20details);%20%20%20%20%20}%20%20%20}%20%20%20```3.%20**Utilize%20the%20New%20Error:**%20%20%20-%20Throw%20the%20new%20error%20in%20appropriate%20places%20within%20the%20application.%20%20%20```typescript%20%20%20//%20src/services/UserService.ts%20%20%20import%20{%20ResourceNotFoundError%20}%20from%20&quot;../errors/ResourceErrors&quot;;%20%20%20export%20async%20function%20getUserById(userId:%20number)%20{%20%20%20%20%20const%20user%20=%20await%20database.findUserById(userId);%20%20%20%20%20if%20(!user)%20{%20%20%20%20%20%20%20throw%20ResourceNotFoundError.create(&quot;User%20not%20found.&quot;,%20{%20userId%20});%20%20%20%20%20}%20%20%20%20%20return%20user;%20%20%20}%20%20%20```####%20**Summary**The%20`ApplicationError`%20class,%20in%20conjunction%20with%20the%20`ErrorCode`%20enumeration%20and%20specialized%20error%20classes,%20establishes%20a%20robust%20error%20handling%20framework%20within%20the%20application.%20By%20adhering%20to%20the%20outlined%20practices%20and%20extending%20the%20system%20as%20needed,%20developers%20can%20ensure%20consistent,%20informative,%20and%20manageable%20error%20management%20throughout%20the%20project.---###%20`qi/core/src/utils````ts%20block_code=true%20class=&quot;line-numbers&quot;%20%20/**%20*%20@fileoverview%20Core%20utility%20functions%20providing%20common%20operations,%20environment%20handling,%20*%20data%20formatting,%20and%20enhanced%20error%20handling%20capabilities.%20*%20@module%20@qi/core/utils%20*%20*%20Key%20Features:%20*%20-%20Environment%20file%20loading%20and%20parsing%20*%20-%20Secure%20cryptographic%20hashing%20*%20-%20Data%20formatting%20(bytes,%20JSON,%20truncation)%20*%20-%20Retry%20mechanisms%20for%20operations%20*%20-%20Lodash%20utility%20re-exports%20*%20*%20@author%20Zhifeng%20Zhang%20*%20@created%202024-03-18%20*%20@modified%202024-11-19%20*/import%20{%20%20debounce,%20%20throttle,%20%20merge%20as%20deepMerge,%20%20isPlainObject,%20%20uniqBy%20as%20uniqueBy,}%20from%20&quot;lodash-es&quot;;import%20{%20createHash%20}%20from%20&quot;crypto&quot;;import%20bytes%20from%20&quot;bytes&quot;;import%20retry%20from%20&quot;retry&quot;;import%20{%20promises%20as%20fs%20}%20from%20&quot;fs&quot;;import%20chalk%20from%20&quot;chalk&quot;;//%20Re-export%20lodash%20utilitiesexport%20{%20debounce,%20throttle,%20deepMerge,%20isPlainObject,%20uniqueBy%20};/**%20*%20Handles%20file%20not%20found%20errors%20by%20returning%20a%20fallback%20value.%20*%20Used%20for%20graceful%20handling%20of%20missing%20config/env%20files.%20*%20*%20@param%20promise%20-%20Promise%20that%20might%20reject%20with%20ENOENT/ENOTDIR%20*%20@param%20fallbackValue%20-%20Value%20to%20return%20if%20file%20not%20found%20*%20@returns%20Promise%20resolving%20to%20either%20the%20original%20value%20or%20fallback%20*%20*%20@example%20*%20```typescript%20*%20const%20content%20=%20await%20orIfFileNotExist(%20*%20%20%20fs.readFile(&#39;config.json&#39;),%20*%20%20%20&#39;{}&#39;%20*%20);%20*%20```%20*/async%20function%20orIfFileNotExist&lt;T&gt;(%20%20promise:%20Promise&lt;T&gt;,%20%20fallbackValue:%20T):%20Promise&lt;T&gt;%20{%20%20try%20{%20%20%20%20return%20await%20promise;%20%20}%20catch%20(e)%20{%20%20%20%20if%20(%20%20%20%20%20%20(e%20as%20NodeJS.ErrnoException).code%20===%20&quot;ENOENT&quot;%20||%20%20%20%20%20%20(e%20as%20NodeJS.ErrnoException).code%20===%20&quot;ENOTDIR&quot;%20%20%20%20)%20{%20%20%20%20%20%20return%20fallbackValue;%20%20%20%20}%20%20%20%20throw%20e;%20%20}}/**%20*%20Parses%20environment%20file%20content%20in%20KEY=VALUE%20format.%20*%20Handles%20comments,%20empty%20lines,%20and%20quoted%20values.%20*%20*%20@param%20content%20-%20Raw%20content%20of%20environment%20file%20*%20@returns%20Object%20mapping%20environment%20variable%20names%20to%20values%20*%20*%20@example%20*%20```typescript%20*%20const%20vars%20=%20parseEnvFile(`%20*%20%20%20#%20Database%20config%20*%20%20%20DB_HOST=localhost%20*%20%20%20DB_PORT=5432%20*%20%20%20DB_NAME=&quot;my_app&quot;%20*%20`);%20*%20```%20*/function%20parseEnvFile(content:%20string):%20Record&lt;string,%20string&gt;%20{%20%20const%20result:%20Record&lt;string,%20string&gt;%20=%20{};%20%20content.split(&quot;\n&quot;).forEach((line)%20=&gt;%20{%20%20%20%20line%20=%20line.trim();%20%20%20%20if%20(!line%20||%20line.startsWith(&quot;#&quot;))%20return;%20%20%20%20const%20[key,%20...valueParts]%20=%20line.split(&quot;=&quot;);%20%20%20%20if%20(!key%20||%20valueParts.length%20===%200)%20return;%20%20%20%20const%20value%20=%20valueParts.join(&quot;=&quot;).trim();%20%20%20%20result[key.trim()]%20=%20value.replace(/^[&quot;&#39;]|[&quot;&#39;]"/>/g, "");
+    logger.error(`${this.name} [${this.code}]: ${this.message}`, {
+      statusCode: this.statusCode,
+      details: this.details,
+      stack: this.stack,
+    });
+
+    // Prepare standardized response (example for an HTTP API)
+    return {
+      status: this.statusCode,
+      error: {
+        code: this.code,
+        message: this.message,
+        ...(process.env.NODE_ENV === "development" && {
+          details: this.details,
+        }),
+      },
+    };
+  }
+}
+```
+
+#### `qi/core/src/errors/index.ts`
+
+```typescript
+/**
+ * @fileoverview Core error handling system providing strongly-typed error classes
+ * for different categories of application failures. Includes detailed error tracking,
+ * type-safe error details, and standardized error codes.
+ * @module @qi/core/errors
+ *
+ * @author Zhifeng Zhang
+ * @created 2024-03-18
+ * @modified 2024-11-22
+ */
+
+export { ErrorDetails, ApplicationError } from "./ApplicationError.js";
+export { ErrorCode } from "./ErrorCodes.js";
+```
+
+#### ApplicationError Overview
+
+The `ApplicationError` class is the cornerstone of the application's error handling mechanism. It provides a consistent and structured way to handle errors across the entire codebase, ensuring that all errors are managed uniformly and contain necessary contextual information.
+
+#### Key Features
+
+1. **Centralized Error Codes:**
+   - Utilizes the `ErrorCode` enumeration to assign standardized codes to errors, promoting consistency and ease of identification.
+
+2. **Structured Error Details:**
+   - Incorporates an `ErrorDetails` interface to attach additional context to errors, facilitating easier debugging and more informative responses.
+
+3. **Standardized Handling Mechanism:**
+   - Implements a `handle` method that logs error details and prepares a consistent response format, suitable for APIs or other interfaces.
+
+4. **Integration with Logging System:**
+   - Leverages a centralized `logger` to record error information, including messages, codes, details, and stack traces.
+
+#### Components
+
+1. **ErrorCode Enumeration (`ErrorCodes.ts`):**
+   - Defines a comprehensive set of error codes used throughout the application.
+   - Ensures that each error type is uniquely identifiable and standardized.
+
+   ```typescript
+   // src/errors/ErrorCodes.ts
+
+   export enum ErrorCode {
+     APPLICATION_ERROR = "APPLICATION_ERROR",
+     INVALID_INPUT = "INVALID_INPUT",
+     AUTHENTICATION_FAILED = "AUTHENTICATION_FAILED",
+     // Add other error codes as needed
+   }
+   ```
+
+2. **ErrorDetails Interface:**
+   - Provides a flexible structure to include any additional information related to an error.
+   - Allows for the inclusion of nested objects, arrays, or primitive values to convey detailed context.
+
+3. **ApplicationError Class:**
+   - Serves as the base class for all application-specific errors.
+   - Encapsulates common properties such as `message`, `code`, `statusCode`, and `details`.
+   - Offers a `handle` method to process the error uniformly across different parts of the application.
+
+#### Usage Guidelines
+
+1. **Creating Custom Errors:**
+   - Extend the `ApplicationError` class to create specific error types tailored to different scenarios.
+   - Assign appropriate `ErrorCode` values to each custom error to maintain clarity and consistency.
+
+   ```typescript
+   // src/errors/CustomErrors.ts
+
+   import { ApplicationError, ErrorDetails } from "./ApplicationError";
+   import { ErrorCode } from "./ErrorCodes";
+
+   /**
+    * Error thrown when user authentication fails.
+    */
+   export class AuthenticationError extends ApplicationError {
+     constructor(
+       message: string,
+       details?: ErrorDetails
+     ) {
+       super(message, ErrorCode.AUTHENTICATION_FAILED, 401, details);
+       this.name = "AuthenticationError";
+     }
+
+     /**
+      * Factory method to create a new AuthenticationError instance.
+      *
+      * @param {string} message - Error message.
+      * @param {ErrorDetails} [details] - Additional error details.
+      * @returns {AuthenticationError} New instance of AuthenticationError.
+      *
+      * @example
+      * ```typescript
+      * throw AuthenticationError.create("Invalid credentials provided.", { username: "john_doe" });
+      * ```
+      */
+     static create(message: string, details?: ErrorDetails): AuthenticationError {
+       return new AuthenticationError(message, details);
+     }
+   }
+   ```
+
+2. **Throwing Errors:**
+   - Instantiate and throw errors using either the constructor or factory methods provided by custom error classes.
+
+   ```typescript
+   // src/controllers/UserController.ts
+
+   import { AuthenticationError } from "../errors/CustomErrors";
+
+   export async function loginUser(req, res) {
+     const { username, password } = req.body;
+
+     const user = await findUserByUsername(username);
+     if (!user || !validatePassword(user, password)) {
+       throw AuthenticationError.create("Invalid username or password.", { username });
+     }
+
+     // Proceed with generating token or session
+   }
+   ```
+
+3. **Catching and Handling Errors:**
+   - Use try-catch blocks to intercept errors and utilize the `handle` method for logging and response preparation.
+
+   ```typescript
+   // src/middleware/errorHandler.ts
+
+   import { ApplicationError } from "../errors/ApplicationError";
+
+   export function errorHandler(err, req, res, next) {
+     if (err instanceof ApplicationError) {
+       const response = err.handle();
+       return res.status(response.status).json(response.error);
+     }
+
+     // Handle non-ApplicationError instances
+     console.error("Unhandled error:", err);
+     res.status(500).json({ code: "INTERNAL_SERVER_ERROR", message: "An unexpected error occurred." });
+   }
+   ```
+
+#### Best Practices
+
+- **Consistent Error Codes:**
+  - Always use predefined `ErrorCode` values when throwing errors to maintain consistency and facilitate easier error tracking.
+
+- **Comprehensive Error Details:**
+  - Provide as much contextual information as possible within the `details` property to aid in debugging and user feedback.
+
+- **Avoid Sensitive Information:**
+  - Ensure that sensitive data is not exposed in error messages or details, especially in production environments.
+
+- **Utilize Factory Methods:**
+  - Prefer using factory methods for creating error instances, as they encapsulate the instantiation logic and enforce consistent usage patterns.
+
+- **Centralized Error Handling:**
+  - Implement a centralized error handling middleware or mechanism to uniformly process and respond to errors across the application.
+
+#### **Extending the Error Handling System**
+
+To extend the error handling system with new error types:
+
+1. **Define a New ErrorCode:**
+   - Add a new entry to the `ErrorCode` enumeration in `ErrorCodes.ts`.
+
+   ```typescript
+   export enum ErrorCode {
+     // Existing codes...
+     RESOURCE_NOT_FOUND = "RESOURCE_NOT_FOUND",
+     // Add new codes here
+   }
+   ```
+
+2. **Create a Custom Error Class:**
+   - Extend `ApplicationError` to create a new error class corresponding to the new error code.
+
+   ```typescript
+   // src/errors/ResourceErrors.ts
+
+   import { ApplicationError, ErrorDetails } from "./ApplicationError";
+   import { ErrorCode } from "./ErrorCodes";
+
+   /**
+    * Error thrown when a requested resource is not found.
+    */
+   export class ResourceNotFoundError extends ApplicationError {
+     constructor(
+       message: string,
+       details?: ErrorDetails
+     ) {
+       super(message, ErrorCode.RESOURCE_NOT_FOUND, 404, details);
+       this.name = "ResourceNotFoundError";
+     }
+
+     /**
+      * Factory method to create a new ResourceNotFoundError instance.
+      *
+      * @param {string} message - Error message.
+      * @param {ErrorDetails} [details] - Additional error details.
+      * @returns {ResourceNotFoundError} New instance of ResourceNotFoundError.
+      *
+      * @example
+      * ```typescript
+      * throw ResourceNotFoundError.create("User not found.", { userId: 123 });
+      * ```
+      */
+     static create(message: string, details?: ErrorDetails): ResourceNotFoundError {
+       return new ResourceNotFoundError(message, details);
+     }
+   }
+   ```
+
+3. **Utilize the New Error:**
+   - Throw the new error in appropriate places within the application.
+
+   ```typescript
+   // src/services/UserService.ts
+
+   import { ResourceNotFoundError } from "../errors/ResourceErrors";
+
+   export async function getUserById(userId: number) {
+     const user = await database.findUserById(userId);
+     if (!user) {
+       throw ResourceNotFoundError.create("User not found.", { userId });
+     }
+     return user;
+   }
+   ```
+
+#### **Summary**
+
+The `ApplicationError` class, in conjunction with the `ErrorCode` enumeration and specialized error classes, establishes a robust error handling framework within the application. By adhering to the outlined practices and extending the system as needed, developers can ensure consistent, informative, and manageable error management throughout the project.
+
+
+---
+
+### `qi/core/src/utils`
+
+```typescript
+/**
+ * @fileoverview Core utility functions providing common operations, environment handling,
+ * data formatting, and enhanced error handling capabilities.
+ * @module @qi/core/utils
+ *
+ * Key Features:
+ * - Environment file loading and parsing
+ * - Secure cryptographic hashing
+ * - Data formatting (bytes, JSON, truncation)
+ * - Retry mechanisms for operations
+ * - Lodash utility re-exports
+ *
+ * @author Zhifeng Zhang
+ * @created 2024-03-18
+ * @modified 2024-11-19
+ */
+
+import {
+  debounce,
+  throttle,
+  merge as deepMerge,
+  isPlainObject,
+  uniqBy as uniqueBy,
+} from "lodash-es";
+import { createHash } from "crypto";
+import bytes from "bytes";
+import retry from "retry";
+import { promises as fs } from "fs";
+import chalk from "chalk";
+
+// Re-export lodash utilities
+export { debounce, throttle, deepMerge, isPlainObject, uniqueBy };
+
+/**
+ * Handles file not found errors by returning a fallback value.
+ * Used for graceful handling of missing config/env files.
+ *
+ * @param promise - Promise that might reject with ENOENT/ENOTDIR
+ * @param fallbackValue - Value to return if file not found
+ * @returns Promise resolving to either the original value or fallback
+ *
+ * @example
+ * ```typescript
+ * const content = await orIfFileNotExist(
+ *   fs.readFile('config.json'),
+ *   '{}'
+ * );
+ * ```
+ */
+async function orIfFileNotExist<T>(
+  promise: Promise<T>,
+  fallbackValue: T
+): Promise<T> {
+  try {
+    return await promise;
+  } catch (e) {
+    if (
+      (e as NodeJS.ErrnoException).code === "ENOENT" ||
+      (e as NodeJS.ErrnoException).code === "ENOTDIR"
+    ) {
+      return fallbackValue;
+    }
+    throw e;
+  }
+}
+
+/**
+ * Parses environment file content in KEY=VALUE format.
+ * Handles comments, empty lines, and quoted values.
+ *
+ * @param content - Raw content of environment file
+ * @returns Object mapping environment variable names to values
+ *
+ * @example
+ * ```typescript
+ * const vars = parseEnvFile(`
+ *   # Database config
+ *   DB_HOST=localhost
+ *   DB_PORT=5432
+ *   DB_NAME="my_app"
+ * `);
+ * ```
+ */
+function parseEnvFile(content: string): Record<string, string> {
+  const result: Record<string, string> = {};
+
+  content.split("\n").forEach((line) => {
+    line = line.trim();
+    if (!line || line.startsWith("#")) return;
+
+    const [key, ...valueParts] = line.split("=");
+    if (!key || valueParts.length === 0) return;
+
+    const value = valueParts.join("=").trim();
+    result[key.trim()] = value.replace(/^["']|["']$/g, "");
   });
-  
+
   return result;
 }
-  
+
 /**
  * Loads and parses environment variables from a file.
  * Supports optional overriding of existing variables.
@@ -358,9 +714,9 @@ export async function loadEnv(
 ): Promise<Record<string, string> | null> {
   const data = await orIfFileNotExist(fs.readFile(envFile, "utf8"), null);
   if (data === null) return null;
-  
+
   const parsed = parseEnvFile(data);
-  
+
   if (options.override) {
     Object.entries(parsed).forEach(([key, value]) => {
       process.env[key] = value;
@@ -372,10 +728,10 @@ export async function loadEnv(
       }
     });
   }
-  
+
   return parsed;
 }
-  
+
 /**
  * Creates a SHA-256 hash of the input string.
  *
@@ -390,7 +746,7 @@ export async function loadEnv(
 export function hash(input: string): string {
   return createHash("sha256").update(input).digest("hex");
 }
-  
+
 /**
  * Formats byte sizes into human-readable strings.
  *
@@ -410,7 +766,7 @@ export function formatBytes(byteCount: number, decimals = 2): string {
     decimalPlaces: decimals,
   });
 }
-  
+
 /**
  * Truncates a string to specified length, adding ellipsis if needed.
  *
@@ -426,7 +782,7 @@ export function formatBytes(byteCount: number, decimals = 2): string {
 export function truncate(str: string, length: number): string {
   return str.length > length ? str.slice(0, length) + "..." : str;
 }
-  
+
 /**
  * Retries an asynchronous operation with exponential backoff.
  *
@@ -452,7 +808,7 @@ export async function retryOperation<T>(
     ...options,
     randomize: false,
   });
-  
+
   return new Promise((resolve, reject) => {
     operation.attempt(async () => {
       try {
@@ -466,7 +822,7 @@ export async function retryOperation<T>(
     });
   });
 }
-  
+
 /**
  * Formats a JSON object with color-coded syntax highlighting.
  * Color scheme:
@@ -490,19 +846,123 @@ export async function retryOperation<T>(
 export const formatJsonWithColor = (obj: unknown): string => {
   const colorizeValue = (value: unknown): string => {
     if (typeof value === "string") {
-      return chalk.green(`"<img src="https://latex.codecogs.com/gif.latex?{value}&quot;`);%20%20%20%20}%20%20%20%20if%20(%20%20%20%20%20%20typeof%20value%20===%20&quot;number&quot;%20||%20%20%20%20%20%20typeof%20value%20===%20&quot;boolean&quot;%20||%20%20%20%20%20%20value%20===%20null%20%20%20%20)%20{%20%20%20%20%20%20return%20chalk.yellow(String(value));%20%20%20%20}%20%20%20%20return%20String(value);%20%20};%20%20const%20formatWithIndent%20=%20(data:%20unknown,%20indent%20=%200):%20string%20=&gt;%20{%20%20%20%20const%20spaces%20=%20&quot;%20&quot;.repeat(indent%20*%202);%20%20%20%20if%20(Array.isArray(data))%20{%20%20%20%20%20%20if%20(data.length%20===%200)%20return%20&quot;[]&quot;;%20%20%20%20%20%20const%20items%20=%20data%20%20%20%20%20%20%20%20.map((item)%20=&gt;%20`"/>{spaces}  <img src="https://latex.codecogs.com/gif.latex?{formatWithIndent(item,%20indent%20+%201)}`)%20%20%20%20%20%20%20%20.join(&quot;,\n&quot;);%20%20%20%20%20%20return%20`[\n"/>{items}\n<img src="https://latex.codecogs.com/gif.latex?{spaces}]`;%20%20%20%20}%20%20%20%20if%20(data%20&amp;&amp;%20typeof%20data%20===%20&quot;object&quot;%20&amp;&amp;%20data%20!==%20null)%20{%20%20%20%20%20%20if%20(Object.keys(data).length%20===%200)%20return%20&quot;{}&quot;;%20%20%20%20%20%20const%20entries%20=%20Object.entries(data)%20%20%20%20%20%20%20%20.map(([key,%20value])%20=&gt;%20{%20%20%20%20%20%20%20%20%20%20const%20coloredKey%20=%20chalk.blue(`&quot;"/>{key}"`);
+      return chalk.green(`"${value}"`);
+    }
+    if (
+      typeof value === "number" ||
+      typeof value === "boolean" ||
+      value === null
+    ) {
+      return chalk.yellow(String(value));
+    }
+    return String(value);
+  };
+
+  const formatWithIndent = (data: unknown, indent = 0): string => {
+    const spaces = " ".repeat(indent * 2);
+
+    if (Array.isArray(data)) {
+      if (data.length === 0) return "[]";
+      const items = data
+        .map((item) => `${spaces}  ${formatWithIndent(item, indent + 1)}`)
+        .join(",\n");
+      return `[\n${items}\n${spaces}]`;
+    }
+
+    if (data && typeof data === "object" && data !== null) {
+      if (Object.keys(data).length === 0) return "{}";
+      const entries = Object.entries(data)
+        .map(([key, value]) => {
+          const coloredKey = chalk.blue(`"${key}"`);
           const formattedValue = formatWithIndent(value, indent + 1);
-          return `<img src="https://latex.codecogs.com/gif.latex?{spaces}"/>{coloredKey}: <img src="https://latex.codecogs.com/gif.latex?{formattedValue}`;%20%20%20%20%20%20%20%20})%20%20%20%20%20%20%20%20.join(&quot;,\n&quot;);%20%20%20%20%20%20return%20`{\n"/>{entries}\n<img src="https://latex.codecogs.com/gif.latex?{spaces}}`;%20%20%20%20}%20%20%20%20return%20colorizeValue(data);%20%20};%20%20return%20formatWithIndent(obj);};```%20%20####%20DescriptionThe%20`@qi/core/utils`%20module%20offers%20a%20collection%20of%20essential%20utility%20functions%20that%20facilitate%20common%20operations%20within%20the%20application.%20These%20utilities%20enhance%20environment%20handling,%20data%20formatting,%20error%20management,%20and%20provide%20re-exports%20of%20frequently%20used%20Lodash%20functions%20for%20streamlined%20development.**Key%20Features:**-%20**Environment%20Handling:**%20%20-%20`parseEnvFile`:%20Parses%20environment%20variable%20files%20(`.env`)%20supporting%20comments%20and%20quoted%20values.%20%20-%20`orIfFileNotExist`:%20Gracefully%20handles%20file%20read%20operations%20by%20providing%20fallback%20values%20if%20files%20are%20missing.-%20**Data%20Formatting:**%20%20-%20`formatBytes`:%20Converts%20byte%20values%20into%20human-readable%20formats%20(e.g.,%20KB,%20MB).%20%20-%20`truncate`:%20Shortens%20long%20strings%20and%20appends%20ellipses%20for%20readability.-%20**Cryptographic%20Operations:**%20%20-%20`generateHash`:%20Creates%20SHA-256%20hashes%20for%20input%20strings,%20useful%20for%20securing%20sensitive%20data.-%20**Retry%20Mechanisms:**%20%20-%20`retryAsync`:%20Implements%20retry%20logic%20for%20asynchronous%20operations,%20enhancing%20reliability%20in%20network%20requests%20or%20unstable%20operations.-%20**Logging%20Enhancements:**%20%20-%20`coloredLog`:%20Outputs%20log%20messages%20with%20colors%20corresponding%20to%20their%20severity%20levels%20for%20better%20visibility%20in%20the%20console.-%20**Lodash%20Utilities:**%20%20-%20Re-exports%20common%20Lodash%20functions%20like%20`debounce`,%20`throttle`,%20`deepMerge`,%20`isPlainObject`,%20and%20`uniqueBy`%20for%20ease%20of%20use%20across%20the%20application.####%20Usage%20ExampleHere&#39;s%20how%20we%20can%20utilize%20the%20various%20utility%20functions%20provided%20by%20the%20`@qi/core/utils`%20module%20in%20the%20application:```typescript//%20src/app.tsimport%20{%20%20debounce,%20%20throttle,%20%20deepMerge,%20%20isPlainObject,%20%20uniqueBy,%20%20orIfFileNotExist,%20%20parseEnvFile,%20%20generateHash,%20%20formatBytes,%20%20retryAsync,%20%20truncate,%20%20coloredLog,}%20from%20&#39;@qi/core/utils&#39;;import%20{%20promises%20as%20fs%20}%20from%20&#39;fs&#39;;async%20function%20initializeApp()%20{%20%20//%20Environment%20Handling%20%20const%20envContent%20=%20await%20orIfFileNotExist(%20%20%20%20fs.readFile(&#39;.env&#39;,%20&#39;utf-8&#39;),%20%20%20%20&#39;&#39;%20%20);%20%20const%20envVars%20=%20parseEnvFile(envContent);%20%20console.log(envVars);%20%20//%20Cryptographic%20Hashing%20%20const%20passwordHash%20=%20generateHash(&#39;my_secure_password&#39;);%20%20console.log(`Password%20Hash:"/>{passwordHash}`);
-  
+          return `${spaces}  ${coloredKey}: ${formattedValue}`;
+        })
+        .join(",\n");
+      return `{\n${entries}\n${spaces}}`;
+    }
+
+    return colorizeValue(data);
+  };
+
+  return formatWithIndent(obj);
+};
+```
+
+#### Description
+
+The `@qi/core/utils` module offers a collection of essential utility functions that facilitate common operations within the application. These utilities enhance environment handling, data formatting, error management, and provide re-exports of frequently used Lodash functions for streamlined development.
+
+**Key Features:**
+
+- **Environment Handling:**
+  - `parseEnvFile`: Parses environment variable files (`.env`) supporting comments and quoted values.
+  - `orIfFileNotExist`: Gracefully handles file read operations by providing fallback values if files are missing.
+
+- **Data Formatting:**
+  - `formatBytes`: Converts byte values into human-readable formats (e.g., KB, MB).
+  - `truncate`: Shortens long strings and appends ellipses for readability.
+
+- **Cryptographic Operations:**
+  - `generateHash`: Creates SHA-256 hashes for input strings, useful for securing sensitive data.
+
+- **Retry Mechanisms:**
+  - `retryAsync`: Implements retry logic for asynchronous operations, enhancing reliability in network requests or unstable operations.
+
+- **Logging Enhancements:**
+  - `coloredLog`: Outputs log messages with colors corresponding to their severity levels for better visibility in the console.
+
+- **Lodash Utilities:**
+  - Re-exports common Lodash functions like `debounce`, `throttle`, `deepMerge`, `isPlainObject`, and `uniqueBy` for ease of use across the application.
+
+#### Usage Example
+
+Here's how we can utilize the various utility functions provided by the `@qi/core/utils` module in the application:
+
+```typescript
+// src/app.ts
+
+import {
+  debounce,
+  throttle,
+  deepMerge,
+  isPlainObject,
+  uniqueBy,
+  orIfFileNotExist,
+  parseEnvFile,
+  generateHash,
+  formatBytes,
+  retryAsync,
+  truncate,
+  coloredLog,
+} from '@qi/core/utils';
+import { promises as fs } from 'fs';
+
+async function initializeApp() {
+  // Environment Handling
+  const envContent = await orIfFileNotExist(
+    fs.readFile('.env', 'utf-8'),
+    ''
+  );
+  const envVars = parseEnvFile(envContent);
+  console.log(envVars);
+
+  // Cryptographic Hashing
+  const passwordHash = generateHash('my_secure_password');
+  console.log(`Password Hash: ${passwordHash}`);
+
   // Data Formatting
   const formattedBytes = formatBytes(2048);
-  console.log(`Formatted Bytes: <img src="https://latex.codecogs.com/gif.latex?{formattedBytes}`);%20%20const%20longString%20=%20&quot;This%20is%20an%20exceptionally%20long%20string%20that%20needs%20to%20be%20truncated.&quot;;%20%20const%20shortString%20=%20truncate(longString,%2030);%20%20console.log(`Truncated%20String:"/>{shortString}`);
-  
+  console.log(`Formatted Bytes: ${formattedBytes}`);
+
+  const longString = "This is an exceptionally long string that needs to be truncated.";
+  const shortString = truncate(longString, 30);
+  console.log(`Truncated String: ${shortString}`);
+
   // Logging Enhancements
   coloredLog('info', 'Application initialized successfully.');
   coloredLog('warn', 'Low disk space detected.');
   coloredLog('error', 'Failed to connect to the database.');
-  
+
   // Retry Mechanism
   try {
     const data = await retryAsync(
@@ -513,32 +973,32 @@ export const formatJsonWithColor = (obj: unknown): string => {
   } catch (error) {
     console.error('Failed to fetch data after retries:', error);
   }
-  
+
   // Lodash Utilities
   const debouncedFunction = debounce(() => {
     console.log('Debounced Function Executed');
   }, 300);
-  
+
   debouncedFunction();
-  
+
   const throttledFunction = throttle(() => {
     console.log('Throttled Function Executed');
   }, 1000);
-  
+
   throttledFunction();
-  
+
   const mergedObject = deepMerge({ a: 1, b: { c: 2 } }, { b: { d: 3 } });
   console.log('Merged Object:', mergedObject);
-  
+
   const plain = isPlainObject(mergedObject);
   console.log('Is Plain Object:', plain);
-  
+
   const uniqueArray = uniqueBy([{ id: 1 }, { id: 2 }, { id: 1 }], 'id');
   console.log('Unique Array:', uniqueArray);
 }
-  
+
 initializeApp();
-  
+
 /**
  * Mock function to simulate fetching data from an API.
  * Replace this with actual API call logic.
@@ -551,9 +1011,9 @@ async function fetchDataFromAPI(): Promise<any> {
   return { data: 'Sample Data' };
 }
 ```
-  
+
 #### Example Breakdown
-  
+
 1. **Environment Handling:**
    - **Reading Environment Variables:**
      ```typescript
@@ -567,7 +1027,7 @@ async function fetchDataFromAPI(): Promise<any> {
      - Attempts to read a `.env` file.
      - If the file doesn't exist, returns an empty string as a fallback.
      - Parses the environment variables and logs them.
-  
+
 2. **Cryptographic Hashing:**
    - **Generating a Hash:**
      ```typescript
@@ -575,7 +1035,7 @@ async function fetchDataFromAPI(): Promise<any> {
      console.log(`Password Hash: ${passwordHash}`);
      ```
      - Creates a SHA-256 hash of the input string.
-  
+
 3. **Data Formatting:**
    - **Formatting Bytes:**
      ```typescript
@@ -583,7 +1043,7 @@ async function fetchDataFromAPI(): Promise<any> {
      console.log(`Formatted Bytes: ${formattedBytes}`);
      ```
      - Converts `2048` bytes to a human-readable format (`2 kB`).
-  
+
    - **Truncating Strings:**
      ```typescript
      const longString = "This is an exceptionally long string that needs to be truncated.";
@@ -591,7 +1051,7 @@ async function fetchDataFromAPI(): Promise<any> {
      console.log(`Truncated String: ${shortString}`);
      ```
      - Shortens a long string to `30` characters, appending an ellipsis.
-  
+
 4. **Logging Enhancements:**
    - **Colored Logging:**
      ```typescript
@@ -600,7 +1060,7 @@ async function fetchDataFromAPI(): Promise<any> {
      coloredLog('error', 'Failed to connect to the database.');
      ```
      - Logs messages with colors based on severity (`info` in blue, `warn` in yellow, `error` in red).
-  
+
 5. **Retry Mechanism:**
    - **Retrying an Operation:**
      ```typescript
@@ -616,50 +1076,49 @@ async function fetchDataFromAPI(): Promise<any> {
      ```
      - Attempts to fetch data from an API.
      - Retries up to `3` times with a minimum timeout of `1` second between attempts.
-  
+
 6. **Lodash Utilities:**
    - **Debounce and Throttle:**
      ```typescript
      const debouncedFunction = debounce(() => {
        console.log('Debounced Function Executed');
      }, 300);
-  
+
      debouncedFunction();
-  
+
      const throttledFunction = throttle(() => {
        console.log('Throttled Function Executed');
      }, 1000);
-  
+
      throttledFunction();
      ```
      - Debounces and throttles functions to control their execution frequency.
-  
+
    - **Deep Merge:**
      ```typescript
      const mergedObject = deepMerge({ a: 1, b: { c: 2 } }, { b: { d: 3 } });
      console.log('Merged Object:', mergedObject);
      ```
      - Deeply merges two objects.
-  
+
    - **Type Checking:**
      ```typescript
      const plain = isPlainObject(mergedObject);
      console.log('Is Plain Object:', plain);
      ```
      - Checks if `mergedObject` is a plain JavaScript object.
-  
+
    - **Unique By Property:**
      ```typescript
      const uniqueArray = uniqueBy([{ id: 1 }, { id: 2 }, { id: 1 }], 'id');
      console.log('Unique Array:', uniqueArray);
      ```
      - Removes duplicate objects from an array based on the `id` property.
-  
+
 #### **Summary**
-  
+
 The `@qi/core/utils` module is a comprehensive collection of utility functions designed to streamline common tasks within the application. By providing robust environment handling, secure cryptographic operations, flexible data formatting, reliable retry mechanisms, and convenient Lodash re-exports (the re-export mechanism can be thought of adaptor pattern), this module enhances both the development experience and the application's reliability.
-  
+
 Implementing these utilities can significantly reduce boilerplate code, improve error handling, and ensure consistent data processing across different parts of the application.
-  
+
 If one requires further customization or additional utilities, consider extending this module to fit the specific project needs.
-  

@@ -61,10 +61,6 @@
       "import": "./dist/*/index.js",
       "require": "./dist/*/index.js"
     },
-    "./errors/*": {
-      "import": "./dist/errors/*.js",
-      "require": "./dist/errors/*.js"
-    },
     "./cli/config/*": {
       "import": "./dist/cli/config/*.js",
       "require": "./dist/cli/config/*.js"
