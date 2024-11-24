@@ -29,7 +29,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-03-18
- * @modified 2024-11-23
+ * @modified 2024-11-25
  */
 
 // Configuration factory for creating loaders and validators
@@ -39,6 +39,7 @@ export { ConfigFactory } from "./ConfigFactory.js";
 export { ConfigCache } from "./ConfigCache.js";
 
 // Configuration loaders for different sources
+export { BaseLoader } from "./BaseLoader.js"; // Base loader class
 export { JsonLoader } from "./JsonLoader.js"; // JSON file loader
 export { EnvLoader } from "./EnvLoader.js"; // Environment variables loader
 export { CachedConfigLoader } from "./CachedConfigLoader.js"; // Cached loader wrapper
@@ -61,7 +62,13 @@ export type {
  * - EnvOptions: Options for environment variable loading
  * - CacheOptions: Configuration cache settings
  */
-export { BaseConfig, JsonSchema, EnvOptions, CacheOptions } from "./types.js";
+export {
+  BaseConfig,
+  JsonSchema,
+  EnvOptions,
+  CacheOptions,
+  ConfigChangeEvent,
+} from "./types.js";
 
 /**
  * Core configuration interfaces:

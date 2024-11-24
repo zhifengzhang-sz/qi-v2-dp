@@ -4,7 +4,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-19
- * @modified 2024-11-23
+ * @modified 2024-11-25
  */
 
 import js from "@eslint/js";
@@ -15,15 +15,14 @@ import prettierConfig from "eslint-config-prettier";
 import globals from "globals";
 import { fileURLToPath } from "url";
 import path from "path";
+import nodePlugin from "eslint-plugin-node";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default [
-  // Extend ESLint recommended rules
   js.configs.recommended,
 
-  // TypeScript-specific configuration
   {
     files: ["src/**/*.ts", "src/**/*.js"],
     ignores: ["node_modules"],
@@ -45,10 +44,7 @@ export default [
       prettier: prettierPlugin,
     },
     rules: {
-      // Extend recommended TypeScript rules
       ...tsPlugin.configs.recommended.rules,
-
-      // Custom rules
       "@typescript-eslint/no-unused-vars": ["error"],
       "@typescript-eslint/no-unused-expressions": [
         "error",
@@ -62,7 +58,6 @@ export default [
     },
   },
 
-  // Test-specific configuration
   {
     files: ["tests/**/*.ts"],
     languageOptions: {
@@ -75,7 +70,7 @@ export default [
       },
       globals: {
         ...globals.node,
-        vitest: true,
+        vitest: "readonly",
       },
     },
     plugins: {
@@ -91,13 +86,17 @@ export default [
     },
   },
 
-  // Prettier configuration to enforce formatting
   prettierConfig,
 
-  // Node.js-specific configuration
   {
-    "env": {
-      "node": true
-    }
-  }
+    languageOptions: {
+      globals: {
+        require: "readonly",
+        module: "readonly",
+        __dirname: "readonly",
+        process: "readonly",
+        Buffer: "readonly",
+      },
+    },
+  },
 ];

@@ -9,25 +9,29 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-22
+ * @modified 2024-11-25
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
  * that file headers are up-to-date with the author's name and modification date.
  */
 
+/// <reference types="node" />
+
 import { BaseLoader } from "./BaseLoader.js";
 import { loadEnv } from "@qi/core/utils";
 import { EnvOptions, BaseConfig } from "./types.js";
 import { ISchema } from "./IConfig.js";
 import { ConfigLoaderError, CONFIG_LOADER_CODES } from "./errors.js";
-import { watch } from "fs";
+import type { FSWatcher } from "node:fs";
+import { watch } from "node:fs";
 
 export class EnvLoader<
   T extends BaseConfig & Record<string, string | undefined>,
 > extends BaseLoader<T> {
   private readonly options: EnvOptions;
   private refreshTimer?: NodeJS.Timeout;
+  private fileWatchers: FSWatcher[] = [];
 
   constructor(
     private readonly schema: ISchema,
@@ -49,9 +53,20 @@ export class EnvLoader<
     if (!this.options.watch) return;
 
     if (this.options.path) {
-      watch(this.options.path, () => void this.load());
+      const mainWatcher = watch(this.options.path, async (eventType) => {
+        if (eventType === "change") {
+          await this.load();
+        }
+      });
+      this.fileWatchers.push(mainWatcher);
+
       this.options.extraFiles?.forEach((file) => {
-        watch(file, () => void this.load());
+        const watcher = watch(file, async (eventType) => {
+          if (eventType === "change") {
+            await this.load();
+          }
+        });
+        this.fileWatchers.push(watcher);
       });
     }
 
@@ -65,6 +80,14 @@ export class EnvLoader<
 
   override unwatch(): void {
     super.unwatch();
+
+    // Close all file watchers
+    for (const watcher of this.fileWatchers) {
+      watcher.close();
+    }
+    this.fileWatchers = [];
+
+    // Clear refresh timer
     if (this.refreshTimer) {
       clearInterval(this.refreshTimer);
       this.refreshTimer = undefined;

@@ -11,7 +11,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-22
+ * @modified 2024-11-25
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -36,6 +36,9 @@ import { BaseConfig, ConfigChangeEvent } from "./types.js";
 export class CachedConfigLoader<T extends BaseConfig>
   implements IConfigLoader<T>
 {
+  private readonly watchers: Set<(event: ConfigChangeEvent<T>) => void> =
+    new Set();
+
   /**
    * Creates an instance of CachedConfigLoader.
    *
@@ -58,22 +61,31 @@ export class CachedConfigLoader<T extends BaseConfig>
    * @method load
    * @returns {Promise<T>} - A promise that resolves to the loaded configuration object.
    * @description
-   * Attempts to retrieve the configuration from the cache using a unique cache key.
-   * If the configuration is not found in the cache, it delegates the loading to the underlying loader,
-   * caches the result, and then returns the loaded configuration.
+   * Attempts to retrieve the configuration from the cache if available. If the configuration is not
+   * found in the cache or if no cache is configured, it delegates the loading to the underlying loader,
+   * caches the result (if a cache is available), and then returns the loaded configuration.
    */
   async load(): Promise<T> {
     if (!this.cache) {
       return this.loader.load();
     }
 
-    const cached = await this.cache.get(this.getCacheKey());
-    if (cached) {
-      return cached as T;
+    try {
+      const cached = await this.cache.get(`${this.loader.constructor.name}`);
+      if (cached) {
+        return cached as T;
+      }
+    } catch (error) {
+      // If cache retrieval fails, fallback to loader
+      console.warn("Cache retrieval failed:", error);
     }
 
     const config = await this.loader.load();
-    await this.cache.set(this.getCacheKey(), config);
+    try {
+      await this.cache.set(`${this.loader.constructor.name}`, config);
+    } catch (error) {
+      console.warn("Cache set failed:", error);
+    }
     return config;
   }
 
@@ -82,20 +94,29 @@ export class CachedConfigLoader<T extends BaseConfig>
    *
    * @method watch
    * @param {(event: ConfigChangeEvent<T>) => void} callback - The callback function to handle configuration change events.
-   * @returns {void}
    * @description
    * Adds a watcher to the underlying loader if it supports watching. When a configuration change event
-   * is emitted by the underlying loader, it updates the cache with the new configuration and invokes
-   * the provided callback with the event details.
+   * occurs, it updates the cache with the new configuration and invokes the provided callback with
+   * the event details.
    */
   watch(callback: (event: ConfigChangeEvent<T>) => void): void {
-    if ("watch" in this.loader && typeof this.loader.watch === "function") {
-      this.loader.watch(async (event) => {
-        if (this.cache) {
-          await this.cache.set(this.getCacheKey(), event.current);
-        }
-        callback(event);
-      });
+    this.watchers.add(callback);
+
+    if (this.loader.watch) {
+      if (this.watchers.size === 1) {
+        // Only set up loader watch once
+        this.loader.watch((event) => {
+          if (this.cache) {
+            this.cache
+              .set(`${this.loader.constructor.name}`, event.current)
+              .catch((error) => console.warn("Failed to update cache:", error));
+          }
+          // Notify all registered watchers
+          for (const watcher of this.watchers) {
+            watcher(event);
+          }
+        });
+      }
     }
   }
 
@@ -103,29 +124,15 @@ export class CachedConfigLoader<T extends BaseConfig>
    * Stops watching for configuration changes.
    *
    * @method unwatch
-   * @returns {void}
    * @description
-   * Removes the watcher from the underlying loader if it supports unwatching, thereby stopping
-   * the monitoring of configuration changes. This ensures that callbacks are no longer invoked
-   * when the configuration updates.
+   * Removes all registered watchers and stops watching for configuration changes in the
+   * underlying loader if it supports unwatching.
    */
   unwatch(): void {
-    if ("unwatch" in this.loader && typeof this.loader.unwatch === "function") {
+    if (this.loader.unwatch) {
       this.loader.unwatch();
     }
-  }
-
-  /**
-   * Generates a unique cache key based on the loader's class name.
-   *
-   * @private
-   * @method getCacheKey
-   * @returns {string} - The generated cache key.
-   * @description
-   * Constructs a unique key for caching purposes by prefixing the loader's constructor name.
-   * This ensures that different loaders have distinct cache entries.
-   */
-  private getCacheKey(): string {
-    return `config:${this.loader.constructor.name}`;
+    // Clear all registered watchers
+    this.watchers.clear();
   }
 }
