@@ -4,7 +4,7 @@
 
 @import "../../../qi/core/src/logger/index.ts" {block_code=true class="line-numbers"}
 
-### Usage Example
+#### Usage Example
 
 To utilize the logger in the application, import it and log messages at various levels as shown below:
 
@@ -23,7 +23,7 @@ logger.warn('Disk space running low', { availableSpace: '500MB' });
 logger.error('Failed to connect to database', { error: err.message });
 ```
 
-### Description
+#### Description
 
 The `logger` instance is configured using Winston to provide versatile logging capabilities across the application. It supports:
 
@@ -32,7 +32,7 @@ The `logger` instance is configured using Winston to provide versatile logging c
 - **JSON Metadata Support**: Allows attaching additional metadata to log messages for better context.
 - **File Logging in Development**: In non-production environments, logs are written to both `error.log` and `combined.log` files for persistent storage and review.
 
-### Example
+#### Example
 
 Here's how we can implement and use the logger in different scenarios:
 
@@ -56,17 +56,14 @@ This setup ensures that the application has a robust and flexible logging mechan
 
 ### `qi/core/src/errors`
 
-#### `qi/core/src/errors/ErrorCode.ts`
-
+1. `qi/core/src/errors/ErrorCode.ts`
 @import "../../../qi/core/src/errors/ErrorCodes.ts"
 
-#### `qi/core/src/errors/ApplicationError.ts`
-
+2. `qi/core/src/errors/ApplicationError.ts`
 @import "../../../qi/core/src/errors/ApplicationError.ts" {block_code=true class="line-numbers"}
 
 
-#### `qi/core/src/errors/index.ts`
-
+3. `qi/core/src/errors/index.ts`
 @import "../../../qi/core/src/errors/index.ts" {block_code=true class="line-numbers"}
 
 
@@ -213,7 +210,7 @@ The `ApplicationError` class is the cornerstone of the application's error handl
 - **Centralized Error Handling:**
   - Implement a centralized error handling middleware or mechanism to uniformly process and respond to errors across the application.
 
-#### **Extending the Error Handling System**
+#### Extending the Error Handling System
 
 To extend the error handling system with new error types:
 

@@ -12,7 +12,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-03-18
- * @modified 2024-11-19
+ * @modified 2024-11-28
  */
 
 import {
@@ -210,7 +210,11 @@ export function truncate(str: string, length: number): string {
  */
 export async function retryOperation<T>(
   fn: () => Promise<T>,
-  options = { retries: 3, minTimeout: 1000 }
+  options: {
+    retries: number;
+    minTimeout: number;
+    onRetry?: (times: number) => void;
+  } = { retries: 3, minTimeout: 1000 }
 ): Promise<T> {
   const operation = retry.operation({
     ...options,
@@ -225,6 +229,8 @@ export async function retryOperation<T>(
       } catch (err) {
         if (!operation.retry(err as Error)) {
           reject(operation.mainError());
+        } else if (options.onRetry) {
+          options.onRetry(operation.attempts());
         }
       }
     });

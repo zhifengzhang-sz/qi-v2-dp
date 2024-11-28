@@ -70,6 +70,10 @@
       "import": "./dist/services/config/*.js",
       "require": "./dist/services/config/*.js"
     },
+    "./services/redis": {
+      "import": "./dist/services/redis/index.js",
+      "require": "./dist/services/redis/index.js"
+    },
     "./services/utils": {
       "import": "./dist/services/utils/index.js",
       "require": "./dist/services/utils/index.js"

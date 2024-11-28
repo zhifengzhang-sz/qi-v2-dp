@@ -1,10 +1,10 @@
 /**
- * @fileoverview
+ * @fileoverview Tests for schema registration and validation
  * @module schema.registration.test.ts
  *
  * @author zhifengzhang-sz
  * @created 2024-11-19
- * @modified 2024-11-19
+ * @modified 2024-11-28
  */
 
 import { describe, it, beforeEach, expect, vi } from "vitest";
@@ -13,8 +13,9 @@ import {
   serviceConfigSchema,
   envConfigSchema,
   mergedConfigSchema,
+  schemas,
 } from "@qi/core/services/config/schemas";
-import { ConfigError } from "@qi/core/config";
+import { ConfigLoaderError } from "@qi/core/config";
 import { logger } from "@qi/core/logger";
 
 // Mock the logger
@@ -34,7 +35,19 @@ describe("Schema Registration", () => {
   });
 
   describe("registerSchema", () => {
+    // Helper function to register dependencies
+    const registerDependencies = () => {
+      // Register all component schemas first
+      Object.entries(schemas).forEach(([name, schemaObj]) => {
+        if (name !== "service" && name !== "env" && name !== "merged") {
+          schema.registerSchema(name, schemaObj);
+        }
+      });
+    };
+
     it("should successfully register valid service config schema", () => {
+      registerDependencies();
+
       expect(() => {
         schema.registerSchema("service-config", serviceConfigSchema);
       }).not.toThrow();
@@ -42,7 +55,7 @@ describe("Schema Registration", () => {
       expect(schema.hasSchema("service-config")).toBe(true);
       expect(logger.info).toHaveBeenCalledWith("Registered schema", {
         name: "service-config",
-        schemaId: "service-config",
+        schemaId: "qi://core/services/config/service.schema",
       });
     });
 
@@ -54,11 +67,13 @@ describe("Schema Registration", () => {
       expect(schema.hasSchema("env-config")).toBe(true);
       expect(logger.info).toHaveBeenCalledWith("Registered schema", {
         name: "env-config",
-        schemaId: "env-config",
+        schemaId: "qi://core/services/config/env.schema",
       });
     });
 
     it("should successfully register valid merged config schema", () => {
+      registerDependencies();
+
       expect(() => {
         schema.registerSchema("merged-config", mergedConfigSchema);
       }).not.toThrow();
@@ -66,13 +81,13 @@ describe("Schema Registration", () => {
       expect(schema.hasSchema("merged-config")).toBe(true);
       expect(logger.info).toHaveBeenCalledWith("Registered schema", {
         name: "merged-config",
-        schemaId: "merged-config",
+        schemaId: "qi://core/services/config/merged.schema",
       });
     });
 
     it("should throw error when registering invalid schema", () => {
       const invalidSchema = {
-        $id: "invalid-schema",
+        $id: "qi://core/services/config/invalid.schema",
         type: "invalid-type", // Invalid type
         properties: {
           field: { type: "string" },
@@ -81,32 +96,35 @@ describe("Schema Registration", () => {
 
       expect(() => {
         schema.registerSchema("invalid-schema", invalidSchema);
-      }).toThrowError(ConfigError);
+      }).toThrowError(ConfigLoaderError);
 
       expect(schema.hasSchema("invalid-schema")).toBe(false);
       expect(logger.error).toHaveBeenCalledWith("Failed to register schema", {
         name: "invalid-schema",
-        schemaId: "invalid-schema",
+        schemaId: "qi://core/services/config/invalid.schema",
         error: expect.anything(),
       });
     });
 
     it("should throw error when registering schema with duplicate ID", () => {
       const duplicateSchema = {
-        $id: "service-config", // Add $id to match the implementation
-        type: "invalid-type", // Invalid type
+        $id: "qi://core/services/config/service.schema",
+        type: "object",
         properties: {
           field: { type: "string" },
         },
       };
 
+      registerDependencies();
+      schema.registerSchema("service-config", serviceConfigSchema);
+
       expect(() => {
-        schema.registerSchema("service-config", duplicateSchema);
-      }).toThrowError(ConfigError);
+        schema.registerSchema("duplicate-schema", duplicateSchema);
+      }).toThrowError(ConfigLoaderError);
 
       expect(logger.error).toHaveBeenCalledWith("Failed to register schema", {
-        name: "service-config",
-        schemaId: "service-config",
+        name: "duplicate-schema",
+        schemaId: "qi://core/services/config/service.schema",
         error: expect.anything(),
       });
     });
@@ -114,9 +132,10 @@ describe("Schema Registration", () => {
 
   describe("validate", () => {
     beforeEach(() => {
-      schema.registerSchema("service-config", serviceConfigSchema);
-      schema.registerSchema("env-config", envConfigSchema);
-      schema.registerSchema("merged-config", mergedConfigSchema);
+      // Register all component schemas first
+      Object.entries(schemas).forEach(([name, schemaObj]) => {
+        schema.registerSchema(name, schemaObj);
+      });
     });
 
     it("should validate valid service config", () => {
@@ -184,7 +203,7 @@ describe("Schema Registration", () => {
 
       expect(() => {
         schema.validate(invalidConfig, "service-config");
-      }).toThrowError(ConfigError);
+      }).toThrowError(ConfigLoaderError);
     });
 
     it("should validate valid env config", () => {
@@ -216,7 +235,7 @@ describe("Schema Registration", () => {
 
       expect(() => {
         schema.validate(invalidEnvConfig, "env-config");
-      }).toThrowError(ConfigError);
+      }).toThrowError(ConfigLoaderError);
     });
   });
 
@@ -224,15 +243,18 @@ describe("Schema Registration", () => {
     it("should throw error when validating with non-existent schema", () => {
       expect(() => {
         schema.validate({}, "non-existent-schema");
-      }).toThrowError(ConfigError);
+      }).toThrowError(ConfigLoaderError);
     });
 
     it("should handle schema removal correctly", () => {
-      schema.registerSchema("test-schema", serviceConfigSchema);
-      expect(schema.hasSchema("test-schema")).toBe(true);
+      // Register all component schemas first
+      Object.entries(schemas).forEach(([name, schemaObj]) => {
+        schema.registerSchema(name, schemaObj);
+      });
 
-      schema.removeSchema("test-schema");
-      expect(schema.hasSchema("test-schema")).toBe(false);
+      expect(schema.hasSchema("service-config")).toBe(true);
+      schema.removeSchema("service-config");
+      expect(schema.hasSchema("service-config")).toBe(false);
     });
   });
 });
