@@ -1,186 +1,140 @@
 /**
- * @fileoverview Defines the configuration types for the service module
- * @module types
+ * @fileoverview Service configuration type definitions
+ * @module @qi/core/services/config/types
+ *
+ * @description
+ * Defines TypeScript interfaces for service configuration including databases,
+ * message queues, monitoring tools, and networking. These types are used to
+ * ensure type safety when working with configuration data loaded from JSON
+ * and environment files.
+ *
+ * @example
+ * ```typescript
+ * import { ServiceConfig } from './types';
+ *
+ * const config: ServiceConfig = {
+ *   type: 'service',
+ *   version: '1.0',
+ *   databases: {
+ *     redis: {
+ *       host: 'localhost',
+ *       port: 6379,
+ *       maxRetries: 3
+ *     }
+ *   }
+ * };
+ * ```
  *
  * @author Zhifeng Zhang
- * @created 2023-11-18
- * @modified 2024-11-19
+ * @modified 2024-11-30
+ * @created 2024-11-29
+ *
+ * @note
+ * This file is automatically processed by a pre-commit script to ensure
+ * that file headers are up-to-date with the author's name and modification date.
  */
 
 import { BaseConfig } from "@qi/core/config";
 
 /**
- * Represents the configuration for a service
+ * Database service configurations
+ */
+export interface DatabaseConfigs {
+  postgres: {
+    host: string;
+    port: number;
+    database: string;
+    user: string;
+    password?: string;
+    maxConnections: number;
+  };
+  questdb: {
+    host: string;
+    httpPort: number;
+    pgPort: number;
+    influxPort: number;
+    telemetryEnabled?: boolean;
+  };
+  redis: {
+    host: string;
+    port: number;
+    password?: string;
+    maxRetries: number;
+  };
+}
+
+/**
+ * Message queue service configurations
+ */
+export interface MessageQueueConfigs {
+  redpanda: {
+    kafkaPort: number;
+    schemaRegistryPort: number;
+    adminPort: number;
+    pandaproxyPort: number;
+    brokerId?: number;
+    advertisedKafkaApi?: string;
+    advertisedSchemaRegistryApi?: string;
+    advertisedPandaproxyApi?: string;
+  };
+}
+
+/**
+ * Monitoring service configurations
+ */
+export interface MonitoringConfigs {
+  grafana: {
+    host: string;
+    port: number;
+    adminPassword?: string;
+    plugins?: string;
+  };
+  pgAdmin: {
+    host: string;
+    port: number;
+    email?: string;
+    password?: string;
+  };
+}
+
+/**
+ * Network configurations
+ */
+export interface NetworkingConfigs {
+  networks: {
+    db: string;
+    redis: string;
+    redpanda: string;
+  };
+}
+
+/**
+ * Complete service configuration
  */
 export interface ServiceConfig extends BaseConfig {
   type: "service";
   version: string;
-  databases: {
-    postgres: {
-      host: string;
-      port: number;
-      database: string;
-      user: string;
-      password: string;
-      maxConnections: number;
-    };
-    questdb: {
-      host: string;
-      httpPort: number;
-      pgPort: number;
-      influxPort: number;
-      telemetryEnabled: boolean;
-    };
-    redis: {
-      host: string;
-      port: number;
-      password: string;
-      maxRetries: number;
-    };
-  };
-  messageQueue: {
-    redpanda: {
-      brokerId: number;
-      advertisedKafkaApi: string;
-      advertisedSchemaRegistryApi: string;
-      advertisedPandaproxyApi: string;
-      kafkaPort: number;
-      schemaRegistryPort: number;
-      adminPort: number;
-      pandaproxyPort: number;
-    };
-  };
-  monitoring: {
-    grafana: {
-      host: string;
-      port: number;
-      adminPassword: string;
-      plugins: string;
-    };
-    pgAdmin: {
-      host: string;
-      port: number;
-      email: string;
-      password: string;
-    };
-  };
-  networking: {
-    networks: {
-      db: string;
-      redis: string;
-      redpanda: string;
-    };
-  };
+  databases: DatabaseConfigs;
+  messageQueue: MessageQueueConfigs;
+  monitoring: MonitoringConfigs;
+  networking: NetworkingConfigs;
 }
 
 /**
- * Defines the domain-specific language (DSL) for service configuration
+ * Environment variables configuration
  */
-export interface ServiceDSL {
-  databases: {
-    postgres: {
-      connectionString: string;
-      maxConnections: number;
-      poolConfig: {
-        max: number;
-        idleTimeoutMs: number;
-        connectionTimeoutMs: number;
-      };
-    };
-    questdb: {
-      endpoints: {
-        http: string;
-        postgresql: string;
-        influx: string;
-      };
-      options: {
-        telemetryEnabled: boolean;
-      };
-    };
-    redis: {
-      connectionString: string;
-      options: {
-        maxRetries: number;
-        retryDelayMs: number;
-        maxRetryDelayMs: number;
-      };
-    };
-  };
-  messageQueue: {
-    redpanda: {
-      brokers: string[];
-      clientId: string;
-      options: {
-        schemaRegistry: {
-          endpoint: string;
-          timeout: number;
-        };
-        adminApi: {
-          endpoint: string;
-          timeout: number;
-        };
-        proxy: {
-          endpoint: string;
-          timeout: number;
-        };
-      };
-    };
-  };
-  monitoring: {
-    endpoints: {
-      grafana: {
-        url: string;
-        auth: {
-          username: string;
-          password: string;
-        };
-        options: {
-          plugins: string[];
-          datasources: {
-            questdb: boolean;
-            postgresql: boolean;
-          };
-        };
-      };
-      pgAdmin: {
-        url: string;
-        auth: {
-          email: string;
-          password: string;
-        };
-        options: {
-          defaultDatabase: string;
-        };
-      };
-    };
-  };
-  networking: {
-    networks: {
-      db: string;
-      redis: string;
-      redpanda: string;
-    };
-  };
-}
-
-/**
- * Represents the configuration that will be loaded from environment variables.
- * It extends BaseConfig and allows for string | undefined values.
- */
-export interface EnvConfig
-  extends BaseConfig,
-    Record<string, string | undefined> {
-  type: "service";
-  version: string;
-  // Environment variables
+export interface EnvConfig {
   POSTGRES_PASSWORD: string;
+  POSTGRES_USER: string;
+  POSTGRES_DB: string;
   REDIS_PASSWORD: string;
-  QDB_PG_PASSWORD: string;
   GF_SECURITY_ADMIN_PASSWORD: string;
+  GF_INSTALL_PLUGINS?: string;
   PGADMIN_DEFAULT_EMAIL: string;
   PGADMIN_DEFAULT_PASSWORD: string;
-  REDPANDA_SUPERUSER_PASSWORD: string;
-  REDPANDA_ADMIN_API_KEY: string;
-  REDPANDA_SCHEMA_REGISTRY_API_KEY: string;
-  JWT_SECRET: string;
+  QDB_TELEMETRY_ENABLED?: string;
+  REDPANDA_BROKER_ID?: string;
+  REDPANDA_ADVERTISED_KAFKA_API?: string;
+  REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API?: string;
+  REDPANDA_ADVERTISED_PANDAPROXY_API?: string;
 }
