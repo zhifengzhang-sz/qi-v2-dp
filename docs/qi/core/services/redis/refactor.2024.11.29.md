@@ -19,7 +19,7 @@ We need to adjust the Redis service module to properly use the `services/config`
  * @created 2024-11-29
  */
 
-import type { RedisConnection } from "../config/dsl";
+import type { RedisConnection } from "../config/dsl.js";
 
 /**
  * Extended Redis configuration for client
@@ -62,7 +62,7 @@ import { Redis } from "ioredis";
 import { ApplicationError, ErrorCode, ErrorDetails } from "@qi/core/errors";
 import { logger } from "@qi/core/logger";
 import { retryOperation } from "@qi/core/utils";
-import type { RedisClientConfig } from "./types";
+import type { RedisClientConfig } from "./types.js";
 
 export class RedisClient {
   private client: Redis;
@@ -75,13 +75,12 @@ export class RedisClient {
    */
   constructor(config: RedisClientConfig) {
     this.config = config;
-    const connStr = config.connection.getConnectionString();
-    const connUrl = new URL(connStr);
 
     this.client = new Redis({
-      host: connUrl.hostname,
-      port: parseInt(connUrl.port, 10),
-      password: connUrl.password,
+      host: config.connection.getHost(),
+      port: config.connection.getPort(),
+      // Parse password from connection string for security
+      password: new URL(config.connection.getConnectionString()).password,
       maxRetriesPerRequest: config.connection.getMaxRetries(),
       retryStrategy: (times) => {
         const delay = Math.min(times * 1000, 3000);
@@ -127,16 +126,13 @@ export class RedisClient {
    */
   async ping(): Promise<boolean> {
     try {
-      const result = await retryOperation(
-        () => this.client.ping(),
-        {
-          retries: this.config.connection.getMaxRetries(),
-          minTimeout: 1000,
-          onRetry: (times) => {
-            logger.debug("Retrying Redis ping", { attempt: times });
-          },
-        }
-      );
+      const result = await retryOperation(() => this.client.ping(), {
+        retries: this.config.connection.getMaxRetries(),
+        minTimeout: 1000,
+        onRetry: (times) => {
+          logger.debug("Retrying Redis ping", { attempt: times });
+        },
+      });
       return result === "PONG";
     } catch (error) {
       const details: ErrorDetails = {
@@ -155,11 +151,115 @@ export class RedisClient {
     }
   }
 
-  // ... rest of the methods remain the same but use this.config.connection
-  // for host/port/connection info
-}
+  /**
+   * Closes Redis connection
+   */
+  async close(): Promise<void> {
+    try {
+      await this.client.quit();
+      logger.info("Redis connection closed gracefully");
+    } catch (error) {
+      const details: ErrorDetails = {
+        operation: "close",
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
+        error: error instanceof Error ? error.message : String(error),
+      };
 
+      throw new ApplicationError(
+        "Failed to close Redis connection",
+        ErrorCode.CONNECTION_ERROR,
+        500,
+        details
+      );
+    }
+  }
+
+  /**
+   * Gets a value from Redis
+   *
+   * @param key - Key to retrieve
+   * @returns Promise resolving to value or null if not found
+   */
+  async get(key: string): Promise<string | null> {
+    try {
+      return await this.client.get(key);
+    } catch (error) {
+      const details: ErrorDetails = {
+        operation: "get",
+        key,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
+        error: error instanceof Error ? error.message : String(error),
+      };
+
+      throw new ApplicationError(
+        "Redis get operation failed",
+        ErrorCode.OPERATION_ERROR,
+        500,
+        details
+      );
+    }
+  }
+
+  /**
+   * Sets a value in Redis
+   *
+   * @param key - Key to set
+   * @param value - Value to set
+   * @returns Promise resolving to OK on success
+   */
+  async set(key: string, value: string): Promise<"OK"> {
+    try {
+      return await this.client.set(key, value);
+    } catch (error) {
+      const details: ErrorDetails = {
+        operation: "set",
+        key,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
+        error: error instanceof Error ? error.message : String(error),
+      };
+
+      throw new ApplicationError(
+        "Redis set operation failed",
+        ErrorCode.OPERATION_ERROR,
+        500,
+        details
+      );
+    }
+  }
+
+  /**
+   * Deletes a key from Redis
+   *
+   * @param key - Key to delete
+   * @returns Promise resolving to number of keys deleted
+   */
+  async del(key: string): Promise<number> {
+    try {
+      return await this.client.del(key);
+    } catch (error) {
+      const details: ErrorDetails = {
+        operation: "del",
+        key,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
+        error: error instanceof Error ? error.message : String(error),
+      };
+
+      throw new ApplicationError(
+        "Redis delete operation failed",
+        ErrorCode.OPERATION_ERROR,
+        500,
+        details
+      );
+    }
+  }
+}
 ```
+
+---
 
 ### `qi/core/src/services/redis/index.ts`
 

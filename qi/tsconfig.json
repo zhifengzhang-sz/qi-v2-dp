@@ -24,8 +24,6 @@
   },
   "references": [
     { "path": "./core" },
-    { "path": "./producers" },
-    { "path": "./consumers" },
     { "path": "./app" }
   ],
   "include": [],

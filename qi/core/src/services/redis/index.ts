@@ -6,7 +6,7 @@
  * Exports Redis client and configuration types.
  *
  * @author Zhifeng Zhang
- * @modified 2024-11-30
+ * @modified 2024-12-01
  * @created 2024-11-29
  *
  * @note
@@ -15,4 +15,4 @@
  */
 
 export { RedisClient } from "./client.js";
-export type { RedisConfig } from "./types.js";
+export type { RedisClientConfig } from "./types.js";

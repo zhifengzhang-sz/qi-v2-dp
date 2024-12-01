@@ -1,6 +1,5 @@
-### `qi/core/src/services/config/types.ts`
-
-````typescript
+1. `qi/core/src/services/config/types.ts`:
+```ts
 /**
  * @fileoverview Service Configuration Types
  * @module @qi/core/services/config/types
@@ -30,9 +29,9 @@
  * @author Zhifeng Zhang
  * @created 2024-11-29
  */
-
+  
 import { BaseConfig } from "@qi/core/config";
-
+  
 /**
  * Service configuration interface matching services-1.0.json schema
  *
@@ -88,7 +87,7 @@ export interface ServiceConfig extends BaseConfig {
     };
   };
 }
-
+  
 /**
  * Environment configuration interface matching services.env
  *
@@ -99,26 +98,26 @@ export interface EnvConfig extends Record<string, string | undefined> {
   POSTGRES_PASSWORD: string;
   POSTGRES_USER: string;
   POSTGRES_DB: string;
-
+  
   // Redis configuration
   REDIS_PASSWORD: string;
-
+  
   // Monitoring credentials
   GF_SECURITY_ADMIN_PASSWORD: string;
   GF_INSTALL_PLUGINS?: string;
   PGADMIN_DEFAULT_EMAIL: string;
   PGADMIN_DEFAULT_PASSWORD: string;
-
+  
   // QuestDB configuration
   QDB_TELEMETRY_ENABLED?: string;
-
+  
   // Redpanda configuration
   REDPANDA_BROKER_ID?: string;
   REDPANDA_ADVERTISED_KAFKA_API?: string;
   REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API?: string;
   REDPANDA_ADVERTISED_PANDAPROXY_API?: string;
 }
-
+  
 /**
  * Service configuration result interface
  *
@@ -128,22 +127,11 @@ export interface LoadConfigResult {
   config: ServiceConfig;
   env: EnvConfig;
 }
-````
-
-Improvements:
-
-1. Simplified to pure type definitions without any logic
-2. Direct mapping to actual config files (services-1.0.json and services.env)
-3. Removed redundant interfaces and types
-4. Clear separation between service config and env config
-5. Added LoadConfigResult interface to make config loading results explicit
-6. Strong typing for all configuration objects
-
----
-
-### `qi/core/src/services/config/dsl.ts`
-
-````typescript
+  
+```  
+  
+2. `qi/core/src/services/config/dsl.ts`:
+```ts
 /**
  * @fileoverview Service Configuration Domain-Specific Language (DSL)
  * @module @qi/core/services/config/dsl
@@ -173,7 +161,7 @@ Improvements:
  * @author Zhifeng Zhang
  * @created 2024-11-29
  */
-
+  
 /**
  * Base interface for database connections
  *
@@ -183,7 +171,7 @@ export interface DatabaseConnection {
   getHost(): string;
   getPort(): number;
 }
-
+  
 /**
  * PostgreSQL database connection interface
  *
@@ -194,7 +182,7 @@ export interface PostgresConnection extends DatabaseConnection {
   getConnectionString(): string;
   getMaxConnections(): number;
 }
-
+  
 /**
  * QuestDB time-series database connection interface
  *
@@ -206,7 +194,7 @@ export interface QuestDBConnection extends DatabaseConnection {
   getPgEndpoint(): string;
   getInfluxEndpoint(): string;
 }
-
+  
 /**
  * Redis cache connection interface
  *
@@ -217,7 +205,7 @@ export interface RedisConnection extends DatabaseConnection {
   getConnectionString(): string;
   getMaxRetries(): number;
 }
-
+  
 /**
  * Message queue connection interface
  *
@@ -230,7 +218,7 @@ export interface MessageQueueConnection {
   getProxyEndpoint(): string;
   getBrokerId(): number | undefined;
 }
-
+  
 /**
  * Monitoring service endpoint interface
  *
@@ -240,7 +228,7 @@ export interface MonitoringEndpoint {
   getEndpoint(): string;
   getCredentials(): { username?: string; password: string };
 }
-
+  
 /**
  * Grafana monitoring interface extending base monitoring
  *
@@ -250,7 +238,7 @@ export interface MonitoringEndpoint {
 export interface GrafanaEndpoint extends MonitoringEndpoint {
   getPlugins(): string[];
 }
-
+  
 /**
  * Network configuration interface
  *
@@ -260,7 +248,7 @@ export interface NetworkConfig {
   getNetworkName(service: "db" | "redis" | "redpanda"): string;
   getAllNetworks(): Record<string, string>;
 }
-
+  
 /**
  * Complete service connections interface
  *
@@ -279,22 +267,11 @@ export interface ServiceConnections {
   };
   networking: NetworkConfig;
 }
-````
-
-Improvements:
-
-1. Focused purely on interface definitions without implementations
-2. Simplified interface hierarchy
-3. Clear separation between different service types
-4. Removed base classes in favor of interfaces
-5. Added GrafanaEndpoint interface for Grafana-specific functionality
-6. Better organized network configuration interface
-
----
-
-### `qi/core/src/services/config/schema.ts`
-
-````typescript
+  
+```  
+  
+3. `qi/core/src/services/config/schema.ts`:
+```ts
 /**
  * @fileoverview Service Configuration Schema
  * @module @qi/core/services/config/schema
@@ -323,9 +300,9 @@ Improvements:
  * @author Zhifeng Zhang
  * @created 2024-11-29
  */
-
+  
 import { JsonSchema } from "@qi/core/config";
-
+  
 /**
  * Port number validation schema
  * Reusable component for validating TCP/UDP ports
@@ -336,7 +313,7 @@ const portSchema: JsonSchema = {
   maximum: 65535,
   description: "Valid TCP/UDP port number",
 };
-
+  
 /**
  * Host validation schema
  * Reusable component for validating hostnames
@@ -346,7 +323,7 @@ const hostSchema: JsonSchema = {
   minLength: 1,
   description: "Hostname or IP address",
 };
-
+  
 /**
  * Database schemas collection
  */
@@ -375,7 +352,7 @@ const databaseSchemas: Record<string, JsonSchema> = {
     },
     additionalProperties: false,
   },
-
+  
   questdb: {
     type: "object",
     required: ["host", "httpPort", "pgPort", "influxPort"],
@@ -396,7 +373,7 @@ const databaseSchemas: Record<string, JsonSchema> = {
     },
     additionalProperties: false,
   },
-
+  
   redis: {
     type: "object",
     required: ["host", "port", "maxRetries"],
@@ -412,7 +389,7 @@ const databaseSchemas: Record<string, JsonSchema> = {
     additionalProperties: false,
   },
 };
-
+  
 /**
  * Message queue schema
  */
@@ -451,7 +428,7 @@ const messageQueueSchema: JsonSchema = {
   },
   additionalProperties: false,
 };
-
+  
 /**
  * Monitoring schema
  */
@@ -480,29 +457,12 @@ const monitoringSchema: JsonSchema = {
   },
   additionalProperties: false,
 };
-
+  
 /**
  * Complete service configuration schema
  */
 export const serviceConfigSchema: JsonSchema = {
-  $id: "qi://core/services/config/service.schema",
-  type: "object",
-  required: [
-    "type",
-    "version",
-    "databases",
-    "messageQueue",
-    "monitoring",
-    "networking",
-  ],
-  properties: {
-    type: {
-      const: "services",
-      description: "Configuration type identifier",
-    },
-    version: {
-      type: "string",
-      pattern: "^\\d+\\.\\d+$",
+  <img src="https://latex.codecogs.com/gif.latex?id:%20&quot;qi://core/services/config/service.schema&quot;,%20%20type:%20&quot;object&quot;,%20%20required:%20[%20%20%20%20&quot;type&quot;,%20%20%20%20&quot;version&quot;,%20%20%20%20&quot;databases&quot;,%20%20%20%20&quot;messageQueue&quot;,%20%20%20%20&quot;monitoring&quot;,%20%20%20%20&quot;networking&quot;,%20%20],%20%20properties:%20{%20%20%20%20type:%20{%20%20%20%20%20%20const:%20&quot;services&quot;,%20%20%20%20%20%20description:%20&quot;Configuration%20type%20identifier&quot;,%20%20%20%20},%20%20%20%20version:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20pattern:%20&quot;^\\d+\\.\\d+"/>",
       description: "Configuration version (semver format)",
     },
     databases: {
@@ -545,70 +505,12 @@ export const serviceConfigSchema: JsonSchema = {
   },
   additionalProperties: false,
 };
-
+  
 /**
  * Environment configuration schema
  */
 export const envConfigSchema: JsonSchema = {
-  $id: "qi://core/services/config/env.schema",
-  type: "object",
-  required: [
-    "POSTGRES_PASSWORD",
-    "POSTGRES_USER",
-    "POSTGRES_DB",
-    "REDIS_PASSWORD",
-    "GF_SECURITY_ADMIN_PASSWORD",
-    "PGADMIN_DEFAULT_EMAIL",
-    "PGADMIN_DEFAULT_PASSWORD",
-  ],
-  properties: {
-    POSTGRES_PASSWORD: {
-      type: "string",
-      minLength: 1,
-      description: "PostgreSQL password",
-    },
-    POSTGRES_USER: {
-      type: "string",
-      minLength: 1,
-      description: "PostgreSQL username",
-    },
-    POSTGRES_DB: {
-      type: "string",
-      minLength: 1,
-      description: "PostgreSQL database name",
-    },
-    REDIS_PASSWORD: {
-      type: "string",
-      minLength: 1,
-      description: "Redis password",
-    },
-    GF_SECURITY_ADMIN_PASSWORD: {
-      type: "string",
-      minLength: 1,
-      description: "Grafana admin password",
-    },
-    GF_INSTALL_PLUGINS: {
-      type: "string",
-      description: "Semicolon-separated list of Grafana plugins",
-    },
-    PGADMIN_DEFAULT_EMAIL: {
-      type: "string",
-      format: "email",
-      description: "pgAdmin administrator email",
-    },
-    PGADMIN_DEFAULT_PASSWORD: {
-      type: "string",
-      minLength: 1,
-      description: "pgAdmin administrator password",
-    },
-    QDB_TELEMETRY_ENABLED: {
-      type: "string",
-      enum: ["true", "false"],
-      description: "QuestDB telemetry setting",
-    },
-    REDPANDA_BROKER_ID: {
-      type: "string",
-      pattern: "^\\d+$",
+  <img src="https://latex.codecogs.com/gif.latex?id:%20&quot;qi://core/services/config/env.schema&quot;,%20%20type:%20&quot;object&quot;,%20%20required:%20[%20%20%20%20&quot;POSTGRES_PASSWORD&quot;,%20%20%20%20&quot;POSTGRES_USER&quot;,%20%20%20%20&quot;POSTGRES_DB&quot;,%20%20%20%20&quot;REDIS_PASSWORD&quot;,%20%20%20%20&quot;GF_SECURITY_ADMIN_PASSWORD&quot;,%20%20%20%20&quot;PGADMIN_DEFAULT_EMAIL&quot;,%20%20%20%20&quot;PGADMIN_DEFAULT_PASSWORD&quot;,%20%20],%20%20properties:%20{%20%20%20%20POSTGRES_PASSWORD:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;PostgreSQL%20password&quot;,%20%20%20%20},%20%20%20%20POSTGRES_USER:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;PostgreSQL%20username&quot;,%20%20%20%20},%20%20%20%20POSTGRES_DB:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;PostgreSQL%20database%20name&quot;,%20%20%20%20},%20%20%20%20REDIS_PASSWORD:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;Redis%20password&quot;,%20%20%20%20},%20%20%20%20GF_SECURITY_ADMIN_PASSWORD:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;Grafana%20admin%20password&quot;,%20%20%20%20},%20%20%20%20GF_INSTALL_PLUGINS:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20description:%20&quot;Semicolon-separated%20list%20of%20Grafana%20plugins&quot;,%20%20%20%20},%20%20%20%20PGADMIN_DEFAULT_EMAIL:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20format:%20&quot;email&quot;,%20%20%20%20%20%20description:%20&quot;pgAdmin%20administrator%20email&quot;,%20%20%20%20},%20%20%20%20PGADMIN_DEFAULT_PASSWORD:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20minLength:%201,%20%20%20%20%20%20description:%20&quot;pgAdmin%20administrator%20password&quot;,%20%20%20%20},%20%20%20%20QDB_TELEMETRY_ENABLED:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20enum:%20[&quot;true&quot;,%20&quot;false&quot;],%20%20%20%20%20%20description:%20&quot;QuestDB%20telemetry%20setting&quot;,%20%20%20%20},%20%20%20%20REDPANDA_BROKER_ID:%20{%20%20%20%20%20%20type:%20&quot;string&quot;,%20%20%20%20%20%20pattern:%20&quot;^\\d+"/>",
       description: "Redpanda broker ID",
     },
     REDPANDA_ADVERTISED_KAFKA_API: {
@@ -626,54 +528,37 @@ export const envConfigSchema: JsonSchema = {
   },
   additionalProperties: true,
 };
-````
-
-Improvements:
-
-1. Move schema definitions from index.ts to dedicated file
-2. Use JSON Schema validation more effectively
-3. Add descriptions and constraints for each field
-4. Better organize schema structure to match config files
-5. Add format validations where appropriate
-
----
-
-### `qi/core/src/services/config/handlers.ts`
-
-````typescript
+  
+```  
+  
+4. `qi/core/src/services/config/handlers.ts`:
+```ts
 /**
- * @fileoverview Service Configuration Handlers
+ * @fileoverview Service Configuration Connection Handlers
  * @module @qi/core/services/config/handlers
  *
  * @description
- * Implements service-specific configuration handlers.
+ * Implements handlers for various service connections including databases,
+ * message queues, and monitoring endpoints. These handlers provide clean interfaces
+ * for accessing configuration data and generating connection strings while handling
+ * edge cases like special characters and IPv6 addresses.
  *
- * Improvements:
- * - Direct interface implementations instead of inheritance
- * - Constructor validation
- * - Secure credential handling
- * - Clear separation of concerns
- * - Improved error messages
- * - Type-safe implementations
- *
- * @example
- * ```typescript
- * const pgHandler = new PostgresConnectionHandler(config.databases.postgres, {
- *   user: "postgres",
- *   password: "secret"
- * });
- * const connString = pgHandler.getConnectionString();
- * ```
+ * Key features:
+ * - Safe handling of connection credentials
+ * - Support for IPv6 addresses
+ * - Custom port configurations
+ * - URL-safe character encoding
+ * - Validation of required fields
  *
  * @author Zhifeng Zhang
  * @created 2024-11-29
+ * @modified 2024-12-01
  */
-
+  
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
 import { logger } from "@qi/core/logger";
 import { ServiceConfig } from "./types.js";
 import {
-  DatabaseConnection,
   PostgresConnection,
   QuestDBConnection,
   RedisConnection,
@@ -682,10 +567,9 @@ import {
   GrafanaEndpoint,
   NetworkConfig,
 } from "./dsl.js";
-
+  
 /**
- * PostgreSQL connection handler
- *
+ * PostgreSQL connection handler implementation.
  * @implements {PostgresConnection}
  */
 export class PostgresConnectionHandler implements PostgresConnection {
@@ -705,27 +589,35 @@ export class PostgresConnectionHandler implements PostgresConnection {
       host: config.host,
     });
   }
-
+  
+  private formatHost(host: string): string {
+    // Check if the host is an IPv6 address (contains colons but is not a hostname:port)
+    if (host.includes(":") && !host.includes("]") && !host.includes("/")) {
+      return `[${host}]`;
+    }
+    return host;
+  }
+  
   getHost(): string {
     return this.config.host;
   }
-
+  
   getPort(): number {
     return this.config.port;
   }
-
+  
   getConnectionString(): string {
-    return `postgresql://${this.credentials.user}:${this.credentials.password}@${this.config.host}:${this.config.port}/${this.config.database}`;
+    const formattedHost = this.formatHost(this.config.host);
+    return `postgresql://${this.credentials.user}:${this.credentials.password}@${formattedHost}:${this.config.port}/${this.config.database}`;
   }
-
+  
   getMaxConnections(): number {
     return this.config.maxConnections;
   }
 }
-
+  
 /**
- * QuestDB connection handler
- *
+ * QuestDB connection handler implementation.
  * @implements {QuestDBConnection}
  */
 export class QuestDBConnectionHandler implements QuestDBConnection {
@@ -747,31 +639,30 @@ export class QuestDBConnectionHandler implements QuestDBConnection {
       host: config.host,
     });
   }
-
+  
   getHost(): string {
     return this.config.host;
   }
-
+  
   getPort(): number {
     return this.config.pgPort;
   }
-
+  
   getHttpEndpoint(): string {
     return `http://${this.config.host}:${this.config.httpPort}`;
   }
-
+  
   getPgEndpoint(): string {
     return `postgresql://${this.config.host}:${this.config.pgPort}/questdb`;
   }
-
+  
   getInfluxEndpoint(): string {
     return `http://${this.config.host}:${this.config.influxPort}`;
   }
 }
-
+  
 /**
- * Redis connection handler
- *
+ * Redis connection handler implementation.
  * @implements {RedisConnection}
  */
 export class RedisConnectionHandler implements RedisConnection {
@@ -789,27 +680,26 @@ export class RedisConnectionHandler implements RedisConnection {
     }
     logger.debug("Initialized Redis connection handler", { host: config.host });
   }
-
+  
   getHost(): string {
     return this.config.host;
   }
-
+  
   getPort(): number {
     return this.config.port;
   }
-
+  
   getConnectionString(): string {
     return `redis://:${this.password}@${this.config.host}:${this.config.port}`;
   }
-
+  
   getMaxRetries(): number {
     return this.config.maxRetries;
   }
 }
-
+  
 /**
- * Message queue (Redpanda) connection handler
- *
+ * Message queue (Redpanda) connection handler implementation.
  * @implements {MessageQueueConnection}
  */
 export class MessageQueueConnectionHandler implements MessageQueueConnection {
@@ -832,36 +722,53 @@ export class MessageQueueConnectionHandler implements MessageQueueConnection {
     }
     logger.debug("Initialized message queue connection handler");
   }
-
+  
   getBrokerEndpoint(): string {
-    const host = this.advertised.kafka || "localhost";
-    return `${host}:${this.config.kafkaPort}`;
+    if (this.advertised.kafka) {
+      // Check if advertised address already includes port
+      if (this.advertised.kafka.includes(":")) {
+        return this.advertised.kafka;
+      }
+      return `${this.advertised.kafka}:${this.config.kafkaPort}`;
+    }
+    return `localhost:${this.config.kafkaPort}`;
   }
-
+  
   getSchemaRegistryEndpoint(): string {
-    const host = this.advertised.schemaRegistry || "localhost";
-    return `http://${host}:${this.config.schemaRegistryPort}`;
+    if (this.advertised.schemaRegistry) {
+      // Check if advertised address already includes port
+      if (this.advertised.schemaRegistry.includes(":")) {
+        return `http://${this.advertised.schemaRegistry}`;
+      }
+      return `http://${this.advertised.schemaRegistry}:${this.config.schemaRegistryPort}`;
+    }
+    return `http://localhost:${this.config.schemaRegistryPort}`;
   }
-
+  
   getAdminEndpoint(): string {
     return `http://localhost:${this.config.adminPort}`;
   }
-
+  
   getProxyEndpoint(): string {
-    const host = this.advertised.proxy || "localhost";
-    return `http://${host}:${this.config.pandaproxyPort}`;
+    if (this.advertised.proxy) {
+      // Check if advertised address already includes port
+      if (this.advertised.proxy.includes(":")) {
+        return `http://${this.advertised.proxy}`;
+      }
+      return `http://${this.advertised.proxy}:${this.config.pandaproxyPort}`;
+    }
+    return `http://localhost:${this.config.pandaproxyPort}`;
   }
-
+  
   getBrokerId(): number | undefined {
     return this.advertised.brokerId
       ? parseInt(this.advertised.brokerId, 10)
       : undefined;
   }
 }
-
+  
 /**
- * Base monitoring endpoint handler
- *
+ * Base monitoring endpoint handler implementation.
  * @implements {MonitoringEndpoint}
  */
 export class MonitoringEndpointHandler implements MonitoringEndpoint {
@@ -878,19 +785,18 @@ export class MonitoringEndpointHandler implements MonitoringEndpoint {
       );
     }
   }
-
+  
   getEndpoint(): string {
     return `http://${this.config.host}:${this.config.port}`;
   }
-
+  
   getCredentials(): { username?: string; password: string } {
     return this.credentials;
   }
 }
-
+  
 /**
- * Grafana-specific monitoring endpoint handler
- *
+ * Grafana-specific monitoring endpoint handler implementation.
  * @implements {GrafanaEndpoint}
  */
 export class GrafanaEndpointHandler
@@ -907,15 +813,14 @@ export class GrafanaEndpointHandler
       plugins: this.getPlugins(),
     });
   }
-
+  
   getPlugins(): string[] {
     return this.plugins?.split(";").filter(Boolean) || [];
   }
 }
-
+  
 /**
- * Network configuration handler
- *
+ * Network configuration handler implementation.
  * @implements {NetworkConfig}
  */
 export class NetworkConfigHandler implements NetworkConfig {
@@ -930,65 +835,57 @@ export class NetworkConfigHandler implements NetworkConfig {
     }
     logger.debug("Initialized network configuration handler");
   }
-
+  
   getNetworkName(service: "db" | "redis" | "redpanda"): string {
     return this.config[service];
   }
-
+  
   getAllNetworks(): Record<string, string> {
     return { ...this.config };
   }
 }
-````
-
-Improvements:
-
-1. Direct interface implementations without complex inheritance
-2. Constructor validation for each handler
-3. Secure credential handling
-4. Clear logging of initialization
-5. Strong typing throughout
-6. Consistent error handling
-
----
-
-### `qi/core/src/services/config/loader.ts`
-
-````typescript
+  
+```  
+  
+5. `qi/core/src/services/config/loader.ts`:
+```ts
 /**
  * @fileoverview Service Configuration Loader
  * @module @qi/core/services/config/loader
  *
  * @description
  * Provides configuration loading functionality for services.
+ * File paths and names are provided by the application layer.
  *
  * Improvements:
+ * - Removed hardcoded file names
+ * - Required paths in options
  * - Maximizes use of core ConfigFactory
  * - Simplified error handling
  * - Better environment handling
  * - Improved logging
- * - Robust path handling
- * - Clear error messages
  *
  * @example
  * ```typescript
- * const services = await loadServiceConfig();
- * const pgConn = services.databases.postgres.getConnectionString();
+ * // Application provides all paths
+ * const services = await loadServiceConfig({
+ *   configPath: "/app/config/services.json",
+ *   envPath: "/app/config/services.env"
+ * });
  * ```
  *
  * @author Zhifeng Zhang
  * @created 2024-11-29
  */
-
+  
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
 import { Schema, ConfigFactory } from "@qi/core/config";
 import { loadEnv } from "@qi/core/utils";
 import { logger } from "@qi/core/logger";
-import { join } from "path";
-
-import { serviceConfigSchema, envConfigSchema } from "./schema";
-import { ServiceConfig, EnvConfig } from "./types";
-import { ServiceConnections } from "./dsl";
+  
+import { serviceConfigSchema, envConfigSchema } from "./schema.js";
+import { ServiceConfig, EnvConfig } from "./types.js";
+import { ServiceConnections } from "./dsl.js";
 import {
   PostgresConnectionHandler,
   QuestDBConnectionHandler,
@@ -997,20 +894,18 @@ import {
   GrafanaEndpointHandler,
   MonitoringEndpointHandler,
   NetworkConfigHandler,
-} from "./handlers";
-
+} from "./handlers.js";
+  
 /**
  * Configuration loading options
  */
 export interface LoadConfigOptions {
-  /** Path to configuration directory */
-  configDir?: string;
-  /** Configuration file name */
-  configFile?: string;
-  /** Environment file name */
-  envFile?: string;
+  /** Path to service configuration file */
+  configPath: string;
+  /** Path to environment file */
+  envPath: string;
 }
-
+  
 /**
  * Loads service configuration and creates handlers
  *
@@ -1019,17 +914,10 @@ export interface LoadConfigOptions {
  * @throws {ApplicationError} When loading or validation fails
  */
 export async function loadServiceConfig(
-  options: LoadConfigOptions = {}
+  options: LoadConfigOptions
 ): Promise<ServiceConnections> {
-  const {
-    configDir = "./config",
-    configFile = "services-1.0.json",
-    envFile = "services.env",
-  } = options;
-
-  const configPath = join(configDir, configFile);
-  const envPath = join(configDir, envFile);
-
+  const { configPath, envPath } = options;
+  
   try {
     // Load environment using core utility
     const env = (await loadEnv(envPath, { override: true })) as EnvConfig;
@@ -1041,17 +929,23 @@ export async function loadServiceConfig(
         { path: envPath }
       );
     }
-
+  
     logger.info("Loaded environment configuration", {
       path: envPath,
       variables: Object.keys(env).length,
     });
-
+  
     // Initialize schema and factory
     const schema = new Schema({ formats: true });
-    schema.registerSchema("service-config", serviceConfigSchema);
-    schema.registerSchema("env-config", envConfigSchema);
-
+    schema.registerSchema(
+      "qi://core/services/config/service.schema",
+      serviceConfigSchema
+    );
+    schema.registerSchema(
+      "qi://core/services/config/env.schema",
+      envConfigSchema
+    );
+  
     // Create loader using core factory
     const factory = new ConfigFactory(schema);
     const loader = factory.createLoader<ServiceConfig>({
@@ -1059,15 +953,19 @@ export async function loadServiceConfig(
       version: "1.0",
       schema: serviceConfigSchema,
     });
-
+  
+    // Set source path for loader
+    const jsonLoader = loader as unknown as { source: string };
+    jsonLoader.source = configPath;
+  
     // Load and validate configuration
     const config = await loader.load();
-
+  
     logger.info("Loaded service configuration", {
       path: configPath,
       services: Object.keys(config.databases).length,
     });
-
+  
     // Create and return service connections
     return {
       databases: {
@@ -1108,11 +1006,11 @@ export async function loadServiceConfig(
     if (error instanceof ApplicationError) {
       throw error;
     }
-
+  
     // Wrap other errors
     throw new ApplicationError(
       "Failed to load service configuration",
-      ErrorCode.SERVICE_CONFIG_INVALID,
+      ErrorCode.SERVICE_INITIALIZATION_ERROR,
       500,
       {
         configPath,
@@ -1122,210 +1020,11 @@ export async function loadServiceConfig(
     );
   }
 }
-````
-
-Improvements:
-
-1. Maximum use of core ConfigFactory
-2. Clean options interface
-3. Proper path handling
-4. Comprehensive logging
-5. Clear error handling strategy
-6. Structured configuration loading process
-
----
-
-Fixing loading logic:
-
-```typescript
-/**
- * @fileoverview Service Configuration Loader
- * @module @qi/core/services/config/loader
- * 
- * @description
- * Provides configuration loading functionality for services.
- * File paths and names are provided by the application layer.
- * 
- * Improvements:
- * - Removed hardcoded file names
- * - Required paths in options
- * - Maximizes use of core ConfigFactory
- * - Simplified error handling
- * - Better environment handling
- * - Improved logging
- * 
- * @example
- * ```typescript
- * // Application provides all paths
- * const services = await loadServiceConfig({
- *   configPath: "/app/config/services.json",
- *   envPath: "/app/config/services.env"
- * });
- * ```
- * 
- * @author Zhifeng Zhang
- * @created 2024-11-29
- */
-
-import { ApplicationError, ErrorCode } from "@qi/core/errors";
-import { Schema, ConfigFactory } from "@qi/core/config";
-import { loadEnv } from "@qi/core/utils";
-import { logger } from "@qi/core/logger";
-
-import { serviceConfigSchema, envConfigSchema } from "./schema.js";
-import { ServiceConfig, EnvConfig } from "./types.js";
-import { ServiceConnections } from "./dsl.js";
-import {
-  PostgresConnectionHandler,
-  QuestDBConnectionHandler,
-  RedisConnectionHandler,
-  MessageQueueConnectionHandler,
-  GrafanaEndpointHandler,
-  MonitoringEndpointHandler,
-  NetworkConfigHandler
-} from "./handlers.js";
-
-/**
- * Configuration loading options
- */
-export interface LoadConfigOptions {
-  /** Path to service configuration file */
-  configPath: string;
-  /** Path to environment file */
-  envPath: string;
-}
-
-/**
- * Loads service configuration and creates handlers
- * 
- * @param options Configuration loading options
- * @returns Service connections interface
- * @throws {ApplicationError} When loading or validation fails
- */
-export async function loadServiceConfig(options: LoadConfigOptions): Promise<ServiceConnections> {
-  const { configPath, envPath } = options;
-
-  try {
-    // Load environment using core utility
-    const env = await loadEnv(envPath, { override: true }) as EnvConfig;
-    if (!env) {
-      throw new ApplicationError(
-        "Environment configuration not found",
-        ErrorCode.ENV_MISSING_ERROR,
-        500,
-        { path: envPath }
-      );
-    }
-
-    logger.info("Loaded environment configuration", {
-      path: envPath,
-      variables: Object.keys(env).length
-    });
-
-    // Initialize schema and factory
-    const schema = new Schema({ formats: true });
-    schema.registerSchema("qi://core/services/config/service.schema", serviceConfigSchema);
-    schema.registerSchema("qi://core/services/config/env.schema", envConfigSchema);
-    
-    // Create loader using core factory
-    const factory = new ConfigFactory(schema);
-    const loader = factory.createLoader<ServiceConfig>({
-      type: "services",
-      version: "1.0",
-      schema: serviceConfigSchema
-    });
-
-    // Set source path for loader
-    const jsonLoader = loader as unknown as { source: string };
-    jsonLoader.source = configPath;
-
-    // Load and validate configuration
-    const config = await loader.load();
-
-    logger.info("Loaded service configuration", {
-      path: configPath,
-      services: Object.keys(config.databases).length
-    });
-
-    // Create and return service connections
-    return {
-      databases: {
-        postgres: new PostgresConnectionHandler(
-          config.databases.postgres,
-          {
-            user: env.POSTGRES_USER,
-            password: env.POSTGRES_PASSWORD
-          }
-        ),
-        questdb: new QuestDBConnectionHandler(
-          config.databases.questdb
-        ),
-        redis: new RedisConnectionHandler(
-          config.databases.redis,
-          env.REDIS_PASSWORD
-        )
-      },
-      messageQueue: new MessageQueueConnectionHandler(
-        config.messageQueue.redpanda,
-        {
-          kafka: env.REDPANDA_ADVERTISED_KAFKA_API,
-          schemaRegistry: env.REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API,
-          proxy: env.REDPANDA_ADVERTISED_PANDAPROXY_API,
-          brokerId: env.REDPANDA_BROKER_ID
-        }
-      ),
-      monitoring: {
-        grafana: new GrafanaEndpointHandler(
-          config.monitoring.grafana,
-          { password: env.GF_SECURITY_ADMIN_PASSWORD },
-          env.GF_INSTALL_PLUGINS
-        ),
-        pgAdmin: new MonitoringEndpointHandler(
-          config.monitoring.pgAdmin,
-          {
-            username: env.PGADMIN_DEFAULT_EMAIL,
-            password: env.PGADMIN_DEFAULT_PASSWORD
-          }
-        )
-      },
-      networking: new NetworkConfigHandler(
-        config.networking.networks
-      )
-    };
-  } catch (error) {
-    // Re-throw ApplicationErrors directly
-    if (error instanceof ApplicationError) {
-      throw error;
-    }
-
-    // Wrap other errors
-    throw new ApplicationError(
-      "Failed to load service configuration",
-      ErrorCode.SERVICE_CONFIG_INVALID,
-      500,
-      {
-        configPath,
-        envPath,
-        error: String(error)
-      }
-    );
-  }
-}
-```
-
-Improvements:
-1. Removed all hardcoded file paths and names
-2. Made config paths required in options
-3. Removed unnecessary path joining logic
-4. Cleaned up the options interface
-5. Better error messages around file paths
-6. Proper schema IDs in registration
-
----
-
-### `qi/core/src/services/config/index.ts`
-
-````typescript
+  
+```  
+  
+6. `qi/core/src/services/config/index.ts`:
+```ts
 /**
  * @fileoverview Service Configuration Module
  * @module @qi/core/services/config
@@ -1369,10 +1068,10 @@ Improvements:
  * @author Zhifeng Zhang
  * @created 2024-11-29
  */
-
+  
 // Core type definitions
 export type { ServiceConfig, EnvConfig, LoadConfigResult } from "./types.js";
-
+  
 // Domain-specific interfaces
 export type {
   ServiceConnections,
@@ -1385,10 +1084,10 @@ export type {
   GrafanaEndpoint,
   NetworkConfig,
 } from "./dsl.js";
-
+  
 // Schema definitions
 export { serviceConfigSchema, envConfigSchema } from "./schema.js";
-
+  
 // Service handlers
 export {
   PostgresConnectionHandler,
@@ -1399,19 +1098,12 @@ export {
   MonitoringEndpointHandler,
   NetworkConfigHandler,
 } from "./handlers.js";
-
+  
 // Configuration loader
 export { loadServiceConfig, LoadConfigOptions } from "./loader.js";
-
+  
 // Re-export necessary types from core for convenience
 export type { JsonSchema } from "@qi/core/config";
-````
-
-Improvements:
-
-1. Clear module documentation with examples
-2. Organized exports by category
-3. Complete type exports for external use
-4. Re-export of necessary core types
-5. Full JSDoc documentation with examples
-6. Clear authorship and creation date
+  
+```  
+  

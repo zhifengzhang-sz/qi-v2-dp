@@ -3,48 +3,45 @@
  * @module @qi/core/services/redis/client
  *
  * @description
- * Provides a simplified Redis client implementation that handles connection
- * management, basic operations, and error handling. Uses the ioredis library
- * for Redis operations.
+ * Provides a Redis client implementation that integrates with the service
+ * configuration system. Uses ioredis for Redis operations.
  *
  * @author Zhifeng Zhang
- * @modified 2024-11-30
+ * @modified 2024-12-01
  * @created 2024-11-29
- *
- * @note
- * This file is automatically processed by a pre-commit script to ensure
- * that file headers are up-to-date with the author's name and modification date.
  */
 
 import { Redis } from "ioredis";
 import { ApplicationError, ErrorCode, ErrorDetails } from "@qi/core/errors";
 import { logger } from "@qi/core/logger";
-import { RedisConfig } from "./types.js";
 import { retryOperation } from "@qi/core/utils";
+import type { RedisClientConfig } from "./types.js";
 
 export class RedisClient {
   private client: Redis;
-  private readonly config: RedisConfig;
+  private readonly config: RedisClientConfig;
 
   /**
    * Creates a new Redis client instance
    *
-   * @param config - Redis configuration
+   * @param config - Redis configuration from service config
    */
-  constructor(config: RedisConfig) {
+  constructor(config: RedisClientConfig) {
     this.config = config;
+
     this.client = new Redis({
-      host: config.host,
-      port: config.port,
-      password: config.password,
-      maxRetriesPerRequest: config.maxRetries,
+      host: config.connection.getHost(),
+      port: config.connection.getPort(),
+      // Parse password from connection string for security
+      password: new URL(config.connection.getConnectionString()).password,
+      maxRetriesPerRequest: config.connection.getMaxRetries(),
       retryStrategy: (times) => {
         const delay = Math.min(times * 1000, 3000);
         logger.debug("Redis retry", { attempt: times, delay });
         return delay;
       },
-      keyPrefix: config.keyPrefix,
-      commandTimeout: config.commandTimeout,
+      keyPrefix: config.options?.keyPrefix,
+      commandTimeout: config.options?.commandTimeout,
     });
 
     this.setupListeners();
@@ -52,22 +49,20 @@ export class RedisClient {
 
   /**
    * Sets up Redis event listeners
-   *
-   * @private
    */
   private setupListeners(): void {
     this.client.on("connect", () => {
       logger.info("Redis connected", {
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
       });
     });
 
     this.client.on("error", (error) => {
       logger.error("Redis error", {
         error: error.message,
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
       });
     });
 
@@ -85,7 +80,7 @@ export class RedisClient {
   async ping(): Promise<boolean> {
     try {
       const result = await retryOperation(() => this.client.ping(), {
-        retries: this.config.maxRetries,
+        retries: this.config.connection.getMaxRetries(),
         minTimeout: 1000,
         onRetry: (times) => {
           logger.debug("Retrying Redis ping", { attempt: times });
@@ -95,8 +90,8 @@ export class RedisClient {
     } catch (error) {
       const details: ErrorDetails = {
         operation: "ping",
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
 
@@ -119,8 +114,8 @@ export class RedisClient {
     } catch (error) {
       const details: ErrorDetails = {
         operation: "close",
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
 
@@ -146,8 +141,8 @@ export class RedisClient {
       const details: ErrorDetails = {
         operation: "get",
         key,
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
 
@@ -174,8 +169,8 @@ export class RedisClient {
       const details: ErrorDetails = {
         operation: "set",
         key,
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
 
@@ -201,8 +196,8 @@ export class RedisClient {
       const details: ErrorDetails = {
         operation: "del",
         key,
-        host: this.config.host,
-        port: this.config.port,
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
 
