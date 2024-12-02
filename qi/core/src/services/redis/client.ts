@@ -7,7 +7,7 @@
  * configuration system. Uses ioredis for Redis operations.
  *
  * @author Zhifeng Zhang
- * @modified 2024-12-01
+ * @modified 2024-12-02
  * @created 2024-11-29
  */
 
@@ -21,19 +21,13 @@ export class RedisClient {
   private client: Redis;
   private readonly config: RedisClientConfig;
 
-  /**
-   * Creates a new Redis client instance
-   *
-   * @param config - Redis configuration from service config
-   */
   constructor(config: RedisClientConfig) {
     this.config = config;
 
     this.client = new Redis({
       host: config.connection.getHost(),
       port: config.connection.getPort(),
-      // Parse password from connection string for security
-      password: new URL(config.connection.getConnectionString()).password,
+      password: this.extractPassword(config.connection.getConnectionString()),
       maxRetriesPerRequest: config.connection.getMaxRetries(),
       retryStrategy: (times) => {
         const delay = Math.min(times * 1000, 3000);
@@ -45,6 +39,29 @@ export class RedisClient {
     });
 
     this.setupListeners();
+  }
+
+  private extractPassword(connectionString: string): string {
+    // Extract password from redis://:password@host:port format
+    try {
+      const matches = connectionString.match(/redis:\/\/:([^@]+)@/);
+      if (matches && matches[1]) {
+        return decodeURIComponent(matches[1]);
+      }
+      // Fallback: try to parse as URL
+      const url = new URL(connectionString);
+      if (url.password) {
+        return decodeURIComponent(url.password);
+      }
+      throw new Error("No password found in connection string");
+    } catch (error) {
+      throw new ApplicationError(
+        "Invalid Redis connection string",
+        ErrorCode.REDIS_CONFIG_INVALID,
+        500,
+        { error: String(error) }
+      );
+    }
   }
 
   /**

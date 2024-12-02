@@ -1,6 +1,6 @@
-services:  
+services:
   questdb:
-    image: questdb/questdb:7.1.0
+    image: questdb/questdb:7.3.6
     hostname: questdb
     container_name: questdb
     ports:
@@ -32,7 +32,7 @@ services:
     networks:
       - qi_db_network
     ports:
-      - "3000:3000"
+      - "4000:3000"
     volumes:
       - grafana_volume:/var/lib/grafana
     env_file:
@@ -63,7 +63,7 @@ services:
     environment:
       - POSTGRES_USER=${POSTGRES_USER}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_DB=${POSTGRES_DATABASE}
+      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - timescale_volume:/var/lib/postgresql/data
     ports:
@@ -151,24 +151,27 @@ services:
       - redpanda_data:/var/lib/redpanda/data
     env_file:
       - .env
-    environment:
-      REDPANDA_BROKER_ID: ${REDPANDA_BROKER_ID}
-      REDPANDA_ADVERTISED_KAFKA_API: ${REDPANDA_ADVERTISED_KAFKA_API}
-      REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API: ${REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API}
-      REDPANDA_ADVERTISED_PANDAPROXY_API: ${REDPANDA_ADVERTISED_PANDAPROXY_API}
-    command: >
-      redpanda start
-      --overprovisioned
-      --smp 1
-      --memory 2G
-      --reserve-memory 0M
-      --node-id ${REDPANDA_BROKER_ID}
-      --kafka-addr 0.0.0.0:9092
-      --advertised-kafka-addr ${REDPANDA_ADVERTISED_KAFKA_API}:9092
-      --pandaproxy-addr 0.0.0.0:8082
-      --advertised-pandaproxy-addr ${REDPANDA_ADVERTISED_PANDAPROXY_API}:8082
-      --schema-registry-addr 0.0.0.0:8081
-      --advertised-schema-registry-addr ${REDPANDA_ADVERTISED_SCHEMA_REGISTRY_API}:8081
+    command:
+      - redpanda
+      - start
+      - --mode
+      - dev-container
+      - --rpc-addr
+      - 0.0.0.0:33145
+      - --advertise-rpc-addr
+      - ${REDPANDA_ADVERTISED_KAFKA_API}:33145
+      - --kafka-addr
+      - 0.0.0.0:9092
+      - --advertise-kafka-addr
+      - ${REDPANDA_ADVERTISED_KAFKA_API}:9092
+      - --schema-registry-addr
+      - 0.0.0.0:8081
+      - --pandaproxy-addr
+      - 0.0.0.0:8082
+      - --smp
+      - "1"
+      - --memory
+      - 2G
     restart: unless-stopped
 
   console:

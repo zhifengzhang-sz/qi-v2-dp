@@ -17,7 +17,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-29
- * @modified 2024-12-01
+ * @modified 2024-12-02
  */
 
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
@@ -155,7 +155,9 @@ export class RedisConnectionHandler implements RedisConnection {
   }
 
   getConnectionString(): string {
-    return `redis://:${this.password}@${this.config.host}:${this.config.port}`;
+    // Properly encode the password to handle special characters
+    const encodedPassword = encodeURIComponent(this.password);
+    return `redis://:${encodedPassword}@${this.config.host}:${this.config.port}`;
   }
 
   getMaxRetries(): number {

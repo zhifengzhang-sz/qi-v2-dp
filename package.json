@@ -4,7 +4,10 @@
   "description": "Data platform for the QI system",
   "type": "module",
   "scripts": {
-    "config": "node scripts/generate-envs.v1.js"
+    "config": "node scripts/generate-config.js",
+    "config:version": "node scripts/generate-config.js",
+    "config:init": "node scripts/generate-config.js init",
+    "config:map": "node scripts/generate-config.js map"
   },
   "author": "Zhifeng Zhang",
   "license": "MIT",

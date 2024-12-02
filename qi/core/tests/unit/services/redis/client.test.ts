@@ -7,7 +7,7 @@
  * Tests connection handling, operations, error scenarios, and retry logic.
  *
  * @author Claude AI
- * @modified 2024-12-01
+ * @modified 2024-12-02
  * @created 2024-12-01
  */
 
@@ -103,11 +103,11 @@ describe("RedisClient", () => {
 
       new RedisClient(config);
 
-      // Use lastCalledWith instead of toHaveBeenCalledWith
+      // Expect decoded password here since that's what ioredis needs
       expect(Redis).lastCalledWith({
         host: "localhost",
         port: 6379,
-        password: "complex%23password",
+        password: "complex#password", // Decoded from complex%23password
         maxRetriesPerRequest: 3,
         retryStrategy: expect.any(Function),
         keyPrefix: "test:",

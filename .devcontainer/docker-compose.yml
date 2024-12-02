@@ -7,35 +7,29 @@ services:
         - USERNAME=${USERNAME}
         - USER_UID=${UID}
         - USER_GID=${GID}
-        - VERSSION=${VERSION}
+        - VERSION=${VERSION}
         - REGISTRY=${REGISTRY}
     image: qi/data-platform-dev-container:${VERSION}
     container_name: data-platform-dev-container
     hostname: data-platform-dev.local
     working_dir: /home/${USERNAME}
     ports:
-      - 7071:7071
+      - "7071:7071"
     volumes:
       - ../:/workspace:cached
       - ../qi:/home/${USERNAME}/qi:cached
       - ../docs:/home/${USERNAME}/docs:cached
       - ./shared:/shared:cached  # Host-relative path to ensure the same 'shared' access
-    links:
-      - "plantuml:plantuml"
-      - "pandoc-texlive"  # Link to pandoc service
+    networks:
+      - qi_db_network
+      - redis_network
+      - redpanda_network
     command: sleep infinity
 
-  plantuml:
-    image: plantuml/plantuml-server:v1.2024.7
-    ports:
-      - "8082:8080"
-
-  pandoc-texlive:
-    image: ${REGISTRY}/pandoc-texlive:${VERSION}
-    ports:
-      - "7072:7072"  # Expose for REST API access
-    volumes:
-      - shared:/shared
-
-volumes:
-  shared: {}
+networks:
+  qi_db_network:
+    name: qi_db
+  redis_network:
+    name: redis_network
+  redpanda_network:
+    name: redpanda_network
