@@ -1,3 +1,42 @@
+1. `qi/core/src/services/redis/types.ts`:
+```ts
+/**
+ * @fileoverview Redis service type definitions
+ * @module @qi/core/services/redis/types
+ *
+ * @description
+ * Defines TypeScript interfaces for Redis client configuration and operations.
+ * Extends the service configuration with Redis-specific options.
+ *
+ * @author Zhifeng Zhang
+ * @modified 2024-12-01
+ * @created 2024-11-29
+ */
+  
+import type { RedisConnection } from "../config/dsl.js";
+  
+/**
+ * Extended Redis configuration for client
+ * Adds client-specific options to base service config
+ */
+export interface RedisClientConfig {
+  /** Base configuration from services config */
+  connection: RedisConnection;
+  /** Optional client-specific settings */
+  options?: {
+    /** Connection pool size */
+    poolSize?: number;
+    /** Command timeout in milliseconds */
+    commandTimeout?: number;
+    /** Key prefix for namespacing */
+    keyPrefix?: string;
+  };
+}
+  
+```  
+  
+2. `qi/core/src/services/redis/client.ts`:
+```ts
 /**
  * @fileoverview Redis client implementation
  * @module @qi/core/services/redis/client
@@ -7,23 +46,23 @@
  * configuration system. Uses ioredis for Redis operations.
  *
  * @author Zhifeng Zhang
- * @modified 2024-12-03
+ * @modified 2024-12-02
  * @created 2024-11-29
  */
-
+  
 import { Redis } from "ioredis";
 import { ApplicationError, ErrorCode, ErrorDetails } from "@qi/core/errors";
 import { logger } from "@qi/core/logger";
 import { retryOperation } from "@qi/core/utils";
 import type { RedisClientConfig } from "./types.js";
-
+  
 export class RedisClient {
   private client: Redis;
   private readonly config: RedisClientConfig;
-
+  
   constructor(config: RedisClientConfig) {
     this.config = config;
-
+  
     this.client = new Redis({
       host: config.connection.getHost(),
       port: config.connection.getPort(),
@@ -37,18 +76,10 @@ export class RedisClient {
       keyPrefix: config.options?.keyPrefix,
       commandTimeout: config.options?.commandTimeout,
     });
-
+  
     this.setupListeners();
   }
-
-  /**
-   * Gets the underlying Redis instance
-   * @returns {Redis} The ioredis instance
-   */
-  getRedisInstance(): Redis {
-    return this.client;
-  }
-
+  
   private extractPassword(connectionString: string): string {
     // Extract password from redis://:password@host:port format
     try {
@@ -71,7 +102,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Sets up Redis event listeners
    */
@@ -82,7 +113,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
       });
     });
-
+  
     this.client.on("error", (error) => {
       logger.error("Redis error", {
         error: error.message,
@@ -90,12 +121,12 @@ export class RedisClient {
         port: this.config.connection.getPort(),
       });
     });
-
+  
     this.client.on("close", () => {
       logger.info("Redis connection closed");
     });
   }
-
+  
   /**
    * Checks Redis connection health
    *
@@ -119,7 +150,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis ping failed",
         ErrorCode.PING_ERROR,
@@ -128,7 +159,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Closes Redis connection
    */
@@ -143,7 +174,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Failed to close Redis connection",
         ErrorCode.CONNECTION_ERROR,
@@ -152,7 +183,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Gets a value from Redis
    *
@@ -170,7 +201,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis get operation failed",
         ErrorCode.OPERATION_ERROR,
@@ -179,7 +210,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Sets a value in Redis
    *
@@ -198,7 +229,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis set operation failed",
         ErrorCode.OPERATION_ERROR,
@@ -207,7 +238,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Deletes one or more keys from Redis
    *
@@ -225,7 +256,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis delete operation failed",
         ErrorCode.OPERATION_ERROR,
@@ -234,7 +265,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Sets a key with expiration time
    *
@@ -262,7 +293,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis setex operation failed",
         ErrorCode.OPERATION_ERROR,
@@ -271,7 +302,7 @@ export class RedisClient {
       );
     }
   }
-
+  
   /**
    * Scans for keys matching a pattern using Redis SCAN command
    *
@@ -333,7 +364,7 @@ export class RedisClient {
         port: this.config.connection.getPort(),
         error: error instanceof Error ? error.message : String(error),
       };
-
+  
       throw new ApplicationError(
         "Redis scan operation failed",
         ErrorCode.OPERATION_ERROR,
@@ -343,3 +374,29 @@ export class RedisClient {
     }
   }
 }
+  
+```  
+  
+2. `qi/core/src/services/redis/index.ts`:
+```ts
+/**
+ * @fileoverview Redis service module entry point
+ * @module @qi/core/services/redis
+ *
+ * @description
+ * Exports Redis client and configuration types.
+ *
+ * @author Zhifeng Zhang
+ * @modified 2024-12-01
+ * @created 2024-11-29
+ *
+ * @note
+ * This file is automatically processed by a pre-commit script to ensure
+ * that file headers are up-to-date with the author's name and modification date.
+ */
+  
+export { RedisClient } from "./client.js";
+export type { RedisClientConfig } from "./types.js";
+  
+```  
+  

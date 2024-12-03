@@ -5,9 +5,8 @@
 
 import { logger } from "@qi/core/logger";
 import { ApplicationError } from "@qi/core/errors";
-//import { initializeConfig } from "./services/config/index.js";
-//import type { ServiceConfig } from "@qi/core/services/config";
 import * as redis from "./services/redis/index.js";
+import * as cache from "./services/cache/index.js";
 
 /**
  * Service initialization state
@@ -16,6 +15,7 @@ interface ServiceState {
   isInitialized: boolean;
   services: {
     redis?: boolean;
+    cache?: boolean;
   };
 }
 
@@ -31,19 +31,23 @@ async function initializeServices(): Promise<void> {
   try {
     // Load service configuration first
     logger.info("Loading service configuration...");
-    //const services = await initializeConfig();
 
-    // Log using actual service configuration properties
     logger.info("Service configuration loaded successfully", {
-      type: "services", // Known constant for our service type
-      version: "1.0", // Known version we support
+      type: "services",
+      version: "1.0",
     });
 
-    // Initialize Redis service
+    // Initialize Redis service first (required for production cache)
     logger.info("Initializing Redis service...");
     await redis.initialize();
     state.services.redis = true;
     logger.info("Redis service initialized successfully");
+
+    // Initialize Cache service
+    logger.info("Initializing Cache service...");
+    await cache.initialize();
+    state.services.cache = true;
+    logger.info("Cache service initialized successfully");
 
     // Future: Initialize other services here
     // Maintain correct initialization order based on dependencies
@@ -64,7 +68,15 @@ async function shutdownServices(): Promise<void> {
   logger.info("Beginning service shutdown...");
 
   try {
-    // Shutdown Redis if it was initialized
+    // Shutdown Cache first
+    if (state.services.cache) {
+      logger.info("Shutting down Cache service...");
+      await cache.close();
+      state.services.cache = false;
+      logger.info("Cache service shutdown complete");
+    }
+
+    // Shutdown Redis last (as other services might depend on it)
     if (state.services.redis) {
       logger.info("Shutting down Redis service...");
       await redis.close();
