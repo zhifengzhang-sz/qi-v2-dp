@@ -7,15 +7,14 @@ import { logger } from "@qi/core/logger";
 import { ApplicationError } from "@qi/core/errors";
 import * as redis from "./services/redis/index.js";
 import * as cache from "./services/cache/index.js";
+import * as timescaledb from "./services/timescaledb/index.js";
 
-/**
- * Service initialization state
- */
 interface ServiceState {
   isInitialized: boolean;
   services: {
     redis?: boolean;
     cache?: boolean;
+    timescaledb?: boolean;
   };
 }
 
@@ -24,20 +23,11 @@ const state: ServiceState = {
   services: {},
 };
 
-/**
- * Initializes all services in the correct order
- */
 async function initializeServices(): Promise<void> {
   try {
-    // Load service configuration first
     logger.info("Loading service configuration...");
 
-    logger.info("Service configuration loaded successfully", {
-      type: "services",
-      version: "1.0",
-    });
-
-    // Initialize Redis service first (required for production cache)
+    // Initialize Redis service
     logger.info("Initializing Redis service...");
     await redis.initialize();
     state.services.redis = true;
@@ -49,8 +39,11 @@ async function initializeServices(): Promise<void> {
     state.services.cache = true;
     logger.info("Cache service initialized successfully");
 
-    // Future: Initialize other services here
-    // Maintain correct initialization order based on dependencies
+    // Initialize TimescaleDB first (other services might depend on it)
+    logger.info("Initializing TimescaleDB service...");
+    await timescaledb.initialize();
+    state.services.timescaledb = true;
+    logger.info("TimescaleDB service initialized successfully");
 
     state.isInitialized = true;
     logger.info("All services initialized successfully");
@@ -61,14 +54,10 @@ async function initializeServices(): Promise<void> {
   }
 }
 
-/**
- * Gracefully shuts down all services in reverse order
- */
 async function shutdownServices(): Promise<void> {
   logger.info("Beginning service shutdown...");
 
   try {
-    // Shutdown Cache first
     if (state.services.cache) {
       logger.info("Shutting down Cache service...");
       await cache.close();
@@ -76,7 +65,6 @@ async function shutdownServices(): Promise<void> {
       logger.info("Cache service shutdown complete");
     }
 
-    // Shutdown Redis last (as other services might depend on it)
     if (state.services.redis) {
       logger.info("Shutting down Redis service...");
       await redis.close();
@@ -84,8 +72,12 @@ async function shutdownServices(): Promise<void> {
       logger.info("Redis service shutdown complete");
     }
 
-    // Future: Shutdown other services here
-    // Maintain correct shutdown order (reverse of initialization)
+    if (state.services.timescaledb) {
+      logger.info("Shutting down TimescaleDB service...");
+      await timescaledb.close();
+      state.services.timescaledb = false;
+      logger.info("TimescaleDB service shutdown complete");
+    }
 
     state.isInitialized = false;
     logger.info("All services shutdown successfully");

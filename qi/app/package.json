@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "build": "tsc -b",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist tsconfig.tsbuildinfo",
+    "build": "npm run clean && tsc -b",
     "lint": "eslint './src/**/*.ts'",
     "format": "prettier --write './src/**/*.{ts,js}'",
     "start:cli": "node --loader ts-node/esm --experimental-specifier-resolution=node src/cli.loader.main.ts",

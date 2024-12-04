@@ -49,7 +49,7 @@ The development environment consists of three main components:
    USERNAME=your_username
    UID=$(id -u)
    GID=$(id -g)
-   REGISTRY=your_registry
+   REGISTRY=blackgolfer
    VERSION=latest
    EOL
    ```
@@ -63,8 +63,26 @@ The development environment consists of three main components:
    npm run config:init
    npm run config:map -- 1.0.0
    ```
+4. **Create docker network**
+   ```bash
+   docker network create qi_db
+   docker network create redis_network
+   docker network create redpanda_network
+   ```
+5. **Verify network creatioin**
+   ```bash
+   docker network ls | grep -E 'qi_db|redis_network|redpanda_network'
+   ```
 
-4. **Start Core Services**
+   Expected output:
+   ```bash
+   NETWORK ID     NAME                 DRIVER    SCOPE
+   <id>           qi_db                bridge    local
+   <id>           redis_network        bridge    local
+   <id>           redpanda_network     bridge    local
+   ```
+   
+5. **Start Core Services**
    ```bash
    # Start services (creates required networks)
    docker compose up -d
@@ -73,7 +91,7 @@ The development environment consists of three main components:
    docker compose ps
    ```
 
-5. **Start Development Container**
+6. **Start Development Container**
    ```bash
    # Open in VS Code
    code .

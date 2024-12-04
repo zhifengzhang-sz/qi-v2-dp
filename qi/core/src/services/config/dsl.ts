@@ -25,7 +25,7 @@
  * ```
  *
  * @author Zhifeng Zhang
- * @modified 2024-12-01
+ * @modified 2024-12-04
  * @created 2024-11-29
  */
 
@@ -35,6 +35,9 @@
  * @interface DatabaseConnection
  */
 export interface DatabaseConnection {
+  getDatabase(): string;
+  getUser(): string;
+  getPassword(): string;
   getHost(): string;
   getPort(): number;
 }

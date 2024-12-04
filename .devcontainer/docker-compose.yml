@@ -28,8 +28,11 @@ services:
 
 networks:
   qi_db_network:
+    external: true
     name: qi_db
   redis_network:
+    external: true
     name: redis_network
   redpanda_network:
+    external: true
     name: redpanda_network

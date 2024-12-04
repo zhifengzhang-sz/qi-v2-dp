@@ -17,7 +17,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-29
- * @modified 2024-12-02
+ * @modified 2024-12-04
  */
 
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
@@ -63,6 +63,18 @@ export class PostgresConnectionHandler implements PostgresConnection {
     return host;
   }
 
+  getDatabase(): string {
+    return this.config.database;
+  }
+
+  getUser(): string {
+    return this.credentials.user;
+  }
+
+  getPassword(): string {
+    return this.credentials.password;
+  }
+
   getHost(): string {
     return this.config.host;
   }
@@ -105,6 +117,18 @@ export class QuestDBConnectionHandler implements QuestDBConnection {
     });
   }
 
+  getDatabase(): string {
+    return "questdb";
+  }
+
+  getUser(): string {
+    return "admin";
+  }
+
+  getPassword(): string {
+    return "quest";
+  }
+
   getHost(): string {
     return this.config.host;
   }
@@ -144,6 +168,18 @@ export class RedisConnectionHandler implements RedisConnection {
       );
     }
     logger.debug("Initialized Redis connection handler", { host: config.host });
+  }
+
+  getDatabase(): string {
+    return "default";
+  }
+
+  getUser(): string {
+    return "default";
+  }
+
+  getPassword(): string {
+    return this.password;
   }
 
   getHost(): string {
