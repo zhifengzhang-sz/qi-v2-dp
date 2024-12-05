@@ -1,44 +1,9 @@
 /**
  * @fileoverview QuestDB service wrapper with PostgreSQL wire protocol support
  * @module @qi/core/services/questdb
- *
- * @description
- * Provides a service wrapper around QuestDB using the PostgreSQL wire protocol for:
- * - Time series data operations
- * - High-performance ingestion
- * - SQL query interface
- * - Connection management
- * - Health monitoring
- *
- * Key features:
- * - PostgreSQL wire protocol compatibility
- * - Connection pool management
- * - Configurable timeouts
- * - Health monitoring
- * - ILP support for high-speed ingestion
- *
- * @example Basic Usage
- * ```typescript
- * const service = new QuestDBService({
- *   enabled: true,
- *   connection: questdbConnection,
- *   pool: {
- *     max: 20,
- *     min: 5,
- *     acquireTimeout: 30000
- *   }
- * });
- *
- * await service.connect();
- * const client = service.getClient();
- * ```
- *
- * @author Zhifeng Zhang
- * @modified 2024-12-05
- * @created 2024-12-05
  */
 
-import { Pool, PoolConfig, QueryResult } from "pg";
+import type { Pool, PoolConfig, QueryResult } from "pg";
 import { BaseServiceClient } from "../base/client.js";
 import { HealthCheckResult, ServiceStatus } from "../base/types.js";
 import type { PostgresConnection } from "@qi/core/services/config";
@@ -46,10 +11,23 @@ import { logger } from "@qi/core/logger";
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
 
 /**
- * QuestDB service configuration interface
- *
- * @interface QuestDBServiceConfig
+ * Gets the Pool constructor from pg module
+ * Handles both ESM and CommonJS module systems
  */
+async function getPoolConstructor(): Promise<typeof Pool> {
+  try {
+    const pg = await import("pg");
+    return pg.Pool || (pg.default && pg.default.Pool);
+  } catch (error) {
+    throw new ApplicationError(
+      "Failed to load pg module",
+      ErrorCode.INITIALIZATION_ERROR,
+      500,
+      { error: String(error) }
+    );
+  }
+}
+
 interface QuestDBServiceConfig {
   enabled: boolean;
   connection: PostgresConnection;
@@ -69,18 +47,8 @@ interface QuestDBServiceConfig {
   };
 }
 
-/**
- * PostgreSQL parameter value types that QuestDB supports
- */
 type QuestDBParameterValue = string | number | boolean | Date | Buffer | null;
 
-/**
- * QuestDB service implementation providing PostgreSQL wire protocol compatibility
- * and connection pool management.
- *
- * @class QuestDBService
- * @extends {BaseServiceClient<QuestDBServiceConfig>}
- */
 export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
   private pool: Pool | null = null;
 
@@ -88,12 +56,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     super(config, "QuestDB");
   }
 
-  /**
-   * Establishes connection pool to QuestDB
-   *
-   * @returns {Promise<void>}
-   * @throws {ApplicationError} If connection fails
-   */
   async connect(): Promise<void> {
     if (!this.isEnabled()) {
       logger.info("QuestDB service is disabled");
@@ -101,10 +63,10 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     }
 
     try {
+      const Pool = await getPoolConstructor();
       const poolConfig = this.createPoolConfig();
       this.pool = new Pool(poolConfig);
 
-      // Test connection
       const client = await this.pool.connect();
       await client.query("SELECT 1");
       client.release();
@@ -120,8 +82,7 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
         await this.startHealthCheck();
       }
 
-      // Set up event handlers
-      this.pool.on("error", (err) => {
+      this.pool.on("error", (err: Error) => {
         logger.error("Unexpected QuestDB pool error", { error: err.message });
       });
     } catch (error) {
@@ -135,12 +96,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     }
   }
 
-  /**
-   * Closes connection pool and performs cleanup
-   *
-   * @returns {Promise<void>}
-   * @throws {ApplicationError} If disconnection fails
-   */
   async disconnect(): Promise<void> {
     if (this.pool) {
       try {
@@ -159,12 +114,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     }
   }
 
-  /**
-   * Performs health check on the database connection
-   *
-   * @protected
-   * @returns {Promise<HealthCheckResult>}
-   */
   protected async checkHealth(): Promise<HealthCheckResult> {
     if (!this.pool) {
       return {
@@ -201,12 +150,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     }
   }
 
-  /**
-   * Gets the connection pool for database operations
-   *
-   * @returns {Pool} Connection pool instance
-   * @throws {ApplicationError} If pool is not initialized
-   */
   getPool(): Pool {
     if (!this.pool) {
       throw new ApplicationError(
@@ -218,25 +161,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     return this.pool;
   }
 
-  /**
-   * Executes a SQL query
-   *
-   * @param {string} sql - SQL query to execute
-   * @param {QuestDBParameterValue[]} [params] - Query parameters
-   * @returns {Promise<QueryResult>} Query result
-   *
-   * @example
-   * ```typescript
-   * // Simple query
-   * const result = await questdb.query('SELECT * FROM mytable WHERE id = $1', [123]);
-   *
-   * // Query with multiple parameters
-   * const result = await questdb.query(
-   *   'SELECT * FROM sensors WHERE timestamp > $1 AND value > $2',
-   *   [new Date('2024-01-01'), 100]
-   * );
-   * ```
-   */
   async query(
     sql: string,
     params?: QuestDBParameterValue[]
@@ -250,12 +174,6 @@ export class QuestDBService extends BaseServiceClient<QuestDBServiceConfig> {
     }
   }
 
-  /**
-   * Creates connection pool configuration from service config
-   *
-   * @private
-   * @returns {PoolConfig} Connection pool configuration
-   */
   private createPoolConfig(): PoolConfig {
     const conn = this.config.connection;
     return {

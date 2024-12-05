@@ -1,32 +1,95 @@
 # The Data Platform
 
+A development environment for data processing and analytics, featuring TimescaleDB, QuestDB, Redis, Redpanda, and monitoring tools.
+
 ## Setting up the development environment
 
 ### Prerequisites
 
 1. [Docker](https://docs.docker.com/get-docker/) and Docker Compose
+   ```bash
+   # Verify installation
+   docker --version
+   docker compose version
+   ```
+
 2. [Node.js](https://nodejs.org/en/) version 22
    - [nvm](https://github.com/nvm-sh/nvm) (recommended for Node.js version management)
+   ```bash
+   # Install nvm
+   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+   
+   # Install and use Node.js 22
+   nvm install 22
+   nvm use 22
+   
+   # Verify version
+   node --version  # Should be v22.x.x
+   ```
+
 3. [Visual Studio Code](https://code.visualstudio.com/)
    - Required extension: [Remote - Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
    - Required extension: [Markdown Preview Enhanced](https://marketplace.visualstudio.com/items?itemName=shd101wyy.markdown-preview-enhanced)
+
 4. [Git](https://git-scm.com/)
+   ```bash
+   git --version
+   ```
+
 5. [zsh](docs/vscode/zsh.md)
+
+### Project Dependencies
+
+The project uses ES modules and includes the following package configuration:
+
+```json
+{
+  "name": "data-platform",
+  "version": "0.0.1",
+  "description": "Data platform for the QI system",
+  "type": "module",
+  "scripts": {
+    "config": "node scripts/generate-config.js",
+    "config:version": "node scripts/generate-config.js",
+    "config:init": "node scripts/generate-config.js init",
+    "config:map": "node scripts/generate-config.js map"
+  },
+  "dependencies": {
+    "kafkajs": "^2.2.4"
+  },
+  "devDependencies": {
+    "tsconfig-paths": "^4.2.0"
+  }
+}
+```
+
+Available scripts:
+- `npm run config:init`: Generate initial service configurations and passwords
+- `npm run config:map -- <version>`: Map configurations to version
+- `npm run config:version -- <command> <version>`: Run specific command with version
+- `npm run config`: Combined configuration generation
 
 ### Development Container Architecture
 
 The development environment consists of three main components:
 
 1. **Core Services** - Running in separate containers:
-   - Databases (TimescaleDB, QuestDB)
-   - Cache (Redis)
-   - Message Queue (Redpanda)
-   - Monitoring (Grafana, pgAdmin)
+   - Databases:
+     - TimescaleDB (time-series SQL database)
+     - QuestDB (high-performance time-series)
+   - Cache:
+     - Redis (in-memory data store)
+   - Message Queue:
+     - Redpanda (Kafka-compatible streaming)
+     - Redpanda Console (management UI)
+   - Monitoring:
+     - Grafana (metrics visualization)
+     - pgAdmin (database management)
 
 2. **Docker Networks**:
-   - `qi_db` - For database services
+   - `qi_db` - For database services (TimescaleDB, QuestDB)
    - `redis_network` - For Redis cache
-   - `redpanda_network` - For message queue
+   - `redpanda_network` - For message queue services
 
 3. **Development Container**:
    - Node.js development environment
@@ -42,11 +105,20 @@ The development environment consists of three main components:
    cd qi-v2-dp
    ```
 
-2. **Set Up Environment Variables**
+2. **Install Dependencies**
+   ```bash
+   # Verify Node.js version
+   node --version  # Should be v22.x.x
+   
+   # Install dependencies
+   npm install
+   ```
+
+3. **Set Up Environment Variables**
    ```bash
    # Create .env file for devcontainer configuration
    cat > .env << EOL
-   USERNAME=your_username
+   USERNAME=$(whoami)
    UID=$(id -u)
    GID=$(id -g)
    REGISTRY=blackgolfer
@@ -54,23 +126,23 @@ The development environment consists of three main components:
    EOL
    ```
 
-3. **Generate Service Configurations**
+4. **Generate Service Configurations**
    ```bash
-   # Install dependencies
-   npm install
-
-   # Generate service configurations and passwords
+   # Generate initial service configurations
    npm run config:init
+
+   # Map configurations with version
    npm run config:map -- 1.0.0
    ```
-4. **Create docker network**
+
+5. **Create Docker Networks**
    ```bash
+   # Create required networks
    docker network create qi_db
    docker network create redis_network
    docker network create redpanda_network
-   ```
-5. **Verify network creatioin**
-   ```bash
+
+   # Verify network creation
    docker network ls | grep -E 'qi_db|redis_network|redpanda_network'
    ```
 
@@ -81,17 +153,17 @@ The development environment consists of three main components:
    <id>           redis_network        bridge    local
    <id>           redpanda_network     bridge    local
    ```
-   
-5. **Start Core Services**
+
+6. **Start Core Services**
    ```bash
-   # Start services (creates required networks)
+   # Start all services
    docker compose up -d
 
    # Verify services are running
    docker compose ps
    ```
 
-6. **Start Development Container**
+7. **Start Development Container**
    ```bash
    # Open in VS Code
    code .
@@ -118,7 +190,7 @@ The development container is configured via several files:
    - Runs during container startup
    - Ensures required networks exist
 
-### VS Code Workflow Options
+## VS Code Workflow Options
 
 1. **First Time Setup**:
    ```bash
@@ -153,7 +225,7 @@ The development container is configured via several files:
    "Remote-Containers: Rebuild Container"
    ```
 
-### Development Workflow
+## Development Workflow
 
 1. **Starting Work**
    ```bash
@@ -186,15 +258,15 @@ The development container is configured via several files:
 
 ### Available Services
 
-The platform includes:
-- TimescaleDB (Port: 5432)
-- QuestDB (Ports: 9000, 8812, 9009)
-- Redis (Port: 6379)
-- Redpanda (Ports: 9092, 8081, 9644, 8082)
-- Grafana (Port: 4000)
-- pgAdmin (Port: 8000)
-
-Access credentials are stored in `services/.env`
+| Service | Purpose | Port(s) | Default Credentials |
+|---------|---------|---------|-------------------|
+| TimescaleDB | Primary Database | 5432 | See services/.env |
+| QuestDB | Time-series DB | 9000, 8812, 9009 | admin/quest |
+| Redis | Cache | 6379 | See services/.env |
+| Redpanda | Message Queue | 9092, 8081, 9644, 8082 | N/A |
+| Redpanda Console | Queue Management | 8080 | N/A |
+| Grafana | Monitoring | 4000 | admin/see services/.env |
+| pgAdmin | DB Management | 8000 | See services/.env |
 
 ### Troubleshooting
 
@@ -206,17 +278,25 @@ Access credentials are stored in `services/.env`
    # Recreate if needed
    docker compose down
    docker network prune
+   docker network create qi_db
+   docker network create redis_network
+   docker network create redpanda_network
    docker compose up -d
    ```
 
 2. **Container Access Problems**
-   - Check UID/GID in `.env`
-   - Verify service status
-   - Ensure networks exist
-   - Review container logs:
-     ```bash
-     docker compose logs dp_js
-     ```
+   ```bash
+   # Check environment variables
+   cat .env
+   
+   # Verify values match system
+   echo $USER
+   id -u
+   id -g
+   
+   # Check container logs
+   docker compose logs dp_js
+   ```
 
 3. **Dev Container Won't Start**
    ```bash
@@ -235,6 +315,22 @@ Access credentials are stored in `services/.env`
    
    # View service logs
    docker compose logs [service-name]
+   
+   # Check service health
+   docker compose ps --format "table {{.Name}}\t{{.Status}}"
    ```
 
-For more detailed information about the services and their configuration, see the [Services Documentation](docs/services/README.md).
+5. **Configuration Issues**
+   ```bash
+   # Regenerate configurations
+   npm run config:init
+   npm run config:map -- 1.0.0
+   
+   # Verify files exist
+   ls services/.env config/services-1.0.0.json
+   ```
+
+For more detailed information about the services and their configuration, see:
+- [Services Documentation](docs/services/README.md)
+- [Configuration Guide](docs/config/README.md)
+- [Development Container Guide](docs/devcontainer/README.md)

@@ -9,3 +9,6 @@
 
 4. `qi/app/src/services/cache/index.ts`:
 @import "../../../qi/app/src/services/cache/index.ts" {block_code=true class="line-numbers"}
+
+5. `qi/app/src/services/redpanda/index.ts`:
+@import "../../../qi/app/src/services/redpanda/index.ts" {block_code=true class="line-numbers"}

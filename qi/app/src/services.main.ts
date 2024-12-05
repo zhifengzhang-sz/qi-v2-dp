@@ -8,6 +8,7 @@ import { ApplicationError } from "@qi/core/errors";
 import * as redis from "./services/redis/index.js";
 import * as cache from "./services/cache/index.js";
 import * as timescaledb from "./services/timescaledb/index.js";
+import * as redpanda from "./services/redpanda/index.js";
 
 interface ServiceState {
   isInitialized: boolean;
@@ -15,6 +16,7 @@ interface ServiceState {
     redis?: boolean;
     cache?: boolean;
     timescaledb?: boolean;
+    redpanda?: boolean;
   };
 }
 
@@ -45,6 +47,12 @@ async function initializeServices(): Promise<void> {
     state.services.timescaledb = true;
     logger.info("TimescaleDB service initialized successfully");
 
+    // Initialize RedPanda service
+    logger.info("Initializing RedPanda service...");
+    await redpanda.initialize();
+    state.services.redpanda = true;
+    logger.info("RedPanda service initialized successfully");
+
     state.isInitialized = true;
     logger.info("All services initialized successfully");
   } catch (error) {
@@ -70,6 +78,13 @@ async function shutdownServices(): Promise<void> {
       await redis.close();
       state.services.redis = false;
       logger.info("Redis service shutdown complete");
+    }
+
+    if (state.services.redpanda) {
+      logger.info("Shutting down RedPanda service...");
+      await redpanda.close();
+      state.services.redpanda = false;
+      logger.info("RedPanda service shutdown complete");
     }
 
     if (state.services.timescaledb) {

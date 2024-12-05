@@ -8,10 +8,12 @@
     "lint": "eslint './src/**/*.ts'",
     "format": "prettier --write './src/**/*.{ts,js}'",
     "start:cli": "node --loader ts-node/esm --experimental-specifier-resolution=node src/cli.loader.main.ts",
-    "start:services": "node --loader ts-node/esm --experimental-specifier-resolution=node src/services.main.ts"
+    "start:services": "node --no-warnings --loader ts-node/esm/transpile-only --experimental-specifier-resolution=node src/services.main.ts"
   },
   "dependencies": {
     "@qi/core": "*",
+    "kafkajs": "^2.2.4",
+    "pg": "^8.13.1",
     "yargs": "^17.7.2"
   },
   "devDependencies": {
