@@ -10,26 +10,28 @@
 import { Kafka } from 'kafkajs';
 
 const kafka = new Kafka({
-  clientId: 'test-client',
+  clientId: 'test-consumer',
   brokers: ['redpanda:9092']
 });
 
-const producer = kafka.producer();
+const consumer = kafka.consumer({ groupId: 'test-group' });
 
 async function test() {
   console.log('Connecting...');
-  await producer.connect();
+  await consumer.connect();
   console.log('Connected');
 
-  console.log('Sending message...');
-  await producer.send({
-    topic: 'test',
-    messages: [{ value: 'hello' }]
+  await consumer.subscribe({ topic: 'test', fromBeginning: true });
+  
+  await consumer.run({
+    eachMessage: async ({ topic, partition, message }) => {
+      console.log({
+        topic,
+        partition,
+        value: message.value?.toString()
+      });
+    },
   });
-  console.log('Message sent');
-
-  await producer.disconnect();
-  console.log('Disconnected');
 }
 
 test().catch(console.error);

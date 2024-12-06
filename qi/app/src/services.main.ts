@@ -1,8 +1,13 @@
 /**
- * @fileoverview Services Entry Point
- * @module qi/app/src/services.main
+ * @fileoverview
+ * @module services.main.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-06
+ * @modified 2024-12-06
  */
 
+// services.main.ts
 import { logger } from "@qi/core/logger";
 import { ApplicationError } from "@qi/core/errors";
 import * as redis from "./services/redis/index.js";
@@ -49,7 +54,26 @@ async function initializeServices(): Promise<void> {
 
     // Initialize RedPanda service
     logger.info("Initializing RedPanda service...");
-    await redpanda.initialize();
+    await redpanda.initialize({
+      enabled: true,
+      consumer: {
+        groupId: process.env.CONSUMER_GROUP_ID || "qi-consumer-group",
+        sessionTimeout: 30000,
+        rebalanceTimeout: 60000,
+        heartbeatInterval: 3000,
+      },
+      producer: {
+        allowAutoTopicCreation: true,
+        maxInFlightRequests: 5,
+        idempotent: false,
+      },
+      healthCheck: {
+        enabled: true,
+        interval: 30000,
+        timeout: 5000,
+        retries: 3,
+      },
+    });
     state.services.redpanda = true;
     logger.info("RedPanda service initialized successfully");
 
@@ -103,20 +127,14 @@ async function shutdownServices(): Promise<void> {
   }
 }
 
-/**
- * Main application entry point
- */
 async function main(): Promise<void> {
   try {
     await initializeServices();
 
-    // Handle shutdown signals
     process.on("SIGTERM", gracefulShutdown);
     process.on("SIGINT", gracefulShutdown);
 
-    // Keep the process running
     process.stdin.resume();
-
     logger.info("Services are ready");
   } catch (error) {
     if (error instanceof ApplicationError) {
@@ -134,9 +152,6 @@ async function main(): Promise<void> {
   }
 }
 
-/**
- * Handles graceful shutdown process
- */
 async function gracefulShutdown(): Promise<void> {
   try {
     await shutdownServices();
@@ -149,7 +164,6 @@ async function gracefulShutdown(): Promise<void> {
   }
 }
 
-// Start the application if this is the main module
 if (import.meta.url === `file://${process.argv[1]}`) {
   main().catch((error) => {
     logger.error("Unhandled error in main", {

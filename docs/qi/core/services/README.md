@@ -1,266 +1,445 @@
-# Services Module
-`@qi/core/services`
+# Core Services Documentation
 
-## Overview
-The services module provides a comprehensive framework for managing service connections in a distributed system. It includes implementations for databases, caching, message queues, and monitoring services, all built on a common base architecture.
+## Table of Contents
+- [Architecture Overview](#architecture-overview)
+- [Core Components](#core-components)
+- [Service Implementations](#service-implementations)
+- [Testing Strategy](#testing-strategy)
+- [Error Handling](#error-handling)
+- [Configuration Reference](#configuration-reference)
+- [Service Management](#service-management)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
 
-## Architecture
+## Architecture Overview
 
-### Core Components
-
-1. **Base Module** (`@qi/core/services/base`)
-   - Provides foundation for all service implementations
-   - Defines core interfaces and types
-   - Manages service lifecycle
-   - Implements health monitoring
-   - Handles error management
-
-2. **Configuration Module** (`@qi/core/services/config`)
-   - Manages service configurations
-   - Provides type-safe configuration access
-   - Handles environment variables
-   - Validates configuration schema
-   - Generates connection strings
-
-### Service Implementations
-
-1. **TimescaleDB** (`@qi/core/services/timescaledb`)
-   - Primary database service
-   - Time-series data management
-   - Sequelize ORM integration
-   - Connection pooling
-   - Query optimization
-
-2. **QuestDB** (`@qi/core/services/questdb`)
-   - Time-series database
-   - High-performance queries
-   - InfluxDB line protocol support
-   - PostgreSQL wire protocol
-   - HTTP REST API
-
-3. **Redis** (`@qi/core/services/redis`)
-   - Caching service
-   - Key-value operations
-   - Connection management
-   - Health monitoring
-   - Retry strategies
-
-4. **RedPanda** (`@qi/core/services/redpanda`)
-   - Message queue service
-   - Kafka protocol compatibility
-   - Producer/Consumer management
-   - Schema registry integration
-   - Message streaming
-
-## Getting Started
-
-### Installation
-```bash
-npm install @qi/core
+### Module Structure
+```
+@qi/core/services/
+├── base/               # Base abstractions
+│   ├── client.ts      # Abstract client implementation
+│   ├── types.ts       # Common types and interfaces
+│   └── manager.ts     # Service management
+├── config/            # Configuration
+│   ├── types.ts       # Configuration interfaces
+│   ├── handlers.ts    # Connection handlers
+│   ├── schema.ts      # JSON schemas
+│   └── loader.ts      # Config loading
+├── redis/            # Redis implementation
+├── redpanda/         # Message queue service
+├── timescaledb/      # TimescaleDB service
+└── questdb/          # QuestDB service
 ```
 
-### Basic Usage
+### Service Architecture
+
+```mermaid
+classDiagram
+    ServiceClient <|-- BaseServiceClient
+    BaseServiceClient <|-- RedisService
+    BaseServiceClient <|-- RedPandaService
+    BaseServiceClient <|-- TimescaleDBService
+    BaseServiceClient <|-- QuestDBService
+    
+    class ServiceClient {
+        <<interface>>
+        +isEnabled()
+        +isHealthy()
+        +getConfig()
+        +connect()
+        +disconnect()
+    }
+
+    class BaseServiceClient {
+        <<abstract>>
+        #status: ServiceStatus
+        #config: ServiceConfig
+        #validateConfig()
+        #startHealthCheck()
+        #abstract checkHealth()
+    }
+```
+
+## Core Components
+
+### Base Service Client
 
 ```typescript
-import { loadServiceConfig } from '@qi/core/services/config';
-import { ServiceConnectionManager } from '@qi/core/services/base';
-import { RedisService } from '@qi/core/services/redis';
-import { RedPandaService } from '@qi/core/services/redpanda';
+abstract class BaseServiceClient<T extends ServiceConfig> {
+  protected status: ServiceStatus = ServiceStatus.INITIALIZING;
+  protected lastHealthCheck?: HealthCheckResult;
 
-async function initializeServices() {
-  // Load configuration
-  const services = await loadServiceConfig({
-    configPath: '/app/config/services.json',
-    envPath: '/app/config/services.env'
-  });
+  constructor(
+    protected readonly config: T,
+    protected readonly serviceName: string
+  ) {
+    this.validateConfig();
+  }
 
-  // Initialize service manager
-  const manager = new ServiceConnectionManager();
+  abstract connect(): Promise<void>;
+  abstract disconnect(): Promise<void>;
+  protected abstract checkHealth(): Promise<HealthCheckResult>;
 
-  // Initialize and register services
-  const redis = new RedisService({
-    enabled: true,
-    connection: services.databases.redis
-  });
-  manager.registerService('redis', redis);
-
-  const redpanda = new RedPandaService({
-    enabled: true,
-    connection: services.messageQueue,
-    clientId: 'my-service'
-  });
-  manager.registerService('redpanda', redpanda);
-
-  // Start all services
-  await manager.connectAll();
-  
-  return manager;
-}
-```
-
-## Configuration
-
-### File Structure
-```
-config/
-├── services-1.0.0.json     # Service configuration
-└── services.env           # Environment variables
-```
-
-### Configuration Example
-```json
-{
-  "type": "services",
-  "version": "1.0",
-  "databases": {
-    "postgres": {
-      "host": "timescaledb",
-      "port": 5432,
-      "database": "postgres",
-      "user": "postgres",
-      "maxConnections": 100
-    },
-    "redis": {
-      "host": "redis",
-      "port": 6379,
-      "maxRetries": 3
+  async isHealthy(): Promise<boolean> {
+    try {
+      this.lastHealthCheck = await this.checkHealth();
+      return this.lastHealthCheck.status === "healthy";
+    } catch (error) {
+      logger.error(`Health check failed for ${this.serviceName}`, { error });
+      return false;
     }
   }
 }
 ```
 
-## Service Management
+### Service Manager
 
-### Health Monitoring
 ```typescript
-const manager = await initializeServices();
+class ServiceConnectionManager {
+  private services = new Map<string, ServiceClient>();
 
-// Check all services
-const health = await manager.getHealthStatus();
-console.log(health);
-// {
-//   redis: true,
-//   redpanda: true
-// }
+  registerService(name: string, service: ServiceClient): void {
+    if (this.services.has(name)) {
+      throw new Error(`Service ${name} already registered`);
+    }
+    this.services.set(name, service);
+  }
 
-// Check specific service
-const redisService = manager.getService('redis');
-const isHealthy = await redisService.isHealthy();
+  async connectAll(): Promise<void> {
+    for (const [name, service] of this.services) {
+      if (!service.isEnabled()) continue;
+      await service.connect();
+    }
+  }
+
+  async disconnectAll(): Promise<void> {
+    for (const service of this.services.values()) {
+      await service.disconnect();
+    }
+  }
+}
 ```
 
-### Graceful Shutdown
-```typescript
-async function shutdown() {
-  const manager = getServiceManager();
-  await manager.disconnectAll();
-}
+## Service Implementations
 
-process.on('SIGTERM', shutdown);
+### RedPanda Service
+
+Features:
+- Kafka protocol compatibility
+- Producer/Consumer management
+- Topic subscription
+- Message batching
+- Health monitoring
+
+```typescript
+class RedPandaService extends BaseServiceClient<RedPandaConfig> {
+  private kafka: Kafka;
+  private producer: Producer | null = null;
+  private consumer: Consumer | null = null;
+
+  async connect(): Promise<void> {
+    try {
+      const kafkaConfig = this.createKafkaConfig();
+      this.kafka = new Kafka(kafkaConfig);
+      
+      this.producer = this.kafka.producer();
+      await this.producer.connect();
+      
+      if (this.config.consumer?.groupId) {
+        this.consumer = this.kafka.consumer(this.createConsumerConfig());
+        await this.consumer.connect();
+      }
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to connect to RedPanda",
+        ErrorCode.CONNECTION_ERROR
+      );
+    }
+  }
+}
+```
+
+### Redis Service
+
+Features:
+- Connection pooling
+- Key prefixing
+- Command timeout handling
+- Automatic reconnection
+- Health monitoring
+
+```typescript
+class RedisService extends BaseServiceClient<RedisConfig> {
+  private client: Redis | null = null;
+
+  async connect(): Promise<void> {
+    try {
+      this.client = new Redis({
+        host: this.config.connection.getHost(),
+        port: this.config.connection.getPort(),
+        password: this.getPassword(),
+        maxRetriesPerRequest: 3,
+        keyPrefix: this.config.options?.keyPrefix,
+        commandTimeout: this.config.options?.commandTimeout,
+        retryStrategy: times => Math.min(times * 1000, 3000)
+      });
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to connect to Redis",
+        ErrorCode.CONNECTION_ERROR
+      );
+    }
+  }
+}
+```
+
+### TimescaleDB Service
+
+Features:
+- Connection pooling
+- Query interface
+- Model synchronization
+- Transaction support
+- Statement timeouts
+
+```typescript
+class TimescaleDBService extends BaseServiceClient<TimescaleDBConfig> {
+  private sequelize: Sequelize | null = null;
+
+  async connect(): Promise<void> {
+    try {
+      const sequelizeOptions = this.createSequelizeOptions();
+      this.sequelize = new Sequelize(sequelizeOptions);
+      await this.sequelize.authenticate();
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to connect to TimescaleDB",
+        ErrorCode.CONNECTION_ERROR
+      );
+    }
+  }
+}
+```
+
+## Configuration Reference
+
+### Schema
+```typescript
+interface ServiceConfig {
+  type: "services";
+  version: string;
+  databases: {
+    postgres: PostgresConfig;
+    questdb: QuestDBConfig;
+    redis: RedisConfig;
+  };
+  messageQueue: MessageQueueConfig;
+  monitoring: MonitoringConfig;
+  networking: NetworkConfig;
+}
+```
+
+### Environment Variables
+
+Database Credentials:
+```env
+POSTGRES_PASSWORD=<required>
+POSTGRES_USER=<required>
+POSTGRES_DB=<required>
+REDIS_PASSWORD=<required>
+```
+
+Monitoring:
+```env
+GF_SECURITY_ADMIN_PASSWORD=<required>
+PGADMIN_DEFAULT_EMAIL=<required>
+PGADMIN_DEFAULT_PASSWORD=<required>
+```
+
+### Port Matrix
+| Service | Port | Protocol | Usage |
+|---------|------|----------|--------|
+| TimescaleDB | 5432 | PostgreSQL | Database connections |
+| QuestDB | 9000 | HTTP | Web console |
+| QuestDB | 8812 | PostgreSQL | Wire protocol |
+| QuestDB | 9009 | InfluxDB | Line protocol |
+| Redis | 6379 | Redis | Cache operations |
+| RedPanda | 9092 | Kafka | Message broker |
+| RedPanda | 8081 | HTTP | Schema registry |
+| RedPanda | 9644 | HTTP | Admin API |
+| RedPanda | 8082 | HTTP | REST proxy |
+| Grafana | 3000 | HTTP | Monitoring UI |
+| pgAdmin | 80 | HTTP | Database admin |
+
+For more detail, please see [configuration](./config.md).
+
+## Service Management
+
+### Setup
+
+1. Generate Configuration:
+```bash
+npm run config:init
+npm run config:map -- 1.0.0
+```
+
+2. Network Setup:
+```bash
+docker network create qi_db
+docker network create redis_network
+docker network create redpanda_network
+```
+
+3. Start Services:
+```bash
+docker compose up -d
+```
+
+### Health Checks
+
+Health check configurations:
+- Interval: 30s
+- Timeout: 10s
+- Retries: 3-5
+
+### Volume Management
+
+Persistent volumes:
+- `questdb_data`: QuestDB data
+- `timescaledb_data`: TimescaleDB data
+- `pgadmin_data`: pgAdmin settings
+- `grafana_data`: Grafana dashboards
+- `redis_data`: Redis data
+- `redpanda_data`: RedPanda logs
+
+## Testing Strategy
+
+1. Test Setup
+```typescript
+describe("Service", () => {
+  vi.mock("external-lib");
+  
+  const mockConfig = {
+    enabled: true,
+    connection: {
+      getHost: () => "localhost",
+      getPort: () => port
+    }
+  };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+});
+```
+
+2. Lifecycle Tests
+```typescript
+describe("lifecycle", () => {
+  it("connects successfully", async () => {
+    const service = new Service(config);
+    await service.connect();
+    expect(externalClient.connect).toHaveBeenCalled();
+  });
+});
+```
+
+For more information, please see [testing](./test.md).
+
+## Error Handling
+
+Error codes:
+- CONNECTION_ERROR
+- SERVICE_NOT_INITIALIZED 
+- CONFIGURATION_ERROR
+- OPERATION_ERROR
+
+```typescript
+try {
+  // Service operation
+} catch (error) {
+  throw new ApplicationError(
+    "Operation failed",
+    ErrorCode.OPERATION_ERROR,
+    500,
+    { error: String(error) }
+  );
+}
 ```
 
 ## Best Practices
 
-### 1. Configuration Management
-- Use environment variables for sensitive data
-- Validate configurations before use
-- Implement proper error handling
-- Monitor service health
-- Handle reconnection scenarios
+1. Service Implementation
+- Extend BaseServiceClient
+- Implement health checks
+- Handle connection lifecycle
+- Add error handling
+- Include configuration validation
 
-### 2. Error Handling
-```typescript
-try {
-  await service.connect();
-} catch (error) {
-  if (error instanceof ApplicationError) {
-    logger.error('Service connection failed', {
-      service: error.service,
-      code: error.code,
-      message: error.message
-    });
-  }
-  // Handle recovery
-}
+2. Testing
+- Mock external dependencies
+- Test error scenarios
+- Check resource cleanup
+- Verify health checks
+
+3. Error Handling
+- Use ApplicationError
+- Include error details
+- Log errors appropriately
+- Clean up resources
+
+4. Health Monitoring
+- Regular health checks
+- Detailed status reporting
+- Connection verification
+- Error recovery
+
+5. Resource Management
+- Proper cleanup
+- Connection pooling
+- Timeout handling
+- Event handling
+
+## Troubleshooting
+
+### Common Issues
+
+1. Service Won't Start
+```bash
+# Check logs
+docker compose logs [service-name]
+
+# Verify network
+docker network inspect [network-name]
+
+# Check port conflicts
+netstat -tulpn | grep <port>
 ```
 
-### 3. Health Monitoring
-```typescript
-const healthCheck = {
-  enabled: true,
-  interval: 30000,  // 30 seconds
-  timeout: 5000,    // 5 seconds
-  retries: 3
-};
+2. Connection Issues
+```bash
+# Verify service is running
+docker compose ps
 
-const service = new RedisService({
-  ...config,
-  healthCheck
-});
+# Check container networking
+docker inspect [container-name]
+
+# Test connectivity
+docker compose exec [service-name] ping [other-service]
 ```
 
-## Common Issues
+3. Reset Environment
+```bash
+# Stop and clean up
+docker compose down -v
 
-### Connection Problems
-1. Check network connectivity
-2. Verify configuration
-3. Inspect service logs
-4. Check health status
-5. Review error messages
+# Remove networks
+docker network rm qi_db redis_network redpanda_network
 
-### Performance Issues
-1. Monitor connection pools
-2. Check resource usage
-3. Review query patterns
-4. Optimize configurations
-5. Implement caching
+# Regenerate configuration
+npm run config:init
+npm run config:map -- 1.0.0
 
-## Testing
-
-### Unit Tests
-```typescript
-describe('ServiceManager', () => {
-  let manager: ServiceConnectionManager;
-
-  beforeEach(() => {
-    manager = new ServiceConnectionManager();
-  });
-
-  it('should manage service lifecycle', async () => {
-    const mockService = createMockService();
-    manager.registerService('test', mockService);
-    
-    await manager.connectAll();
-    expect(await mockService.isHealthy()).toBe(true);
-  });
-});
+# Start fresh
+docker compose up -d
 ```
-
-## Contributing
-
-### Adding New Services
-1. Extend BaseServiceClient
-2. Implement required interfaces
-3. Add configuration types
-4. Write unit tests
-5. Update documentation
-
-### Development Setup
-1. Clone repository
-2. Install dependencies
-3. Set up environment
-4. Run test suite
-5. Submit pull request
-
-## Related Documentation
-- [Base Service Module](docs/services/base.md)
-- [Configuration Module](docs/services/config.md)
-- [Redis Service](docs/services/redis.md)
-- [RedPanda Service](docs/services/redpanda.md)
-- [TimescaleDB Service](docs/services/timescaledb.md)
-
-## Support
-For issues and questions:
-1. Check documentation
-2. Review common issues
-3. Submit detailed bug reports
-4. Contact development team

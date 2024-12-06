@@ -1,150 +1,109 @@
 /**
- * @fileoverview RedPanda Service Application
- * @module qi/app/src/services/redpanda
+ * @fileoverview
+ * @module index.ts
  *
- * @description
- * Application integration for RedPanda service. Provides a high-level interface
- * for message streaming operations by combining service configuration with the RedPanda
- * implementation from @qi/core.
- *
- * Features:
- * - Automatic broker selection based on environment
- * - Consumer group management
- * - Schema registry integration
- * - Health monitoring
- * - Type-safe message operations
- *
- * @example Basic Usage
- * ```typescript
- * import { initialize } from 'qi/app/src/services/redpanda';
- *
- * const redpanda = await initialize();
- * const producer = redpanda.getProducer();
- * ```
- *
- * @author Zhifeng Zhang
+ * @author zhifengzhang-sz
+ * @created 2024-12-06
  * @modified 2024-12-06
  */
 
-import { RedPandaService } from "@qi/core/services/redpanda";
+// services/redpanda/index.ts
+import { Kafka, Producer, Consumer, ConsumerConfig } from "kafkajs";
+import { RedPandaConfig, toKafkaConfig } from "./config.js";
 import { initializeConfig } from "../config/index.js";
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
 import { logger } from "@qi/core/logger";
-import type { MessageQueueConnection } from "@qi/core/services/config";
-import type { SASLOptions, Mechanism } from "kafkajs";
-import { Kafka } from "kafkajs";
-
-/**
- * Extended Kafka connection interface for RedPanda configuration
- */
-interface KafkaConnection extends MessageQueueConnection {
-  getBrokers(): string[];
-  getSSLConfig(): Record<string, unknown>;
-  getSASLConfig(): SASLOptions | Mechanism | undefined;
-  getConnectionTimeout(): number;
-  getRequestTimeout(): number;
-}
-
-/**
- * Default RedPanda configuration
- */
-export const DEFAULT_REDPANDA_OPTIONS = {
-  enabled: true,
-  consumer: {
-    sessionTimeout: 30000,
-    rebalanceTimeout: 60000,
-    heartbeatInterval: 3000,
-  },
-  producer: {
-    allowAutoTopicCreation: true,
-    maxInFlightRequests: 5,
-    idempotent: false,
-  },
-  healthCheck: {
-    enabled: true,
-    interval: 30000,
-    timeout: 5000,
-    retries: 3,
-  },
-} as const;
 
 let redpandaClient: RedPandaService | undefined;
-let kafkaInstance: Kafka | undefined;
 
-function enhanceConnection(
-  connection: MessageQueueConnection
-): KafkaConnection {
-  return {
-    ...connection,
-    getBrokers(): string[] {
-      return [connection.getBrokerEndpoint()];
-    },
-    getSSLConfig(): Record<string, unknown> {
-      return {};
-    },
-    getSASLConfig(): SASLOptions | Mechanism | undefined {
-      return undefined;
-    },
-    getConnectionTimeout(): number {
-      return 30000;
-    },
-    getRequestTimeout(): number {
-      return 30000;
-    },
+interface RedPandaOptions {
+  enabled?: boolean;
+  consumer?: {
+    groupId?: string;
+    sessionTimeout?: number;
+    rebalanceTimeout?: number;
+    heartbeatInterval?: number;
+  };
+  producer?: {
+    allowAutoTopicCreation?: boolean;
+    maxInFlightRequests?: number;
+    idempotent?: boolean;
+  };
+  healthCheck?: {
+    enabled?: boolean;
+    interval?: number;
+    timeout?: number;
+    retries?: number;
   };
 }
 
-/**
- * Test direct KafkaJS connection
- */
-async function testDirectKafkaConnection(
-  brokerEndpoint: string
-): Promise<void> {
-  logger.debug("Creating Kafka instance", { brokerEndpoint });
+export class RedPandaService {
+  private kafka: Kafka;
+  private producer: Producer | null = null;
+  private consumer: Consumer | null = null;
+  private config: RedPandaConfig;
 
-  try {
-    // Create a basic Kafka instance
-    kafkaInstance = new Kafka({
-      clientId: "connection-test",
-      brokers: [brokerEndpoint],
-      connectionTimeout: 10000,
-      retry: {
-        initialRetryTime: 100,
-        retries: 3,
-      },
-    });
+  constructor(config: RedPandaConfig) {
+    this.config = config;
+    this.kafka = new Kafka(toKafkaConfig(config));
+  }
 
-    logger.debug("Created Kafka instance, getting admin client");
-    const admin = kafkaInstance.admin();
+  async connect(): Promise<void> {
+    try {
+      this.producer = this.kafka.producer(this.config.producer || {});
+      await this.producer.connect();
 
-    logger.debug("Connecting to admin client");
-    await admin.connect();
+      if (this.config.consumer) {
+        const consumerConfig = {
+          groupId: this.config.consumer.groupId,
+          ...this.config.consumer,
+        };
+        // Type assertion to satisfy TypeScript
+        this.consumer = this.kafka.consumer(consumerConfig as ConsumerConfig);
+        await this.consumer.connect();
+      }
+      logger.info("RedPanda service connected successfully");
+    } catch (error) {
+      logger.error("Failed to connect RedPanda service", { error });
+      throw error;
+    }
+  }
 
-    logger.debug("Listing topics to verify connection");
-    const topics = await admin.listTopics();
-    logger.debug("Successfully listed topics", { topics });
+  async disconnect(): Promise<void> {
+    try {
+      if (this.consumer) {
+        await this.consumer.disconnect();
+        this.consumer = null;
+      }
+      if (this.producer) {
+        await this.producer.disconnect();
+        this.producer = null;
+      }
+      logger.info("RedPanda service disconnected successfully");
+    } catch (error) {
+      logger.error("Error disconnecting RedPanda service", { error });
+      throw error;
+    }
+  }
 
-    await admin.disconnect();
-    logger.debug("Successfully disconnected from admin client");
-  } catch (error) {
-    logger.error("Direct Kafka connection test failed", {
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-    });
-    throw error;
+  getProducer(): Producer {
+    if (!this.producer) throw new Error("Producer not initialized");
+    return this.producer;
+  }
+
+  getConsumer(): Consumer {
+    if (!this.consumer) throw new Error("Consumer not initialized");
+    return this.consumer;
   }
 }
 
 export async function initialize(
-  options: Partial<typeof DEFAULT_REDPANDA_OPTIONS> = {}
+  options: RedPandaOptions = {}
 ): Promise<RedPandaService> {
   try {
-    if (redpandaClient) {
-      return redpandaClient;
-    }
+    if (redpandaClient) return redpandaClient;
 
     const services = await initializeConfig();
-
     if (!services.messageQueue) {
       throw new ApplicationError(
         "RedPanda configuration missing",
@@ -153,89 +112,35 @@ export async function initialize(
       );
     }
 
-    const brokerEndpoint = services.messageQueue.getBrokerEndpoint();
-
-    logger.debug(
-      "Testing direct Kafka connection before RedPanda initialization",
-      {
-        brokerEndpoint,
-        schemaRegistryEndpoint:
-          services.messageQueue.getSchemaRegistryEndpoint(),
-        proxyEndpoint: services.messageQueue.getProxyEndpoint(),
-        networkName: services.networking.getNetworkName("redpanda"),
-      }
-    );
-
-    try {
-      await testDirectKafkaConnection(brokerEndpoint);
-    } catch (error) {
-      throw new ApplicationError(
-        "Failed to establish basic Kafka connection",
-        ErrorCode.CONNECTION_ERROR,
-        500,
-        {
-          brokerEndpoint,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      );
-    }
-
-    const config = {
-      enabled: options.enabled ?? DEFAULT_REDPANDA_OPTIONS.enabled,
-      connection: enhanceConnection(services.messageQueue),
-      clientId: process.env.SERVICE_NAME || "qi-service",
-      consumer: {
-        ...DEFAULT_REDPANDA_OPTIONS.consumer,
-        ...options.consumer,
-        groupId: process.env.CONSUMER_GROUP_ID || "qi-consumer-group",
-      },
-      producer: {
-        ...DEFAULT_REDPANDA_OPTIONS.producer,
-        ...options.producer,
-      },
-      healthCheck: {
-        ...DEFAULT_REDPANDA_OPTIONS.healthCheck,
-        ...options.healthCheck,
-      },
-    };
-
-    try {
-      logger.debug("Creating RedPanda service instance", config);
-      redpandaClient = new RedPandaService(config);
-
-      logger.debug("Attempting RedPanda service connection");
-      await redpandaClient.connect();
-
-      logger.debug("RedPanda service connection successful");
-    } catch (error) {
-      logger.error("RedPanda service connection failed", {
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        config: {
-          broker: brokerEndpoint,
-          schemaRegistry: services.messageQueue.getSchemaRegistryEndpoint(),
-          proxy: services.messageQueue.getProxyEndpoint(),
-          clientId: config.clientId,
-          groupId: config.consumer?.groupId,
-        },
-      });
-      throw error;
-    }
-
-    logger.info("RedPanda service initialized successfully", {
-      brokerEndpoint,
+    logger.debug("Initializing RedPanda service with configuration:", {
+      brokerEndpoint: services.messageQueue.getBrokerEndpoint(),
       schemaRegistry: services.messageQueue.getSchemaRegistryEndpoint(),
+      ...options,
     });
 
+    const config: RedPandaConfig = {
+      type: "redpanda",
+      version: "1.0",
+      kafka: {
+        brokers: [services.messageQueue.getBrokerEndpoint()],
+        clientId: process.env.SERVICE_NAME || "qi-service",
+      },
+      consumer: {
+        groupId: process.env.CONSUMER_GROUP_ID || "qi-consumer-group",
+        ...options.consumer,
+      },
+      producer: options.producer,
+    };
+
+    redpandaClient = new RedPandaService(config);
+    await redpandaClient.connect();
     return redpandaClient;
   } catch (error) {
     throw new ApplicationError(
       "Failed to initialize RedPanda service",
       ErrorCode.INITIALIZATION_ERROR,
       500,
-      {
-        error: error instanceof Error ? error.message : String(error),
-      }
+      { error: error instanceof Error ? error.message : String(error) }
     );
   }
 }
@@ -256,19 +161,6 @@ export async function close(): Promise<void> {
     await redpandaClient.disconnect();
     redpandaClient = undefined;
   }
-
-  // Also clean up the Kafka instance if it exists
-  if (kafkaInstance) {
-    const admin = kafkaInstance.admin();
-    try {
-      await admin.disconnect();
-    } catch (error) {
-      logger.warn("Error disconnecting Kafka admin client", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-    kafkaInstance = undefined;
-  }
 }
 
-export type { RedPandaService };
+export type { RedPandaConfig };
