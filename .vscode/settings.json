@@ -20,5 +20,6 @@
   "cSpell.words": [
     "lightolivegreen"
   ],
-  "CodeGPT.apiKey": "Anthropic"
+  "CodeGPT.apiKey": "Anthropic",
+  "markdown-preview-enhanced.plantumlServer": "http://localhost:8084/svg/"
 }
