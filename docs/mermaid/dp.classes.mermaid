@@ -1,0 +1,149 @@
+%%{init: {'theme':'dark'}}%%
+classDiagram
+    %% Core Infrastructure Classes
+    class NetworkManager {
+        -httpServer: Server
+        -wsServer: WebSocketServer
+        +initialize()
+        +startServer()
+        +stopServer()
+        +getStatus()
+    }
+
+    class RestApiService {
+        -router: Router
+        -authMiddleware: AuthMiddleware
+        -rateLimiter: RateLimiter
+        +registerRoutes()
+        +handleRequest()
+        +validateRequest()
+    }
+
+    class WebSocketManager {
+        -connections: Map<string, WebSocket>
+        -heartbeatInterval: number
+        +handleConnection()
+        +broadcastMessage()
+        +handleDisconnect()
+        +monitorHealth()
+    }
+
+    %% Data Model Classes
+    class BaseModel {
+        <<abstract>>
+        #id: string
+        #createdAt: DateTime
+        #updatedAt: DateTime
+        +validate()
+        +toJSON()
+    }
+
+    class MarketData extends BaseModel {
+        +symbol: string
+        +exchange: string
+        +timestamp: DateTime
+        +toTimeSeries()
+    }
+
+    class OHLCV extends MarketData {
+        +interval: string
+        +open: number
+        +high: number
+        +low: number
+        +close: number
+        +volume: number
+    }
+
+    class OrderBook extends MarketData {
+        +bids: PriceLevel[]
+        +asks: PriceLevel[]
+        +snapshot: boolean
+        +getSpread()
+        +getMidPrice()
+    }
+
+    class Trade extends MarketData {
+        +price: number
+        +amount: number
+        +side: TradeSide
+        +maker: string
+        +taker: string
+    }
+
+    %% Provider Integration Classes
+    class DataProvider {
+        <<interface>>
+        +connect()
+        +disconnect()
+        +subscribe()
+        +unsubscribe()
+    }
+
+    class CryptoCompareProvider implements DataProvider {
+        -apiKey: string
+        -baseUrl: string
+        -wsEndpoint: string
+        +fetchHistoricalData()
+        +streamLiveData()
+    }
+
+    class TwelveDataProvider implements DataProvider {
+        -apiKey: string
+        -baseUrl: string
+        -wsEndpoint: string
+        +fetchHistoricalData()
+        +streamLiveData()
+    }
+
+    %% Service Classes
+    class DataProducer {
+        -providers: Map<string, DataProvider>
+        -messageQueue: MessageQueue
+        +initialize()
+        +startProducing()
+        +stopProducing()
+        +handleData()
+    }
+
+    class DataConsumer {
+        -subscription: Subscription
+        -dataStore: DataStore
+        +startConsuming()
+        +stopConsuming()
+        +processMessage()
+        +handleError()
+    }
+
+    class DataWalker {
+        -subscription: Subscription
+        -processors: Map<string, DataProcessor>
+        +registerProcessor()
+        +startProcessing()
+        +stopProcessing()
+        +publishResults()
+    }
+
+    class DataStore {
+        -db: Database
+        -cache: Cache
+        +query()
+        +store()
+        +update()
+        +delete()
+    }
+
+    %% Relationships
+    NetworkManager --> RestApiService
+    NetworkManager --> WebSocketManager
+    RestApiService --> DataProvider
+    WebSocketManager --> DataProvider
+    DataProducer --> DataProvider
+    DataProducer --> MarketData
+    DataConsumer --> MarketData
+    MarketData <|-- OHLCV
+    MarketData <|-- OrderBook
+    MarketData <|-- Trade
+    DataProvider <|.. CryptoCompareProvider
+    DataProvider <|.. TwelveDataProvider
+    DataWalker --> DataProcessor
+    DataStore --> BaseModel

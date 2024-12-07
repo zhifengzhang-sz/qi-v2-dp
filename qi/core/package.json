@@ -78,6 +78,14 @@
     "./services/*": {
       "import": "./dist/services/*/index.js",
       "require": "./dist/services/*/index.js"
+    },
+    "./data/*": {
+      "import": "./dist/data/*.js",
+      "require": "./dist/data/*.js"
+    },
+    "./data/models/*": {
+      "import": "./dist/data/models/*.js",
+      "require": "./dist/data/models/*.js"
     }
   }
 }

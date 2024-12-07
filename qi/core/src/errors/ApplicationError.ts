@@ -9,14 +9,14 @@
  * preparation.
  *
  * @created 2024-11-21
- * @modified 2024-11-22
+ * @modified 2024-12-07
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
  * that file headers are up-to-date with the author's name and modification date.
  */
 
-import { ErrorCode } from "./ErrorCodes.js";
+import { ErrorCode, StatusCode } from "./ErrorCodes.js";
 import { logger } from "@qi/core/logger";
 
 /**
@@ -45,7 +45,7 @@ export class ApplicationError extends Error {
   constructor(
     message: string,
     public code: ErrorCode = ErrorCode.APPLICATION_ERROR,
-    public statusCode: number = 500,
+    public statusCode: number = StatusCode.INTERNAL_SERVER_ERROR,
     public details?: ErrorDetails
   ) {
     super(message);

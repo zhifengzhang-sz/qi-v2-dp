@@ -6,8 +6,8 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-03-18
- * @modified 2024-11-22
+ * @modified 2024-12-07
  */
 
 export { ErrorDetails, ApplicationError } from "./ApplicationError.js";
-export { ErrorCode } from "./ErrorCodes.js";
+export { ErrorCode, StatusCode } from "./ErrorCodes.js";

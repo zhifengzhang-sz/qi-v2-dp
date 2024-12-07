@@ -1,4 +1,4 @@
-### Data Platform Container Diagram (C4 Style)
+### Data Platform Component Diagram (C4 Style)
 
 ```plantuml
 @startuml
