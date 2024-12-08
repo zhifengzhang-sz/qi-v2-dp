@@ -21,7 +21,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-12-07
+ * @modified 2024-12-08
  */
 
 export enum ErrorCode {
@@ -46,6 +46,12 @@ export enum ErrorCode {
   OPERATION_ERROR = 1300,
   INVALID_OPERATION = 1301,
   OPERATION_TIMEOUT = 1302,
+
+  // Authentication errors
+  AUTH_ERROR = 1401, // 401 related errors
+  RATE_LIMIT_ERROR = 1429, // 429 related errors
+  NETWORK_ERROR = 1500, // Network connectivity issues
+  NOT_FOUND_ERROR = 1404, // Resource not found
 
   // === Configuration Errors (2000-2999) ===
   // Basic config errors
