@@ -2,6 +2,526 @@
 
 ## data
 
+### access
+
+#### db
+
+##### BaseRepository.ts
+
+```typescript
+/**
+ * @fileoverview Base repository implementation
+ * @module @qi/core/data/access/db/BaseRepository
+ *
+ * @description
+ * Provides base implementation of the repository interface with:
+ * - CRUD operations
+ * - Transaction support
+ * - Error handling
+ * - Type safety
+ *
+ * Serves as the base class for all concrete repository implementations.
+ *
+ * @author Zhifeng Zhang
+ * @created 2024-12-09
+ * @modified 2024-12-09
+ */
+
+import {
+  Model,
+  ModelStatic,
+  CreationAttributes,
+  UpdateOptions as SequelizeUpdateOptions,
+  FindOptions as SequelizeFindOptions,
+  CreateOptions as SequelizeCreateOptions,
+  DestroyOptions,
+} from "sequelize";
+import {
+  IRepository,
+  FindOptions,
+  CreateOptions,
+  UpdateOptions,
+  DeleteOptions,
+} from "./types.js";
+import { ApplicationError, ErrorCode } from "@qi/core/errors";
+
+/**
+ * Base repository implementation providing common CRUD operations
+ */
+export abstract class BaseRepository<T extends Model>
+  implements IRepository<T>
+{
+  constructor(protected readonly model: ModelStatic<T>) {}
+
+  /**
+   * Create a new record
+   */
+  async create(data: Partial<T>, options?: CreateOptions<T>): Promise<T> {
+    try {
+      const sequelizeOptions: SequelizeCreateOptions<T> = {
+        transaction: options?.transaction,
+        returning: options?.returning !== false,
+      };
+
+      return await this.model.create(
+        data as CreationAttributes<T>,
+        sequelizeOptions
+      );
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to create record",
+        ErrorCode.STORAGE_WRITE_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Create multiple records in bulk
+   */
+  async createBulk(
+    data: Partial<T>[],
+    options?: CreateOptions<T>
+  ): Promise<T[]> {
+    try {
+      return await this.model.bulkCreate(data as CreationAttributes<T>[], {
+        transaction: options?.transaction,
+        returning: options?.returning !== false,
+      });
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to bulk create records",
+        ErrorCode.STORAGE_WRITE_ERROR,
+        500,
+        {
+          model: this.model.name,
+          count: data.length,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Find a single record
+   */
+  async findOne(options: FindOptions<T>): Promise<T | null> {
+    try {
+      const sequelizeOptions: SequelizeFindOptions<T> = {
+        where: options.where,
+        transaction: options.transaction,
+      };
+
+      if (options.order) {
+        sequelizeOptions.order = options.order;
+      }
+
+      return await this.model.findOne(sequelizeOptions);
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to find record",
+        ErrorCode.STORAGE_READ_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Find multiple records
+   */
+  async findMany(options: FindOptions<T>): Promise<T[]> {
+    try {
+      const sequelizeOptions: SequelizeFindOptions<T> = {
+        where: options.where,
+        transaction: options.transaction,
+      };
+
+      if (options.limit) {
+        sequelizeOptions.limit = options.limit;
+      }
+
+      if (options.offset) {
+        sequelizeOptions.offset = options.offset;
+      }
+
+      if (options.order) {
+        sequelizeOptions.order = options.order;
+      }
+
+      return await this.model.findAll(sequelizeOptions);
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to find records",
+        ErrorCode.STORAGE_READ_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Update records that match the criteria
+   */
+  async update(
+    data: Partial<T>,
+    options: UpdateOptions<T>
+  ): Promise<[number, T[]]> {
+    try {
+      const sequelizeOptions: SequelizeUpdateOptions<T> = {
+        where: options.where || {},
+        transaction: options.transaction,
+        returning: true,
+      };
+
+      const [affectedCount] = await this.model.update(
+        data as CreationAttributes<T>,
+        sequelizeOptions
+      );
+      return [affectedCount, [] as T[]];
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to update records",
+        ErrorCode.STORAGE_WRITE_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Delete records that match the criteria
+   */
+  async delete(options: DeleteOptions<T>): Promise<number> {
+    try {
+      const sequelizeOptions: DestroyOptions<T> = {
+        where: options.where || {},
+        transaction: options.transaction,
+        force: options.force,
+      };
+
+      return await this.model.destroy(sequelizeOptions);
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to delete records",
+        ErrorCode.STORAGE_WRITE_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Count records that match the criteria
+   */
+  async count(options?: FindOptions<T>): Promise<number> {
+    try {
+      return await this.model.count({
+        where: options?.where,
+        transaction: options?.transaction,
+      });
+    } catch (error) {
+      throw new ApplicationError(
+        "Failed to count records",
+        ErrorCode.STORAGE_READ_ERROR,
+        500,
+        {
+          model: this.model.name,
+          error: String(error),
+        }
+      );
+    }
+  }
+
+  /**
+   * Get the underlying model
+   */
+  getModel(): ModelStatic<T> {
+    return this.model;
+  }
+}
+
+```
+
+##### TimeseriesRepository.ts
+
+```typescript
+/**
+ * @fileoverview Time series repository implementation
+ * @module @qi/core/data/access/db/TimeseriesRepository
+ *
+ * @description
+ * Extends the base repository with time series specific functionality:
+ * - Time range queries
+ * - Latest record retrieval
+ * - Before/After timestamp queries
+ * - Custom time field support
+ *
+ * Used for all time series data access in the system, particularly
+ * for market data like OHLCV and trades.
+ *
+ * @author Zhifeng Zhang
+ * @created 2024-12-09
+ * @modified 2024-12-09
+ */
+
+import { Model, ModelStatic, Op, WhereOptions } from "sequelize";
+import { BaseRepository } from "./BaseRepository.js";
+import { ITimeSeriesRepository, FindOptions } from "./types.js";
+
+/**
+ * Base repository implementation for time series data
+ * Extends base repository with time-specific operations
+ */
+export abstract class TimeSeriesRepository<T extends Model>
+  extends BaseRepository<T>
+  implements ITimeSeriesRepository<T>
+{
+  constructor(
+    model: ModelStatic<T>,
+    protected readonly timeField: string = "timestamp"
+  ) {
+    super(model);
+  }
+
+  /**
+   * Find records within a time range
+   */
+  async findInTimeRange(
+    startTime: number,
+    endTime: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]> {
+    const whereClause = {
+      [this.timeField]: {
+        [Op.between]: [startTime, endTime],
+      },
+    } as WhereOptions<T>;
+
+    return this.findMany({
+      ...options,
+      where: whereClause,
+      order: [[this.timeField, "ASC"]],
+    });
+  }
+
+  /**
+   * Find the latest record
+   */
+  async findLatest(options?: Omit<FindOptions<T>, "order">): Promise<T | null> {
+    return this.findOne({
+      ...options,
+      order: [[this.timeField, "DESC"]],
+      limit: 1,
+    });
+  }
+
+  /**
+   * Find records after a specific timestamp
+   */
+  async findAfter(
+    timestamp: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]> {
+    const whereClause = {
+      [this.timeField]: {
+        [Op.gt]: timestamp,
+      },
+    } as WhereOptions<T>;
+
+    return this.findMany({
+      ...options,
+      where: whereClause,
+      order: [[this.timeField, "ASC"]],
+    });
+  }
+
+  /**
+   * Find records before a specific timestamp
+   */
+  async findBefore(
+    timestamp: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]> {
+    const whereClause = {
+      [this.timeField]: {
+        [Op.lt]: timestamp,
+      },
+    } as WhereOptions<T>;
+
+    return this.findMany({
+      ...options,
+      where: whereClause,
+      order: [[this.timeField, "DESC"]],
+    });
+  }
+}
+
+```
+
+##### types.ts
+
+```typescript
+/**
+ * @fileoverview Repository interface definitions
+ * @module @qi/core/data/access/db/types
+ *
+ * @description
+ * Defines the core repository interfaces for database access including:
+ * - Base repository interface for CRUD operations
+ * - Time series specific repository interface
+ * - Type-safe options for all operations
+ * - Transaction support
+ *
+ * Used as the foundation for all data access repositories in the system.
+ *
+ * @author Zhifeng Zhang
+ * @created 2024-12-09
+ * @modified 2024-12-09
+ */
+
+import { Model, ModelStatic, Transaction, WhereOptions } from "sequelize";
+
+/**
+ * Base options for repository operations
+ */
+export interface BaseRepositoryOptions {
+  transaction?: Transaction;
+}
+
+/**
+ * Options for finding records
+ */
+export interface FindOptions<T> extends BaseRepositoryOptions {
+  where?: WhereOptions<T>;
+  limit?: number;
+  offset?: number;
+  order?: [string, "ASC" | "DESC"][];
+}
+
+/**
+ * Options for creating records
+ */
+export interface CreateOptions<T> extends BaseRepositoryOptions {
+  returning?: boolean;
+  defaults?: Partial<T>;
+}
+
+/**
+ * Options for updating records
+ */
+export interface UpdateOptions<T> extends BaseRepositoryOptions {
+  where?: WhereOptions<T>;
+  returning?: boolean;
+}
+
+/**
+ * Options for deleting records
+ */
+export interface DeleteOptions<T> extends BaseRepositoryOptions {
+  where?: WhereOptions<T>;
+  force?: boolean;
+}
+
+/**
+ * Base repository interface for CRUD operations
+ */
+export interface IRepository<T extends Model> {
+  /**
+   * Create a new record
+   */
+  create(data: Partial<T>, options?: CreateOptions<T>): Promise<T>;
+
+  /**
+   * Create multiple records in bulk
+   */
+  createBulk(data: Partial<T>[], options?: CreateOptions<T>): Promise<T[]>;
+
+  /**
+   * Find a single record
+   */
+  findOne(options: FindOptions<T>): Promise<T | null>;
+
+  /**
+   * Find multiple records
+   */
+  findMany(options: FindOptions<T>): Promise<T[]>;
+
+  /**
+   * Update records that match the criteria
+   */
+  update(data: Partial<T>, options: UpdateOptions<T>): Promise<[number, T[]]>;
+
+  /**
+   * Delete records that match the criteria
+   */
+  delete(options: DeleteOptions<T>): Promise<number>;
+
+  /**
+   * Count records that match the criteria
+   */
+  count(options?: FindOptions<T>): Promise<number>;
+
+  /**
+   * Get the underlying model
+   */
+  getModel(): ModelStatic<T>;
+}
+
+/**
+ * Base repository interface for time series data
+ * Extends base repository with time-specific operations
+ */
+export interface ITimeSeriesRepository<T extends Model> extends IRepository<T> {
+  /**
+   * Find records within a time range
+   */
+  findInTimeRange(
+    startTime: number,
+    endTime: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]>;
+
+  /**
+   * Find the latest record
+   */
+  findLatest(options?: Omit<FindOptions<T>, "order">): Promise<T | null>;
+
+  /**
+   * Find records after a specific timestamp
+   */
+  findAfter(
+    timestamp: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]>;
+
+  /**
+   * Find records before a specific timestamp
+   */
+  findBefore(
+    timestamp: number,
+    options?: Omit<FindOptions<T>, "where">
+  ): Promise<T[]>;
+}
+
+```
+
 ### errors
 
 #### index.ts
@@ -889,6 +1409,484 @@ export const INTERVAL_AGGREGATION: Record<string, number> = {
   "1w": 7,
   "1M": 30,
 } as const;
+
+```
+
+#### storage
+
+##### avro
+
+###### cryptocompare
+
+####### types.ts
+
+```typescript
+import { Type } from "avsc";
+import ohlcvSchema from "./ohlcv.avsc";
+import tickSchema from "./tick.avsc";
+
+/**
+ * Type definition for the OHLCV Avro schema
+ */
+export interface OHLCV {
+  exchange: string;
+  symbol: string;
+  timestamp: number;
+  open: Buffer; // Decimal logical type
+  high: Buffer;
+  low: Buffer;
+  close: Buffer;
+  volume: Buffer;
+  quoteVolume: Buffer;
+  totalTrades: number | null;
+  source: string;
+  dataType: string;
+  version: string;
+}
+
+/**
+ * Trade side enumeration for tick data
+ */
+export type TradeSide = "buy" | "sell" | "unknown";
+
+/**
+ * Type definition for the Tick Avro schema
+ */
+export interface Tick {
+  exchange: string;
+  symbol: string;
+  timestamp: number;
+  price: Buffer; // Decimal logical type
+  quantity: Buffer;
+  side: TradeSide;
+  tradeId: string;
+  ccseq: number;
+  bestBid: Buffer | null;
+  bestAsk: Buffer | null;
+  bestBidQuantity: Buffer | null;
+  bestAskQuantity: Buffer | null;
+  source: string;
+  dataType: string;
+  version: string;
+}
+
+/**
+ * Schema registry for Avro schemas with type information
+ */
+export const Schemas = {
+  OHLCV: Type.forSchema(ohlcvSchema),
+  Tick: Type.forSchema(tickSchema),
+} as const;
+
+/**
+ * Helper functions for working with Avro decimal types
+ */
+export const AvroUtils = {
+  /**
+   * Converts a Buffer representing a decimal to a number
+   */
+  decimalToNumber(decimal: Buffer | null, scale = 8): number | null {
+    if (!decimal) return null;
+    const value = decimal.readBigInt64BE();
+    return Number(value) / Math.pow(10, scale);
+  },
+
+  /**
+   * Converts a number to a Buffer representing a decimal
+   */
+  numberToDecimal(num: number | null, scale = 8): Buffer | null {
+    if (num === null) return null;
+    const value = BigInt(Math.round(num * Math.pow(10, scale)));
+    const buf = Buffer.alloc(8);
+    buf.writeBigInt64BE(value);
+    return buf;
+  },
+} as const;
+
+// Export everything as const to ensure type safety
+export { type Type, type Buffer };
+
+```
+
+##### sequelize
+
+###### cryptocompare
+
+####### migrations.ts
+
+```typescript
+import { QueryInterface, DataTypes } from "sequelize";
+
+export async function up(queryInterface: QueryInterface): Promise<void> {
+  // Create OHLCV table
+  await queryInterface.createTable("ohlcv", {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    exchange: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    symbol: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    timestamp: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    open: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    high: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    low: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    close: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    volume: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    quoteVolume: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    totalTrades: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+  });
+
+  // Create ticks table
+  await queryInterface.createTable("ticks", {
+    id: {
+      type: DataTypes.INTEGER,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    exchange: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    symbol: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    timestamp: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    price: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    quantity: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: false,
+    },
+    side: {
+      type: DataTypes.ENUM("buy", "sell", "unknown"),
+      allowNull: false,
+    },
+    tradeId: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+    ccseq: {
+      type: DataTypes.BIGINT,
+      allowNull: false,
+    },
+    bestBid: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: true,
+    },
+    bestAsk: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: true,
+    },
+    bestBidQuantity: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: true,
+    },
+    bestAskQuantity: {
+      type: DataTypes.DECIMAL(20, 8),
+      allowNull: true,
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+  });
+
+  // Convert tables to TimescaleDB hypertables
+  await queryInterface.sequelize.query(
+    `SELECT create_hypertable('ohlcv', 'timestamp');`
+  );
+  await queryInterface.sequelize.query(
+    `SELECT create_hypertable('ticks', 'timestamp');`
+  );
+
+  // Create indexes
+  await queryInterface.addIndex("ohlcv", ["exchange", "symbol", "timestamp"], {
+    unique: true,
+  });
+  await queryInterface.addIndex("ohlcv", ["exchange"]);
+  await queryInterface.addIndex("ohlcv", ["symbol"]);
+  await queryInterface.addIndex("ohlcv", ["timestamp"]);
+
+  await queryInterface.addIndex("ticks", ["exchange", "symbol", "ccseq"], {
+    unique: true,
+  });
+  await queryInterface.addIndex("ticks", ["exchange"]);
+  await queryInterface.addIndex("ticks", ["symbol"]);
+  await queryInterface.addIndex("ticks", ["timestamp"]);
+  await queryInterface.addIndex("ticks", ["tradeId"]);
+}
+
+export async function down(queryInterface: QueryInterface): Promise<void> {
+  await queryInterface.dropTable("ohlcv");
+  await queryInterface.dropTable("ticks");
+}
+
+```
+
+####### ohlcv.ts
+
+```typescript
+import { Model, DataTypes, Sequelize } from "sequelize";
+
+/**
+ * OHLCV data model for TimescaleDB using Sequelize ORM.
+ * Stores market candlestick data from CryptoCompare.
+ */
+export class OHLCVModel extends Model {
+  // Base fields (from BaseMarketData)
+  public exchange!: string;
+  public symbol!: string;
+  public timestamp!: number;
+
+  // OHLCV specific fields
+  public open!: number;
+  public high!: number;
+  public low!: number;
+  public close!: number;
+  public volume!: number;
+  public quoteVolume!: number;
+  public totalTrades?: number;
+
+  // Metadata fields
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+export function initOHLCVModel(sequelize: Sequelize): void {
+  OHLCVModel.init(
+    {
+      // Base fields
+      exchange: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      symbol: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      timestamp: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+      },
+      // OHLCV fields
+      open: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      high: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      low: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      close: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      volume: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      quoteVolume: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      totalTrades: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+      },
+    },
+    {
+      sequelize,
+      modelName: "OHLCV",
+      tableName: "ohlcv",
+      // Enable TimescaleDB hypertable for time-series data
+      indexes: [
+        {
+          unique: true,
+          fields: ["exchange", "symbol", "timestamp"],
+        },
+        {
+          fields: ["exchange"],
+        },
+        {
+          fields: ["symbol"],
+        },
+        {
+          fields: ["timestamp"],
+        },
+      ],
+    }
+  );
+}
+
+```
+
+####### tick.ts
+
+```typescript
+import { Model, DataTypes, Sequelize } from "sequelize";
+
+/**
+ * Market tick data model for TimescaleDB using Sequelize ORM.
+ * Stores individual trade ticks from CryptoCompare.
+ */
+export class TickModel extends Model {
+  // Base fields (from BaseMarketData)
+  public exchange!: string;
+  public symbol!: string;
+  public timestamp!: number;
+
+  // Tick specific fields
+  public price!: number;
+  public quantity!: number;
+  public side!: "buy" | "sell" | "unknown";
+  public tradeId!: string;
+  public ccseq!: number;
+
+  // Best bid/ask at time of trade
+  public bestBid?: number;
+  public bestAsk?: number;
+  public bestBidQuantity?: number;
+  public bestAskQuantity?: number;
+
+  // Metadata fields
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+}
+
+export function initTickModel(sequelize: Sequelize): void {
+  TickModel.init(
+    {
+      // Base fields
+      exchange: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      symbol: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      timestamp: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+      },
+      // Tick fields
+      price: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      quantity: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: false,
+      },
+      side: {
+        type: DataTypes.ENUM("buy", "sell", "unknown"),
+        allowNull: false,
+      },
+      tradeId: {
+        type: DataTypes.STRING,
+        allowNull: false,
+      },
+      ccseq: {
+        type: DataTypes.BIGINT,
+        allowNull: false,
+      },
+      // Best bid/ask fields
+      bestBid: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: true,
+      },
+      bestAsk: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: true,
+      },
+      bestBidQuantity: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: true,
+      },
+      bestAskQuantity: {
+        type: DataTypes.DECIMAL(20, 8),
+        allowNull: true,
+      },
+    },
+    {
+      sequelize,
+      modelName: "Tick",
+      tableName: "ticks",
+      // Enable TimescaleDB hypertable for time-series data
+      indexes: [
+        {
+          unique: true,
+          fields: ["exchange", "symbol", "ccseq"],
+        },
+        {
+          fields: ["exchange"],
+        },
+        {
+          fields: ["symbol"],
+        },
+        {
+          fields: ["timestamp"],
+        },
+        {
+          fields: ["tradeId"],
+        },
+      ],
+    }
+  );
+}
 
 ```
 

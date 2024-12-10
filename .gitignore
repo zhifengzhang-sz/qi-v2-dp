@@ -1,6 +1,7 @@
 **/node_modules
 **/.env
 **/data
+!docs/**/data
 docs/sketch
 assets
 docker_images
