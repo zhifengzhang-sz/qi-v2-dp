@@ -2,6 +2,8 @@
 **/.env
 **/data
 !docs/**/data
+!qi/core/src/data
+!qi/core/tests/unit/data
 docs/sketch
 assets
 docker_images
