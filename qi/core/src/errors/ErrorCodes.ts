@@ -21,7 +21,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-12-08
+ * @modified 2024-12-11
  */
 
 export enum ErrorCode {
@@ -41,6 +41,7 @@ export enum ErrorCode {
   CONNECTION_ERROR = 1200,
   TIMEOUT_ERROR = 1201,
   PING_ERROR = 1202,
+  WEBSOCKET_ERROR = 1203,
 
   // Operation errors
   OPERATION_ERROR = 1300,

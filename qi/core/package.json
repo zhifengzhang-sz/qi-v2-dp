@@ -20,6 +20,7 @@
     "ajv": "^8.17.1",
     "ajv-formats": "^3.0.1",
     "avsc": "^5.7.7",
+    "axios": "^1.7.9",
     "bytes": "^3.1.2",
     "dotenv": "^16.4.5",
     "fs-extra": "^11.2.0",
@@ -33,6 +34,7 @@
     "retry": "^0.13.1",
     "sequelize": "^6.37.5",
     "winston": "^3.16.0",
+    "ws": "^8.18.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
@@ -49,6 +51,7 @@
     "@types/redis-mock": "^0.17.3",
     "@types/retry": "^0.12.5",
     "@types/sequelize": "^4.28.20",
+    "@types/ws": "^8.5.13",
     "@typescript-eslint/eslint-plugin": "^8.15.0",
     "@typescript-eslint/parser": "^8.15.0",
     "avro-schema-validator": "^0.3.0",
@@ -77,6 +80,10 @@
     "./cli/config/*": {
       "import": "./dist/cli/config/*.js",
       "require": "./dist/cli/config/*.js"
+    },
+    "./networks/*": {
+      "import": "./dist/networks/index.js",
+      "require": "./dist/networks/index.js"
     },
     "./services/*": {
       "import": "./dist/services/*/index.js",
