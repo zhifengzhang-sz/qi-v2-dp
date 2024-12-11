@@ -11,29 +11,10 @@
 import { describe, it, expect } from "vitest";
 import { CryptoCompareTick } from "@qi/core/data/models/sources/cryptocompare/tick";
 import { CryptoCompareTickData } from "@qi/core/data/models/sources/cryptocompare/response";
+import { mockValidTickData } from "../../../cryptocompare.js";
 
 describe("CryptoCompareTick", () => {
-  const validData: CryptoCompareTickData = {
-    TYPE: "5",
-    MARKET: "Kraken",
-    INSTRUMENT: "BTC-USD",
-    CCSEQ: 123456,
-    PRICE: 43300.5,
-    PRICE_FLAG: "1",
-    PRICE_LAST_UPDATE_TS: 1701936000,
-    PRICE_LAST_UPDATE_TS_NS: 123456789,
-    LAST_TRADE_QUANTITY: 0.5,
-    LAST_TRADE_QUOTE_QUANTITY: 21650.25,
-    LAST_TRADE_ID: "12345",
-    LAST_TRADE_CCSEQ: 123456,
-    LAST_TRADE_SIDE: "buy",
-    LAST_PROCESSED_TRADE_TS: 1701936000,
-    LAST_PROCESSED_TRADE_TS_NS: 123456789,
-    LAST_PROCESSED_TRADE_PRICE: 43300.5,
-    LAST_PROCESSED_TRADE_QUANTITY: 0.5,
-    LAST_PROCESSED_TRADE_QUOTE_QUANTITY: 21650.25,
-    LAST_PROCESSED_TRADE_SIDE: "buy",
-  };
+  const validData: CryptoCompareTickData = mockValidTickData;
 
   it("should create a valid CryptoCompareTick object", () => {
     const tick = new CryptoCompareTick(validData);

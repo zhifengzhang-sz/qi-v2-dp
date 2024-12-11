@@ -13,6 +13,7 @@ import {
   CryptoCompareOHLCVData,
   CryptoCompareTickData,
 } from "@qi/core/data/models/sources/cryptocompare/response";
+import { mockValidTickData } from "../../../cryptocompare.js";
 
 describe("CryptoCompareOHLCVData", () => {
   const validData: CryptoCompareOHLCVData = {
@@ -105,27 +106,26 @@ describe("CryptoCompareOHLCVData", () => {
 });
 
 describe("CryptoCompareTickData", () => {
-  const validData: CryptoCompareTickData = {
-    TYPE: "5",
-    MARKET: "Kraken",
-    INSTRUMENT: "BTC-USD",
-    CCSEQ: 123456,
-    PRICE: 43300.5,
-    PRICE_FLAG: "1",
-    PRICE_LAST_UPDATE_TS: 1701936000,
-    PRICE_LAST_UPDATE_TS_NS: 123456789,
-    LAST_TRADE_QUANTITY: 0.5,
-    LAST_TRADE_QUOTE_QUANTITY: 21650.25,
-    LAST_TRADE_ID: "12345",
-    LAST_TRADE_CCSEQ: 123456,
-    LAST_TRADE_SIDE: "buy",
-    LAST_PROCESSED_TRADE_TS: 1701936000,
-    LAST_PROCESSED_TRADE_TS_NS: 123456789,
-    LAST_PROCESSED_TRADE_PRICE: 43300.5,
-    LAST_PROCESSED_TRADE_QUANTITY: 0.5,
-    LAST_PROCESSED_TRADE_QUOTE_QUANTITY: 21650.25,
-    LAST_PROCESSED_TRADE_SIDE: "buy",
-  };
+  const validData: CryptoCompareTickData = mockValidTickData;
+
+  it("should create a valid CryptoCompareTickData object", () => {
+    const data = { ...validData };
+
+    expect(data.MARKET).toBe("Kraken");
+    expect(data.INSTRUMENT).toBe("BTC-USD");
+    expect(data.PRICE).toBe(43300.5);
+    expect(data.LAST_TRADE_QUANTITY).toBe(0.5);
+    expect(data.LAST_TRADE_SIDE).toBe("buy");
+
+    // Verify timeframe data exists
+    expect(data.CURRENT_HOUR).toBeDefined();
+    expect(data.MOVING_24_HOUR).toBeDefined();
+    expect(data.LIFETIME).toBeDefined();
+
+    // Verify book data
+    expect(data.TOP_OF_BOOK.BEST_BID).toBeDefined();
+    expect(data.TOP_OF_BOOK.BEST_ASK).toBeDefined();
+  });
 
   it("should create a valid CryptoCompareTickData object", () => {
     const data = { ...validData };
