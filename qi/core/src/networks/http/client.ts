@@ -3,11 +3,15 @@
  * @module client.ts
  *
  * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-11
+ * @created 2024-12-10
+ * @modified 2024-12-12
  */
 
-import { ApplicationError, ErrorCode } from "@qi/core/errors";
+/**
+ * @fileoverview HTTP Client Implementation
+ * @module @qi/core/networks/http/client
+ */
+
 import { logger } from "@qi/core/logger";
 import { retryOperation } from "@qi/core/utils";
 import axios, {
@@ -16,8 +20,8 @@ import axios, {
   AxiosResponse,
   InternalAxiosRequestConfig,
 } from "axios";
+import { transformAxiosError } from "../errors.js";
 
-// Extend Axios request config to include startTime
 declare module "axios" {
   export interface InternalAxiosRequestConfig {
     startTime?: number;
@@ -55,7 +59,19 @@ export class HttpClient {
       headers: this.config.headers,
     });
 
-    // Add response interceptor for logging
+    this.setupInterceptors();
+  }
+
+  private setupInterceptors(): void {
+    // Request interceptor for timing
+    this.client.interceptors.request.use(
+      (config: InternalAxiosRequestConfig) => {
+        config.startTime = Date.now();
+        return config;
+      }
+    );
+
+    // Response interceptor for logging and error handling
     this.client.interceptors.response.use(
       (response) => {
         const duration = response.config.startTime
@@ -80,15 +96,8 @@ export class HttpClient {
           error: error.message,
           duration,
         });
-        throw error;
-      }
-    );
 
-    // Add request interceptor for timing
-    this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        config.startTime = Date.now();
-        return config;
+        throw transformAxiosError(error);
       }
     );
   }
@@ -112,30 +121,7 @@ export class HttpClient {
         },
       });
     } catch (error) {
-      // Type guard for axios error
-      if (axios.isAxiosError(error)) {
-        throw new ApplicationError(
-          "HTTP request failed",
-          ErrorCode.NETWORK_ERROR, // Use existing error code
-          error.response?.status || 500,
-          {
-            url: config.url,
-            method: config.method,
-            error: error.message,
-          }
-        );
-      }
-      // Handle non-axios errors
-      throw new ApplicationError(
-        "HTTP request failed",
-        ErrorCode.NETWORK_ERROR,
-        500,
-        {
-          url: config.url,
-          method: config.method,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      );
+      throw transformAxiosError(error);
     }
   }
 
