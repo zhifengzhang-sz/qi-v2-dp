@@ -194,36 +194,32 @@ export function transformAxiosError(error: unknown): ApplicationError {
  * @modified 2024-12-12
  */
 
-// Core interfaces and types from errors
+// Core error types and utilities
 export type { NetworkErrorContext, HttpStatusCodeType } from "./errors.js";
-
-// WebSocket types from client
-export type {
-  WebSocketConfig,
-  MessageHandler,
-  ConnectionState,
-} from "./websocket/client.js";
-
-// HTTP types from client
-export type { HttpConfig, RequestConfig } from "./http/client.js";
-
-// Constants, classes and functions
 export {
-  // Error handling
   HttpStatusCode,
   mapHttpStatusToErrorCode,
   createNetworkError,
   transformAxiosError,
 } from "./errors.js";
 
+// WebSocket types and utilities
+export type { WebSocketConfig, MessageHandler } from "./websocket/types.js";
+export type { ConnectionState } from "./websocket/state.js";
 export {
   createWebSocketError,
   transformWebSocketError,
 } from "./websocket/errors.js";
 
+// HTTP types
+export type { HttpConfig, RequestConfig } from "./http/client.js";
+
 // Client implementations
-export * from "./http/client.js";
-export * from "./websocket/client.js";
+export { HttpClient } from "./http/client.js";
+export { WebSocketClient } from "./websocket/client.js";
+
+// Re-export default config
+export { defaultConfig as defaultWebSocketConfig } from "./websocket/types.js";
 
 ```
 
@@ -237,13 +233,23 @@ export * from "./websocket/client.js";
  * @module client.ts
  *
  * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-11
+ * @created 2024-12-10
+ * @modified 2024-12-12
+ */
+
+/**
+ * @fileoverview HTTP Client Implementation
+ * @module @qi/core/networks/http/client
  */
 
 import { logger } from "@qi/core/logger";
 import { retryOperation } from "@qi/core/utils";
-import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from "axios";
+import axios, {
+  AxiosInstance,
+  AxiosRequestConfig,
+  AxiosResponse,
+  InternalAxiosRequestConfig,
+} from "axios";
 import { transformAxiosError } from "../errors.js";
 
 declare module "axios" {
@@ -286,7 +292,16 @@ export class HttpClient {
     this.setupInterceptors();
   }
 
-  private setupInterceptors() {
+  private setupInterceptors(): void {
+    // Request interceptor for timing
+    this.client.interceptors.request.use(
+      (config: InternalAxiosRequestConfig) => {
+        config.startTime = Date.now();
+        return config;
+      }
+    );
+
+    // Response interceptor for logging and error handling
     this.client.interceptors.response.use(
       (response) => {
         const duration = response.config.startTime
@@ -336,9 +351,6 @@ export class HttpClient {
         },
       });
     } catch (error) {
-      if (axios.isAxiosError(error)) {
-        throw error; // Let the interceptor handle Axios errors
-      }
       throw transformAxiosError(error);
     }
   }
@@ -398,6 +410,15 @@ export class HttpClient {
 
 ```typescript
 /**
+ * @fileoverview
+ * @module types.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-12
+ * @modified 2024-12-12
+ */
+
+/**
  * Shared types for network operations
  */
 export interface NetworkErrorContext {
@@ -418,40 +439,21 @@ export interface NetworkErrorContext {
 #### client.ts
 
 ```typescript
+/**
+ * @fileoverview WebSocket Client Implementation
+ * @module @qi/core/networks/websocket/client
+ *
+ * @created 2024-12-11
+ */
+
 import WebSocket from "ws";
 import { EventEmitter } from "events";
 import { logger } from "@qi/core/logger";
-import { ConnectionStateManager } from "./state.js";
+import { ConnectionState, ConnectionStateManager } from "./state.js";
 import { HeartbeatManager } from "./heartbeat.js";
 import { SubscriptionManager } from "./subscription.js";
 import { createWebSocketError, transformWebSocketError } from "./errors.js";
-import { NetworkErrorContext } from "../errors.js";
-import { defaultConfig } from "./types.js";
-
-const enum WebSocketReadyState {
-  CONNECTING = 0,
-  OPEN = 1,
-  CLOSING = 2,
-  CLOSED = 3,
-}
-
-export interface WebSocketConfig {
-  pingInterval?: number;
-  pongTimeout?: number;
-  reconnect?: boolean;
-  reconnectInterval?: number;
-  maxReconnectAttempts?: number;
-}
-
-export interface MessageHandler {
-  (data: unknown): void | Promise<void>;
-}
-
-export type ConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "disconnecting";
+import { defaultConfig, WebSocketConfig, MessageHandler } from "./types.js";
 
 interface Events {
   connecting: () => void;
@@ -486,7 +488,6 @@ export class WebSocketClient extends EventEmitter {
   private readonly subscriptionManager: SubscriptionManager;
   private heartbeatManager?: HeartbeatManager;
   private reconnectAttempts = 0;
-  private static readonly DEFAULT_CONNECTION_TIMEOUT = 30000;
 
   constructor(config: WebSocketConfig = {}) {
     super();
@@ -498,6 +499,7 @@ export class WebSocketClient extends EventEmitter {
       this.emit("stateChange", state);
       if (state === "connected") {
         this.setupHeartbeat();
+        this.reconnectAttempts = 0;
       } else if (state === "disconnected") {
         this.handleDisconnect();
       }
@@ -509,12 +511,12 @@ export class WebSocketClient extends EventEmitter {
   }
 
   private setupHeartbeat(): void {
-    if (this.ws) {
-      this.heartbeatManager = new HeartbeatManager(this.ws, this.config, () =>
-        this.handlePongTimeout()
-      );
-      this.heartbeatManager.start();
-    }
+    if (!this.ws) return;
+
+    this.heartbeatManager = new HeartbeatManager(this.ws, this.config, () =>
+      this.handlePongTimeout()
+    );
+    this.heartbeatManager.start();
   }
 
   private handlePongTimeout(): void {
@@ -566,7 +568,7 @@ export class WebSocketClient extends EventEmitter {
       throw createWebSocketError("Invalid connection state", {
         currentState: this.stateManager.getState(),
         url,
-      } as NetworkErrorContext);
+      });
     }
 
     this.emit("connecting");
@@ -579,18 +581,18 @@ export class WebSocketClient extends EventEmitter {
       logger.info("WebSocket connected", { url });
     } catch (error) {
       this.stateManager.transition("disconnected");
-      throw transformWebSocketError(error, { url } as NetworkErrorContext);
+      throw transformWebSocketError(error, { url });
     }
   }
 
-  private async establishConnection(
-    url: string,
-    timeout = WebSocketClient.DEFAULT_CONNECTION_TIMEOUT
-  ): Promise<void> {
+  private async establishConnection(url: string): Promise<void> {
     return Promise.race([
       this.createConnection(url),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Connection timeout")), timeout)
+        setTimeout(
+          () => reject(new Error("Connection timeout")),
+          this.config.connectionTimeout
+        )
       ),
     ]);
   }
@@ -634,14 +636,18 @@ export class WebSocketClient extends EventEmitter {
       logger.error("WebSocket error", { error });
       this.emit("error", error);
     });
+
+    this.ws.on("pong", () => {
+      this.heartbeatManager?.handlePong();
+    });
   }
 
   async send(data: unknown): Promise<void> {
-    if (!this.ws || this.ws.readyState !== WebSocketReadyState.OPEN) {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       throw createWebSocketError("WebSocket not connected", {
         readyState: this.ws?.readyState,
-        expected: WebSocketReadyState.OPEN,
-      } as NetworkErrorContext);
+        expected: WebSocket.OPEN,
+      });
     }
 
     return new Promise((resolve, reject) => {
@@ -650,7 +656,7 @@ export class WebSocketClient extends EventEmitter {
           reject(
             transformWebSocketError(error, {
               data: typeof data === "object" ? { ...data } : data,
-            } as NetworkErrorContext)
+            })
           );
         } else {
           resolve();
@@ -661,6 +667,7 @@ export class WebSocketClient extends EventEmitter {
 
   subscribe(channel: string, handler: MessageHandler): void {
     this.subscriptionManager.subscribe(channel, handler);
+
     if (this.isConnected()) {
       this.send({ type: "subscribe", channel }).catch((error) => {
         logger.error("Subscription request failed", { error, channel });
@@ -670,6 +677,7 @@ export class WebSocketClient extends EventEmitter {
 
   unsubscribe(channel: string, handler?: MessageHandler): void {
     this.subscriptionManager.unsubscribe(channel, handler);
+
     if (this.isConnected()) {
       this.send({ type: "unsubscribe", channel }).catch((error) => {
         logger.error("Unsubscription request failed", { error, channel });
@@ -677,28 +685,28 @@ export class WebSocketClient extends EventEmitter {
     }
   }
 
-  private setReconnect(value: boolean): void {
-    (this.config as WebSocketConfig).reconnect = value;
-  }
-
   async close(): Promise<void> {
-    if (this.ws) {
-      this.stateManager.transition("disconnecting");
-      this.emit("disconnecting");
-      this.setReconnect(false);
-      this.ws.close();
-      this.cleanup();
-      this.subscriptionManager.clear();
-      this.stateManager.transition("disconnected");
-    }
+    if (!this.ws) return;
+
+    this.stateManager.transition("disconnecting");
+    this.emit("disconnecting");
+    this.config.reconnect = false;
+    this.ws.close();
+    this.cleanup();
+    this.subscriptionManager.clear();
+    this.stateManager.transition("disconnected");
   }
 
   isConnected(): boolean {
-    return this.stateManager.getState() === "connected";
+    return this.ws?.readyState === WebSocket.OPEN;
   }
 
-  getState(): string {
+  getState(): ConnectionState {
     return this.stateManager.getState();
+  }
+
+  getReconnectAttempts(): number {
+    return this.reconnectAttempts;
   }
 }
 
@@ -707,25 +715,29 @@ export class WebSocketClient extends EventEmitter {
 #### errors.ts
 
 ```typescript
+/**
+ * @fileoverview
+ * @module errors.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-12
+ * @modified 2024-12-12
+ */
+
 // websocket/errors.ts
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
-import { HttpStatusCode } from "@qi/core/networks/errors";
-
-export interface WebSocketErrorContext {
-  url?: string;
-  readyState?: number;
-  expected?: number;
-  currentState?: string;
-  data?: unknown;
-  [key: string]: unknown;
-}
+import {
+  HttpStatusCode,
+  NetworkErrorContext,
+  mapWebSocketErrorToStatus,
+} from "../errors.js";
 
 /**
  * Creates a WebSocket specific error with additional context
  */
 export function createWebSocketError(
   message: string,
-  context?: WebSocketErrorContext
+  context?: NetworkErrorContext
 ): ApplicationError {
   return new ApplicationError(
     message,
@@ -736,11 +748,11 @@ export function createWebSocketError(
 }
 
 /**
- * Maps WebSocket-specific errors to appropriate error types
+ * Transforms WebSocket errors into application errors
  */
 export function transformWebSocketError(
   error: unknown,
-  context?: WebSocketErrorContext
+  context?: NetworkErrorContext
 ): ApplicationError {
   const status = mapWebSocketErrorToStatus(error);
   const errorCode =
@@ -748,43 +760,11 @@ export function transformWebSocketError(
       ? ErrorCode.TIMEOUT_ERROR
       : ErrorCode.WEBSOCKET_ERROR;
 
-  const details = {
+  return new ApplicationError("WebSocket operation failed", errorCode, status, {
     ...context,
     error: error instanceof Error ? error.message : String(error),
     stack: error instanceof Error ? error.stack : undefined,
-  };
-
-  return new ApplicationError(
-    "WebSocket operation failed",
-    errorCode,
-    status,
-    details
-  );
-}
-
-/**
- * Maps WebSocket errors to appropriate HTTP status codes
- */
-function mapWebSocketErrorToStatus(
-  error: unknown
-): (typeof HttpStatusCode)[keyof typeof HttpStatusCode] {
-  if (error instanceof Error) {
-    switch (error.message) {
-      case "ETIMEDOUT":
-        return HttpStatusCode.GATEWAY_TIMEOUT;
-      case "ECONNREFUSED":
-        return HttpStatusCode.SERVICE_UNAVAILABLE;
-      case "ECONNRESET":
-        return HttpStatusCode.BAD_GATEWAY;
-      case "EPROTO":
-        return HttpStatusCode.WEBSOCKET_PROTOCOL_ERROR;
-      case "EMSGSIZE":
-        return HttpStatusCode.WEBSOCKET_MESSAGE_TOO_BIG;
-      default:
-        return HttpStatusCode.INTERNAL_SERVER_ERROR;
-    }
-  }
-  return HttpStatusCode.INTERNAL_SERVER_ERROR;
+  });
 }
 
 ```
@@ -792,6 +772,15 @@ function mapWebSocketErrorToStatus(
 #### heartbeat.ts
 
 ```typescript
+/**
+ * @fileoverview
+ * @module heartbeat.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-12
+ * @modified 2024-12-12
+ */
+
 // websocket/heartbeat.ts
 import WebSocket from "ws";
 import { WebSocketConfig } from "./types.js";
@@ -838,6 +827,15 @@ export class HeartbeatManager {
 #### state.ts
 
 ```typescript
+/**
+ * @fileoverview
+ * @module state.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-12
+ * @modified 2024-12-12
+ */
+
 import EventEmitter from "events";
 
 // websocket/state.ts
@@ -892,6 +890,15 @@ export class ConnectionStateManager extends EventEmitter {
 #### subscription.ts
 
 ```typescript
+/**
+ * @fileoverview
+ * @module subscription.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-12
+ * @modified 2024-12-12
+ */
+
 // websocket/subscription.ts
 import { MessageHandler } from "./types.js";
 import { logger } from "@qi/core/logger";
@@ -949,14 +956,24 @@ export class SubscriptionManager {
 #### types.ts
 
 ```typescript
-// websocket/types.ts
+/**
+ * @fileoverview WebSocket Types and Defaults
+ * @module @qi/core/networks/websocket/types
+ */
 
 export interface WebSocketConfig {
+  /** Interval in ms between ping messages */
   pingInterval?: number;
+  /** Timeout in ms to wait for pong response */
   pongTimeout?: number;
+  /** Whether to attempt reconnection on disconnect */
   reconnect?: boolean;
+  /** Interval in ms between reconnection attempts */
   reconnectInterval?: number;
+  /** Maximum number of reconnection attempts */
   maxReconnectAttempts?: number;
+  /** Timeout in ms for initial connection attempt */
+  connectionTimeout?: number;
 }
 
 export interface MessageHandler {
@@ -969,6 +986,7 @@ export const defaultConfig: Required<WebSocketConfig> = {
   reconnect: true,
   reconnectInterval: 5000,
   maxReconnectAttempts: 5,
+  connectionTimeout: 30000,
 };
 
 ```
