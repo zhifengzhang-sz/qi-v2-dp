@@ -309,4 +309,3 @@ interface SecurityConfig {
 | Message Size | Pre-send | Reject message |
 | Origin Check | Connection | Close connection |
 
-Would you like me to expand on any of these sections further before we move to implementation?

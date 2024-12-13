@@ -59,6 +59,67 @@ interface SendOptions {
 }
 ```
   
+#### Event Type
+  
+```typescript
+// Full event type definitions
+type WebSocketEvents = {
+  CONNECT: {
+    url: string;
+    protocols?: string[];
+    options?: ConnectionOptions;
+  };
+  DISCONNECT: {
+    code?: number;
+    reason?: string;
+  };
+  OPEN: {
+    event: Event;
+    timestamp: number;
+  };
+  CLOSE: {
+    code: number;
+    reason: string;
+    wasClean: boolean;
+  };
+  ERROR: {
+    error: Error;
+    timestamp: number;
+    attempt?: number;
+  };
+  MESSAGE: {
+    data: any;
+    timestamp: number;
+    id?: string;
+  };
+  SEND: {
+    data: any;
+    id?: string;
+    options?: SendOptions;
+  };
+  PING: {
+    timestamp: number;
+  };
+  PONG: {
+    latency: number;
+    timestamp: number;
+  };
+  RETRY: {
+    attempt: number;
+    delay: number;
+  };
+  MAX_RETRIES: {
+    attempts: number;
+    lastError?: Error;
+  };
+  TERMINATE: {
+    code?: number;
+    reason?: string;
+    immediate?: boolean;
+  };
+};
+```
+  
 ### 1.2 Context Specifications
   
 #### Context State Properties
@@ -587,66 +648,111 @@ interface PersistenceHooks {
 ### 8.1 Unit Test Scenarios
   
 #### State Transitions
-```typescript
-interface TransitionTestCase {
-  initialState: WebSocketState;
-  event: WebSocketEvent;
-  expectedState: WebSocketState;
-  expectedContext: Partial<WebSocketContext>;
-  description: string;
-}
-```
+| **Test Case** | **Initial State** | **Event** | **Expected State** | **Description** |
+|---------------|-------------------|-----------|-------------------|-----------------|
+| Basic Connect | `disconnected` | `CONNECT` | `connecting` | Connect with valid URL |
+| Connect Error | `connecting` | `ERROR` | `reconnecting` | Handle connection failure |
+| Connect Success | `connecting` | `OPEN` | `connected` | Handle successful connection |
+| Clean Disconnect | `connected` | `DISCONNECT` | `disconnecting` | Handle clean disconnection |
+| Error Reconnect | `connected` | `ERROR` | `reconnecting` | Handle error with reconnection |
+| Max Retries | `reconnecting` | `MAX_RETRIES` | `disconnected` | Stop after max attempts |
   
 #### Action Tests
-```typescript
-interface ActionTestCase {
-  action: TransitionAction;
-  initialContext: WebSocketContext;
-  event: WebSocketEvent;
-  expectedContextChanges: Partial<WebSocketContext>;
-  expectedSideEffects: string[];
-  mockSetup?: () => void;
-  cleanup?: () => void;
-}
-```
+| **Action** | **Context Changes** | **Success Criteria** | **Side Effects** |
+|------------|-------------------|---------------------|------------------|
+| `createSocket` | Set socket instance | Valid WebSocket instance | New WebSocket() |
+| `updateMetrics` | Increment counters | Updated metric values | None |
+| `queueMessage` | Add to message queue | Queue length increased | None |
+| `resetState` | Clear state data | Initial state values | Clear timers |
   
 ### 8.2 Integration Test Scenarios
   
 #### Network Conditions
-| Scenario | Setup | Validation |
-|----------|--------|------------|
-| Stable Connection | Normal latency | Verify normal operation |
-| High Latency | 500ms delay | Check timeout handling |
-| Packet Loss | 10% drop rate | Verify retry logic |
-| Network Change | Switch networks | Check reconnection |
+| **Scenario** | **Setup** | **Validation** |
+|-------------|-----------|----------------|
+| Stable Connection | Normal latency | Messages delivered |
+| High Latency | 500ms delay | Timeout handling |
+| Packet Loss | Drop 10% | Retry mechanism |
+| Network Change | Switch connection | Auto reconnect |
   
 #### Load Testing
-| Scenario | Conditions | Success Criteria |
-|----------|------------|------------------|
+| **Scenario** | **Parameters** | **Success Criteria** |
+|-------------|---------------|-------------------|
 | Message Flood | 100 msg/sec | No message loss |
-| Concurrent Connections | 10 connections | Stable performance |
-| Long-running | 24 hour test | No memory leaks |
-| Reconnection Storm | 10 reconnects/sec | Proper backoff |
+| Concurrent Connections | 10 clients | Stable performance |
+| Long Duration | 24 hour test | No memory leaks |
+| Reconnection Storm | 10 retries/sec | Proper backoff |
   
 ### 8.3 Mock Requirements
   
+| **Method** | **Parameters** | **Description** |
+|------------|---------------|-----------------|
+| `simulateOpen` | None | Trigger open event |
+| `simulateError` | `error: Error` | Trigger error event |
+| `simulateClose` | `code: number, reason: string` | Trigger close event |
+| `simulateMessage` | `data: any` | Trigger message event |
+| `getState` | None | Get mock state |
+| `getSentMessages` | None | Get sent message history |
+  
+### 8.4 Test Infrastructure
+  
+#### Directory Structure
+```
+qi/core/tests/unit/network/websocket/
+├── machine.test.ts    // State machine tests
+├── client.test.ts     // Client integration tests
+└── mocks.ts          // Test mocks and utilities
+```
+  
+#### Essential Test Utilities
+| **Utility** | **Purpose** | **Usage** |
+|------------|------------|-----------|
+| `createTestActor` | Create machine instance | Setup test cases |
+| `waitForState` | Wait for state transition | Async assertions |
+| `sendTestMessage` | Send test data | Message testing |
+| `assertTransition` | Verify state change | Transition testing |
+  
+### 8.5 Coverage Requirements
+  
+| **Category** | **Minimum %** | **Critical Paths** |
+|-------------|--------------|------------------|
+| Statements | 90% | State transitions |
+| Branches | 85% | Error handling |
+| Functions | 90% | Reconnection logic |
+| Lines | 90% | Message processing |
+  
+### 8.6 Test Implementation Example
+  
 ```typescript
-interface MockWebSocket {
-  // WebSocket API implementation
-  readyState: number;
-  send: jest.Mock;
-  close: jest.Mock;
+describe('WebSocket Machine', () => {
+  it('connect: disconnected -> connecting', () => {
+    const actor = createTestActor();
+    actor.start();
   
-  // Control methods
-  simulateOpen(): void;
-  simulateError(error: Error): void;
-  simulateClose(code: number, reason: string): void;
-  simulateMessage(data: any): void;
+    actor.send({ 
+      type: 'CONNECT', 
+      url: 'ws://localhost:8080' 
+    });
   
-  // Inspection methods
-  getSentMessages(): any[];
-  getCloseInfo(): { code: number; reason: string } | null;
-}
+    expect(actor.getSnapshot().value).toBe('connecting');
+  });
+  
+  it('error: connecting -> reconnecting', async () => {
+    const actor = createTestActor();
+    actor.start();
+  
+    // Transition to connecting
+    actor.send({ type: 'CONNECT', url: 'ws://localhost' });
+  
+    // Simulate error
+    actor.send({ 
+      type: 'ERROR', 
+      error: new Error('Connection failed') 
+    });
+  
+    expect(actor.getSnapshot().value).toBe('reconnecting');
+  });
+});
 ```
   
 ## 9. Performance Requirements
@@ -713,7 +819,6 @@ interface SecurityConfig {
 | Message Size | Pre-send | Reject message |
 | Origin Check | Connection | Close connection |
   
-Would you like me to expand on any of these sections further before we move to implementation?
   
   
   
