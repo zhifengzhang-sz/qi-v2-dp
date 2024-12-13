@@ -1,0 +1,66 @@
+% Options for packages loaded elsewhere
+%\PassOptionsToPackage{unicode}{hyperref}
+%\PassOptionsToPackage{hyphens}{url}
+\documentclass[10pt]{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{hyperref}
+\usepackage{longtable}
+\usepackage{graphicx}
+\usepackage{grffile}
+\usepackage{tikz}
+\usetikzlibrary{automata, positioning, arrows.meta}
+\usepackage{fancyvrb}
+\usepackage{color}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{microtype}
+\usepackage{parskip}
+\usepackage{setspace}
+\usepackage{titlesec}
+\usepackage{titling}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{array}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{sectsty}
+\usepackage{geometry}
+\usepackage{tocloft}
+\usepackage{etoolbox}
+\usepackage{lipsum}
+\usepackage{mathspec}
+\usepackage{unicode-math}
+\usepackage{fontspec}
+
+\setmainfont{DejaVu Sans}
+%\setmathfont{Latin Modern Math}
+
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+
+$if(title)$
+\title{$title$}
+$endif$
+
+$if(author)$
+\author{$for(author)$$author$$sep$ \and $endfor$}
+$endif$
+
+$if(date)$
+\date{$date$}
+$endif$
+
+\begin{document}
+
+$if(title)$
+\maketitle
+$endif$
+
+$if(toc)$
+\tableofcontents
+$endif$
+
+$body$
+
+\end{document}

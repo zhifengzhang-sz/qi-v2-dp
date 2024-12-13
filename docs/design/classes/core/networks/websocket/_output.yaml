@@ -1,0 +1,11 @@
+---
+output: 
+  pdf_document:
+    highlight: tango
+    toc: true
+    toc-depth: 3
+    pdf_engine: xelatex
+    pandoc_args: ["--variable=monofont:'DejaVu Sans Mono'"]
+fontsize: 10pt
+geometry: margin=.75in
+---
