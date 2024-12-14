@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /**
  * @fileoverview
  * @module client.test.ts
  *
  * @author zhifengzhang-sz
  * @created 2024-12-12
- * @modified 2024-12-12
+ * @modified 2024-12-14
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -15,10 +16,10 @@ import axios, {
   InternalAxiosRequestConfig,
 } from "axios";
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
+import { createNetworkError } from "@qi/core/networks";
 import { HttpClient, HttpStatusCode } from "@qi/core/networks";
 import * as utils from "@qi/core/utils";
 import { logger } from "@qi/core/logger";
-import { fail } from "assert";
 
 // Mock modules
 vi.mock("axios");
@@ -39,8 +40,10 @@ describe("HttpClient", () => {
     config: InternalAxiosRequestConfig
   ) => InternalAxiosRequestConfig;
   let responseInterceptor: (response: AxiosResponse) => AxiosResponse;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   let errorInterceptor: (error: unknown) => never;
   let mockRetryOperation: ReturnType<typeof vi.fn>;
+  let mockFetch: ReturnType<typeof vi.fn>;
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -67,11 +70,17 @@ describe("HttpClient", () => {
     mockRetryOperation = vi.fn().mockImplementation((fn) => fn());
     vi.mocked(utils.retryOperation).mockImplementation(mockRetryOperation);
 
+    // Create mock fetch function
+    mockFetch = vi.fn();
+    // Replace global fetch with mock
+    vi.stubGlobal("fetch", mockFetch);
+    // Create client instance
     client = new HttpClient();
   });
 
   afterEach(() => {
     vi.resetAllMocks();
+    vi.restoreAllMocks();
   });
 
   describe("initialization", () => {
@@ -125,24 +134,19 @@ describe("HttpClient", () => {
     });
 
     it("should transform errors properly", async () => {
-      const axiosError = new AxiosError(
-        "Network Error",
-        "ERR_NETWORK",
-        { headers: {} } as InternalAxiosRequestConfig,
-        null,
-        {
-          status: HttpStatusCode.BAD_GATEWAY,
-          data: { message: "Bad Gateway" },
-        } as AxiosResponse
-      );
+      mockFetch.mockRejectedValueOnce(new Error("Network error"));
 
       try {
-        await errorInterceptor(axiosError);
-        fail("Should have thrown an error");
+        await client.get("/test");
+        expect.fail("Should have thrown");
       } catch (error) {
-        expect(error).toBeInstanceOf(ApplicationError);
-        expect(error.code).toBe(ErrorCode.NETWORK_ERROR);
-        expect(error.status).toBe(HttpStatusCode.BAD_GATEWAY);
+        const appError = error as ApplicationError;
+        expect(appError).toBeInstanceOf(ApplicationError);
+        expect(appError).toHaveProperty("code", ErrorCode.NETWORK_ERROR);
+        expect(appError).toHaveProperty(
+          "statusCode",
+          HttpStatusCode.BAD_GATEWAY
+        );
       }
     });
   });
@@ -203,18 +207,15 @@ describe("HttpClient", () => {
 
   describe("retry behavior", () => {
     it("should retry failed requests by default", async () => {
-      const error = new Error("Network error");
-      mockRequest.mockRejectedValueOnce(error).mockResolvedValueOnce({
-        data: { success: true },
-      });
+      mockFetch
+        .mockRejectedValueOnce(new Error("Network error"))
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ data: "success" }))
+        );
 
-      await client.get("/test");
-
-      expect(mockRetryOperation).toHaveBeenCalledWith(expect.any(Function), {
-        retries: 3,
-        minTimeout: 1000,
-        onRetry: expect.any(Function),
-      });
+      const response = await client.get("/test");
+      expect(mockFetch).toHaveBeenCalledTimes(2);
+      expect(response).toBe("success");
     });
 
     it("should not retry when retry option is false", async () => {
