@@ -155,6 +155,21 @@ export function transformAxiosError(error: unknown): ApplicationError {
   if (error instanceof AxiosError) {
     const status =
       error.response?.status || HttpStatusCode.INTERNAL_SERVER_ERROR;
+    
+    // Special case for timeout errors
+    if (error.code === 'ECONNABORTED') {
+      return new ApplicationError(
+        error.message,
+        ErrorCode.TIMEOUT_ERROR,
+        HttpStatusCode.REQUEST_TIMEOUT,
+        {
+          url: error.config?.url,
+          method: error.config?.method,
+          code: error.code,
+        }
+      );
+    }
+
     return createNetworkError(error.message, status, {
       url: error.config?.url,
       method: error.config?.method,
@@ -184,23 +199,21 @@ export function transformAxiosError(error: unknown): ApplicationError {
 /**
  * @fileoverview Network Module Entry Point
  * @module @qi/core/networks
- *
- * @description
- * Exports all network-related functionality including HTTP and WebSocket clients,
- * error handling utilities, and all necessary types and interfaces for external use.
- *
- * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-12
  */
 
-// Core error types and utilities
-export type { NetworkErrorContext, HttpStatusCodeType } from "./errors.js";
+// Core HTTP functionality
+export { HttpClient } from "./http/client.js";
+export type { HttpConfig, RequestConfig } from "./http/types.js";
+
+// Error handling and types
+export type { NetworkErrorContext } from "./shared/types.js";
 export {
   HttpStatusCode,
-  mapHttpStatusToErrorCode,
   createNetworkError,
   transformAxiosError,
+  mapHttpStatusToErrorCode,
+  mapWebSocketErrorToStatus,
+  type HttpStatusCodeType,
 } from "./errors.js";
 
 // WebSocket types and utilities
@@ -211,16 +224,9 @@ export {
   transformWebSocketError,
 } from "./websocket/errors.js";
 
-// HTTP types
-export type { HttpConfig, RequestConfig } from "./http/client.js";
-
-// Client implementations
-export { HttpClient } from "./http/client.js";
 export { WebSocketClient } from "./websocket/client.js";
 
-// Re-export default config
 export { defaultConfig as defaultWebSocketConfig } from "./websocket/types.js";
-
 ```
 
 ### http
@@ -237,50 +243,42 @@ export { defaultConfig as defaultWebSocketConfig } from "./websocket/types.js";
  * @modified 2024-12-12
  */
 
-/**
- * @fileoverview HTTP Client Implementation
- * @module @qi/core/networks/http/client
- */
-
-import { logger } from "@qi/core/logger";
-import { retryOperation } from "@qi/core/utils";
 import axios, {
   AxiosInstance,
-  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
+  AxiosError,
 } from "axios";
-import { transformAxiosError } from "../errors.js";
+import { logger } from "@qi/core/logger";
+import {
+  createNetworkError,
+  transformAxiosError,
+  HttpStatusCode,
+  mapHttpStatusToErrorCode,
+} from "../errors.js";
+import { ApplicationError } from "@qi/core/errors";
+import { retryOperation } from "@qi/core/utils";
+import type { HttpConfig, RequestConfig } from "./types.js";
 
-declare module "axios" {
-  export interface InternalAxiosRequestConfig {
-    startTime?: number;
-  }
-}
-
-export interface HttpConfig {
-  baseURL?: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-  retries?: number;
-  retryDelay?: number;
-}
-
-export interface RequestConfig extends AxiosRequestConfig {
-  retry?: boolean;
-}
+export { HttpStatusCode, mapHttpStatusToErrorCode };
+export type { HttpConfig, RequestConfig };
 
 export class HttpClient {
+  public readonly config: Required<HttpConfig>;
   private readonly client: AxiosInstance;
-  private readonly config: Required<HttpConfig>;
 
   constructor(config: HttpConfig = {}) {
     this.config = {
       baseURL: config.baseURL || "",
       timeout: config.timeout || 30000,
       headers: config.headers || {},
-      retries: config.retries || 3,
-      retryDelay: config.retryDelay || 1000,
+      retry: {
+        limit: 3,
+        delay: 1000,
+        enabled: true,
+        ...config.retry,
+      },
+      logger: config.logger || logger,
     };
 
     this.client = axios.create({
@@ -301,33 +299,63 @@ export class HttpClient {
       }
     );
 
-    // Response interceptor for logging and error handling
+    // Update response interceptor setup
     this.client.interceptors.response.use(
       (response) => {
-        const duration = response.config.startTime
-          ? Date.now() - response.config.startTime
+        const config = response.config as InternalAxiosRequestConfig;
+        const duration = config.startTime
+          ? Date.now() - config.startTime
           : undefined;
 
-        logger.debug("HTTP Response", {
-          url: response.config.url,
+        this.config.logger.debug("HTTP Response", {
+          url: config.url,
           status: response.status,
           duration,
         });
         return response;
       },
-      (error) => {
-        const duration = error.config?.startTime
-          ? Date.now() - error.config.startTime
-          : undefined;
+      (error: unknown) => {
+        if (error instanceof AxiosError) {
+          const status =
+            error.response?.status || HttpStatusCode.INTERNAL_SERVER_ERROR;
+          const errorCode = mapHttpStatusToErrorCode(status);
 
-        logger.error("HTTP Error", {
-          url: error.config?.url,
-          status: error.response?.status,
-          error: error.message,
-          duration,
-        });
+          const transformedError = new ApplicationError(
+            error.message,
+            errorCode,
+            status,
+            {
+              url: error.config?.url,
+              method: error.config?.method,
+              code: error.code,
+              response: error.response && {
+                data: error.response.data,
+                headers: error.response.headers,
+                status: error.response.status,
+              },
+            }
+          );
 
-        throw transformAxiosError(error);
+          if (error.config) {
+            const config = error.config as InternalAxiosRequestConfig;
+            const duration = config.startTime
+              ? Date.now() - config.startTime
+              : undefined;
+
+            this.config.logger.error("HTTP Error", {
+              url: config.url,
+              status: error.response?.status,
+              error: error.message,
+              duration,
+            });
+          }
+
+          throw transformedError;
+        }
+        throw createNetworkError(
+          "Unknown error occurred",
+          HttpStatusCode.INTERNAL_SERVER_ERROR
+        );
       }
     );
   }
@@ -335,23 +363,37 @@ export class HttpClient {
   private async executeRequest<T>(
     config: RequestConfig
   ): Promise<AxiosResponse<T>> {
+    const requestConfig = { ...config }; // Cache config for retry logging
+
     try {
       if (config.retry === false) {
         return await this.client.request<T>(config);
       }
 
-      return await retryOperation(() => this.client.request<T>(config), {
-        retries: this.config.retries,
-        minTimeout: this.config.retryDelay,
-        onRetry: (times) => {
-          logger.warn("Retrying HTTP request", {
-            url: config.url,
-            attempt: times,
-          });
+      return await retryOperation(
+        async () => {
+          try {
+            return await this.client.request<T>(requestConfig);
+          } catch (error) {
+            // Don't transform here - let interceptor handle it
+            throw error;
+          }
         },
-      });
+        {
+          retries: this.config.retry.limit,
+          minTimeout: this.config.retry.delay,
+          onRetry: (times) => {
+            // Use cached config for logging
+            this.config.logger.warn("Retrying request", {
+              url: requestConfig.url,
+              attempt: times,
+            });
+          },
+        }
+      );
     } catch (error) {
-      throw transformAxiosError(error);
+      // Error is already transformed by interceptor
+      throw error;
     }
   }
 
@@ -400,6 +442,43 @@ export class HttpClient {
     });
     return response.data;
   }
+}
+
+```
+
+#### types.ts
+
+```typescript
+import { AxiosRequestConfig } from "axios";
+
+declare module "axios" {
+  interface AxiosRequestConfig {
+    retry?: boolean;
+  }
+  export interface InternalAxiosRequestConfig {
+    startTime?: number;
+  }
+}
+
+export interface HttpConfig {
+  baseURL?: string;
+  timeout?: number;
+  headers?: Record<string, string>;
+  retry?: {
+    limit: number;
+    delay: number;
+    enabled: boolean;
+  };
+  logger?: {
+    warn: (message: string, ...args: unknown[]) => void;
+    info: (message: string, ...args: unknown[]) => void;
+    error: (message: string, ...args: unknown[]) => void;
+    debug: (message: string, ...args: unknown[]) => void;
+  };
+}
+
+export interface RequestConfig extends AxiosRequestConfig {
+  retry?: boolean;
 }
 
 ```
@@ -988,6 +1067,823 @@ export const defaultConfig: Required<WebSocketConfig> = {
   maxReconnectAttempts: 5,
   connectionTimeout: 30000,
 };
+
+```
+
+#### machine
+
+##### actions.ts
+
+```typescript
+/**
+ * @fileoverview
+ * @module actions.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-14
+ */
+
+// qi/core/src/networks/websocket/machine/actions.ts
+
+import { setup } from "xstate";
+import type { WebSocketContext, WebSocketEvent } from "./types.js";
+import { WebSocketStates } from "./websocket-states.js";
+import { TIMING } from "./constants.js";
+
+/**
+ * All actions used in the WebSocket state machine
+ */
+export const actions = {
+  // Connection management
+  storeUrl: setup.assign<WebSocketContext, WebSocketEvent>({
+    url: (_, event) => (event.type === "CONNECT" ? event.url : ""),
+    protocols: (_, event) =>
+      event.type === "CONNECT" ? event.protocols || [] : [],
+  }),
+
+  resetState: setup.assign<WebSocketContext, WebSocketEvent>({
+    socket: () => null,
+    state: (context) => ({
+      ...context.state,
+      connectionAttempts: 0,
+      lastError: null,
+    }),
+  }),
+
+  establishConnection: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context, event) => {
+      if (event.type !== "CONNECT") return {};
+      return {
+        socket: new WebSocket(event.url),
+      };
+    }
+  ),
+
+  bindSocketEvents: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  cleanupOnFailure: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  resetRetries: setup.assign<WebSocketContext, WebSocketEvent>((context) => ({
+    state: {
+      ...context.state,
+      connectionAttempts: 0,
+    },
+  })),
+
+  updateConnectionState: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({
+      status: "connected" as const,
+      readyState: context.socket?.readyState || WebSocket.CLOSED,
+    })
+  ),
+
+  startHeartbeat: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  stopHeartbeat: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  handleMessage: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context, event) => {
+      if (event.type !== "MESSAGE") return {};
+      return {
+        metrics: {
+          ...context.metrics,
+          messagesReceived: context.metrics.messagesReceived + 1,
+        },
+      };
+    }
+  ),
+
+  updateMetrics: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  enqueueMessage: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context, event) => {
+      if (event.type !== "SEND") return {};
+      return {
+        queue: {
+          ...context.queue,
+          messages: [
+            ...context.queue.messages,
+            {
+              id: event.id || crypto.randomUUID(),
+              data: event.data,
+              timestamp: Date.now(),
+              attempts: 0,
+              priority: event.options?.priority || "normal",
+            },
+          ],
+        },
+      };
+    }
+  ),
+
+  processQueue: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  recordError: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context, event) => {
+      if (event.type !== "ERROR") return {};
+      return {
+        errors: [
+          ...context.errors,
+          {
+            timestamp: Date.now(),
+            error: event.error,
+          },
+        ],
+      };
+    }
+  ),
+
+  incrementRetryCounter: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({
+      state: {
+        ...context.state,
+        connectionAttempts: context.state.connectionAttempts + 1,
+      },
+    })
+  ),
+
+  calculateBackoff: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  clearBackoff: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  logClosure: setup.assign<WebSocketContext, WebSocketEvent>((context) => ({
+    state: {
+      ...context.state,
+      lastDisconnectTime: Date.now(),
+    },
+  })),
+
+  logDisconnection: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({
+      state: {
+        ...context.state,
+        lastDisconnectTime: Date.now(),
+      },
+    })
+  ),
+
+  logMaxRetries: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  initiateClose: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({})
+  ),
+
+  sendPing: setup.assign<WebSocketContext, WebSocketEvent>((context) => ({})),
+
+  handlePong: setup.assign<WebSocketContext, WebSocketEvent>((context) => ({})),
+
+  // New actions for rate limiting and suspension
+  updateRateLimitState: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({
+      status: "rateLimited" as const,
+      messageCount: 0,
+      windowStart: Date.now(),
+    })
+  ),
+
+  clearRateLimitState: setup.assign<WebSocketContext, WebSocketEvent>(
+    (context) => ({
+      messageCount: 0,
+      windowStart: Date.now(),
+    })
+  ),
+
+  logSuspension: setup.assign<WebSocketContext, WebSocketEvent>((context) => ({
+    status: "suspended" as const,
+  })),
+} as const;
+
+```
+
+##### constants.ts
+
+```typescript
+/**
+ * @fileoverview WebSocket State Machine Constants
+ * Default values and configuration constants
+ */
+
+// qi/core/src/networks/websocket/machine/constants.ts
+
+// Default connection configuration
+export const DEFAULT_CONFIG = {
+  // Reconnection settings
+  reconnect: true,
+  maxReconnectAttempts: 5,
+  reconnectInterval: 1000,
+  reconnectBackoffRate: 1.5,
+
+  // Health check settings
+  pingInterval: 30000,
+  pongTimeout: 5000,
+
+  // Message handling
+  messageQueueSize: 100,
+  messageTimeout: 5000,
+
+  // Rate limiting
+  rateLimit: {
+    messages: 100,
+    window: 1000,
+  },
+} as const;
+
+// WebSocket close codes
+export const WS_CLOSE_CODES = {
+  NORMAL_CLOSURE: 1000,
+  GOING_AWAY: 1001,
+  PROTOCOL_ERROR: 1002,
+  UNSUPPORTED_DATA: 1003,
+  NO_STATUS: 1005,
+  ABNORMAL_CLOSURE: 1006,
+  INVALID_FRAME: 1007,
+  POLICY_VIOLATION: 1008,
+  MESSAGE_TOO_BIG: 1009,
+  MANDATORY_EXTENSION: 1010,
+  INTERNAL_ERROR: 1011,
+  SERVICE_RESTART: 1012,
+  TRY_AGAIN_LATER: 1013,
+  BAD_GATEWAY: 1014,
+  TLS_HANDSHAKE: 1015,
+} as const;
+
+// Timing constants
+export const TIMING = {
+  MIN_RECONNECT_DELAY: 1000,
+  MAX_RECONNECT_DELAY: 30000,
+  CONNECTION_TIMEOUT: 30000,
+  DEFAULT_PING_INTERVAL: 30000,
+  DEFAULT_PONG_TIMEOUT: 5000,
+  RATE_LIMIT_WINDOW: 1000,
+} as const;
+
+// Maximum values
+export const LIMITS = {
+  MAX_MESSAGE_SIZE: 1024 * 1024, // 1MB
+  MAX_QUEUE_SIZE: 1000,
+  MAX_RETRY_ATTEMPTS: 10,
+  MAX_ERROR_HISTORY: 100,
+  MAX_LATENCY_SAMPLES: 50,
+} as const;
+
+// Default error messages
+export const ERROR_MESSAGES = {
+  INVALID_URL: "Invalid WebSocket URL provided",
+  CONNECTION_TIMEOUT: "Connection attempt timed out",
+  MAX_RETRIES_EXCEEDED: "Maximum reconnection attempts exceeded",
+  RATE_LIMIT_EXCEEDED: "Message rate limit exceeded",
+  QUEUE_FULL: "Message queue is full",
+  INVALID_STATE: "Invalid state transition attempted",
+  PONG_TIMEOUT: "WebSocket pong response timeout",
+  MESSAGE_TOO_LARGE: "Message exceeds maximum size limit",
+} as const;
+
+export const CONNECTION_STATES = {
+  DISCONNECTED: "disconnected",
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  DISCONNECTING: "disconnecting",
+  RECONNECTING: "reconnecting",
+  BACKING_OFF: "backingOff",
+  RATE_LIMITED: "rateLimited",
+  SUSPENDED: "suspended",
+} as const;
+```
+
+##### guards.ts
+
+```typescript
+/**
+ * @fileoverview
+ * @module guards.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-16
+ */
+
+// guards.ts
+
+import type { WebSocketContext, WebSocketEvent } from './types.js';
+
+export const guards = {
+  canInitiateConnection: ({ context, event }: { context: WebSocketContext; event: WebSocketEvent }) => {
+    if (event.type !== 'CONNECT') return false;
+    
+    try {
+      const url = new URL(event.url);
+      return (
+        (url.protocol === 'ws:' || url.protocol === 'wss:') &&
+        context.status === 'disconnected' &&
+        !context.socket
+      );
+    } catch {
+      return false;
+    }
+  },
+
+  canReconnect: ({ context }: { context: WebSocketContext }) => {
+    return (
+      context.options.reconnect &&
+      context.state.connectionAttempts < context.options.maxReconnectAttempts
+    );
+  },
+
+  isWithinRetryLimit: ({ context }: { context: WebSocketContext }) => {
+    return context.state.connectionAttempts < context.options.maxReconnectAttempts;
+  },
+
+  canSendMessage: ({ context }: { context: WebSocketContext }) => {
+    return (
+      context.socket?.readyState === WebSocket.OPEN &&
+      !guards.isRateLimited({ context })
+    );
+  },
+
+  isRateLimited: ({ context }: { context: WebSocketContext }) => {
+    const now = Date.now();
+    const windowEnd = context.windowStart + context.options.rateLimit.window;
+    
+    if (now > windowEnd) {
+      context.windowStart = now;
+      context.messageCount = 0;
+      return false;
+    }
+    
+    return context.messageCount >= context.options.rateLimit.messages;
+  }
+};
+```
+
+##### machine.ts
+
+```typescript
+/**
+ * @fileoverview
+ * @module machine.ts
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-14
+ */
+
+// machine.ts
+
+import { setup } from "xstate";
+import type { WebSocketContext, WebSocketEvent, ConnectionOptions } from "./types.js";
+import { guards } from "./guards.js";
+import { actions } from "./actions.js";
+import { states } from "./states.js";
+
+const DEFAULT_OPTIONS: Required<ConnectionOptions> = {
+  reconnect: true,
+  maxReconnectAttempts: 5,
+  reconnectInterval: 1000,
+  pingInterval: 30000,
+  pongTimeout: 5000,
+  messageQueueSize: 100,
+  messageTimeout: 5000,
+  rateLimit: {
+    messages: 100,
+    window: 1000,
+  },
+};
+
+/** Create immutable initial context */
+const createInitialContext = (config?: Partial<ConnectionOptions>): WebSocketContext => ({
+  // Connection
+  url: "",
+  protocols: [],
+  socket: null,
+  status: "disconnected",
+  readyState: WebSocket.CLOSED,
+  options: {
+    ...DEFAULT_OPTIONS,
+    ...config,
+  },
+
+  // State
+  state: {
+    connectionAttempts: 0,
+    lastConnectTime: 0,
+    lastDisconnectTime: 0,
+    lastError: null,
+    lastMessageTime: 0,
+  },
+
+  // Queue
+  queue: {
+    messages: [],
+    pending: false,
+    lastProcessed: 0,
+  },
+
+  // Metrics
+  metrics: {
+    messagesSent: 0,
+    messagesReceived: 0,
+    bytesReceived: 0,
+    bytesSent: 0,
+  },
+
+  // Health Check
+  lastPingTime: 0,
+  lastPongTime: 0,
+  latency: [],
+
+  // Errors
+  errors: [],
+
+  // Rate Limiting
+  messageCount: 0,
+  windowStart: Date.now(),
+});
+
+export const createWebSocketMachine = (config?: Partial<ConnectionOptions>) => {
+  return setup({
+    types: {} as {
+      context: WebSocketContext;
+      events: WebSocketEvent;
+    },
+    guards,
+    actions,
+  }).createMachine({
+    id: "webSocket",
+    initial: "disconnected",
+    context: createInitialContext(config),
+    states: states
+  });
+};
+
+export default createWebSocketMachine;
+```
+
+##### states.ts
+
+```typescript
+// qi/core/src/networks/websocket/machine/states.ts
+
+import type { WebSocketContext, WebSocketEvent } from "./types.js";
+import { CONNECTION_STATES } from "./constants.js";
+import type { actions } from "./actions.js";
+
+// Type for state machine configuration with proper typing
+type StateConfig = {
+  [K in (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES]]: {
+    entry?: Array<keyof typeof actions>;
+    exit?: Array<keyof typeof actions>;
+    on?: {
+      [E in WebSocketEvent["type"]]?:
+        | {
+            target?: (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES];
+            guard?: keyof typeof import("./guards.js").guards;
+            actions?: Array<keyof typeof actions>;
+          }
+        | Array<{
+            target: (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES];
+            guard?: keyof typeof import("./guards.js").guards;
+            actions?: Array<keyof typeof actions>;
+          }>;
+    };
+  };
+};
+
+export const states: StateConfig = {
+  disconnected: {
+    on: {
+      CONNECT: {
+        target: "connecting",
+        guard: "canInitiateConnection",
+        actions: ["storeUrl", "resetState", "establishConnection"],
+      },
+    },
+  },
+
+  connecting: {
+    entry: ["bindSocketEvents"],
+    exit: ["cleanupOnFailure"],
+    on: {
+      OPEN: {
+        target: "connected",
+        actions: ["resetRetries", "updateConnectionState", "startHeartbeat"],
+      },
+      ERROR: [
+        {
+          target: "reconnecting",
+          guard: "canReconnect",
+          actions: ["recordError", "incrementRetryCounter"],
+        },
+        {
+          target: "disconnected",
+          actions: ["recordError", "resetState"],
+        },
+      ],
+      CLOSE: {
+        target: "disconnected",
+        actions: ["logClosure", "resetState"],
+      },
+    },
+  },
+
+  connected: {
+    entry: ["startHeartbeat", "processQueue"],
+    exit: ["stopHeartbeat"],
+    on: {
+      SEND: {
+        guard: "canSendMessage",
+        actions: ["enqueueMessage", "processQueue"],
+      },
+      MESSAGE: {
+        actions: ["handleMessage", "updateMetrics"],
+      },
+      PING: {
+        actions: ["sendPing"],
+      },
+      PONG: {
+        actions: ["handlePong"],
+      },
+      ERROR: [
+        {
+          target: "reconnecting",
+          guard: "canReconnect",
+          actions: ["recordError", "incrementRetryCounter"],
+        },
+        {
+          target: "disconnected",
+          actions: ["recordError", "resetState"],
+        },
+      ],
+      DISCONNECT: {
+        target: "disconnecting",
+        actions: ["initiateClose"],
+      },
+    },
+  },
+
+  reconnecting: {
+    entry: ["calculateBackoff"],
+    exit: ["clearBackoff"],
+    on: {
+      RETRY: {
+        target: "connecting",
+        guard: "isWithinRetryLimit",
+        actions: ["establishConnection"],
+      },
+      MAX_RETRIES: {
+        target: "disconnected",
+        actions: ["logMaxRetries", "resetState"],
+      },
+      CONNECT: {
+        target: "connecting",
+        guard: "canInitiateConnection",
+        actions: ["storeUrl", "resetState", "establishConnection"],
+      },
+    },
+  },
+
+  disconnecting: {
+    entry: ["initiateClose"],
+    exit: ["resetState"],
+    on: {
+      CLOSE: {
+        target: "disconnected",
+        actions: ["logDisconnection"],
+      },
+    },
+  },
+
+  backingOff: {
+    on: {
+      RETRY: {
+        target: "connecting",
+        guard: "isWithinRetryLimit",
+        actions: ["establishConnection"],
+      },
+      MAX_RETRIES: {
+        target: "disconnected",
+        actions: ["logMaxRetries", "resetState"],
+      },
+    },
+  },
+
+  rateLimited: {
+    entry: ["updateRateLimitState"],
+    exit: ["clearRateLimitState"],
+    on: {
+      RETRY: {
+        target: "connected",
+        guard: "isRateLimitCleared",
+      },
+    },
+  },
+
+  suspended: {
+    entry: ["logSuspension"],
+    on: {
+      CONNECT: {
+        target: "connecting",
+        guard: "canInitiateConnection",
+        actions: ["storeUrl", "resetState", "establishConnection"],
+      },
+    },
+  },
+} as const;
+
+```
+
+##### types.ts
+
+```typescript
+// qi/core/src/networks/websocket/machine/types.ts
+
+import { CONNECTION_STATES, WS_CLOSE_CODES, DEFAULT_CONFIG } from "./constants.js";
+
+// Connection States
+export type ConnectionState = keyof typeof CONNECTION_STATES;
+
+// Connection Options
+export interface ConnectionOptions {
+  // Reconnection settings
+  reconnect: boolean;
+  maxReconnectAttempts: number;
+  reconnectInterval: number;
+  reconnectBackoffRate: number;
+
+  // Health check settings
+  pingInterval: number;
+  pongTimeout: number;
+
+  // Message handling
+  messageQueueSize: number;
+  messageTimeout: number;
+
+  // Rate limiting
+  rateLimit: {
+    messages: number;
+    window: number;
+  };
+}
+
+// Message-related types
+export interface QueuedMessage {
+  id: string;
+  data: unknown;
+  timestamp: number;
+  attempts: number;
+  timeout?: number;
+  priority: "high" | "normal";
+}
+
+export interface ErrorRecord {
+  timestamp: number;
+  error: Error;
+  context?: string;
+}
+
+// WebSocket Context
+export interface WebSocketContext {
+  // Connection
+  url: string;
+  protocols: string[];
+  socket: WebSocket | null;
+  status: ConnectionState;
+  readyState: number;
+  options: Required<ConnectionOptions>;
+
+  // State tracking
+  state: {
+    connectionAttempts: number;
+    lastConnectTime: number;
+    lastDisconnectTime: number;
+    lastError: Error | null;
+    lastMessageTime: number;
+  };
+
+  // Message Queue
+  queue: {
+    messages: QueuedMessage[];
+    pending: boolean;
+    lastProcessed: number;
+  };
+
+  // Metrics
+  metrics: {
+    messagesSent: number;
+    messagesReceived: number;
+    bytesReceived: number;
+    bytesSent: number;
+  };
+
+  // Health Check
+  lastPingTime: number;
+  lastPongTime: number;
+  latency: number[];
+
+  // Error tracking
+  errors: ErrorRecord[];
+
+  // Rate Limiting
+  messageCount: number;
+  windowStart: number;
+}
+
+// Event Types
+export type WebSocketEvent =
+  | {
+      type: "CONNECT";
+      url: string;
+      protocols?: string[];
+      options?: Partial<ConnectionOptions>;
+      timestamp: number;
+    }
+  | { type: "DISCONNECT"; code?: number; reason?: string; timestamp: number }
+  | { type: "OPEN"; event: Event; timestamp: number }
+  | {
+      type: "CLOSE";
+      code: (typeof WS_CLOSE_CODES)[keyof typeof WS_CLOSE_CODES];
+      reason: string;
+      wasClean: boolean;
+      timestamp: number;
+    }
+  | { type: "ERROR"; error: Error; timestamp: number; attempt?: number }
+  | { type: "MESSAGE"; data: unknown; timestamp: number; id?: string }
+  | {
+      type: "SEND";
+      data: unknown;
+      id?: string;
+      timestamp: number;
+      options?: { priority: "high" | "normal" };
+    }
+  | { type: "RETRY"; attempt: number; delay: number; timestamp: number }
+  | {
+      type: "MAX_RETRIES";
+      attempts: number;
+      lastError?: Error;
+      timestamp: number;
+    }
+  | { type: "PING"; timestamp: number }
+  | { type: "PONG"; latency: number; timestamp: number };
+
+// Default configuration type assert
+export type DefaultConfig = typeof DEFAULT_CONFIG;
+
+```
+
+##### websocket-state.ts
+
+```typescript
+// qi/core/src/networks/websocket/machine/websocket-states.ts
+
+export type WebSocketReadyState = 0 | 1 | 2 | 3;
+
+export const WebSocketStates = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+} as const;
+
+export const isWebSocketOpen = (readyState: number): boolean =>
+  readyState === WebSocketStates.OPEN;
+
+export default WebSocketStates;
+```
+
+##### websocket-states.ts
+
+```typescript
+export type WebSocketReadyState = 0 | 1 | 2 | 3;
+
+export const WebSocketStates = {
+  CONNECTING: 0,
+  OPEN: 1,
+  CLOSING: 2,
+  CLOSED: 3,
+} as const;
+
+export const isWebSocketOpen = (readyState: number): boolean =>
+  readyState === WebSocketStates.OPEN;
+
+export default WebSocketStates;
 
 ```
 
