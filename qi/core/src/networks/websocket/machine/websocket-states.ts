@@ -3,9 +3,11 @@
  * @module websocket-states.ts
  *
  * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-14
+ * @created 2024-12-18
+ * @modified 2024-12-18
  */
+
+// qi/core/src/networks/websocket/machine/websocket-states.ts
 
 export type WebSocketReadyState = 0 | 1 | 2 | 3;
 

@@ -30,3 +30,36 @@ export const defaultConfig: Required<WebSocketConfig> = {
   maxReconnectAttempts: 5,
   connectionTimeout: 30000,
 };
+
+export interface WebSocketContext {
+  url: string;
+  protocols?: string | string[];
+  socket?: WebSocket;
+  options: {
+    connectionTimeout: number;
+    pingInterval: number;
+  };
+  metrics: {
+    totalErrors: number;
+    consecutiveErrors: number;
+  };
+  state: {
+    connectionAttempts: number;
+  };
+}
+
+export interface WebSocketError extends Error {
+  code?: number;
+  reason?: string;
+  wasClean?: boolean;
+}
+
+export interface WebSocketEvents {
+  type: 'OPEN' | 'CLOSE' | 'MESSAGE' | 'PING';
+  timestamp: number;
+  data?: any;
+  code?: number;
+  reason?: string;
+  wasClean?: boolean;
+  error?: Error;
+}

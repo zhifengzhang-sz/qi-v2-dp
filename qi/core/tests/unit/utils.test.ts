@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-11-19
- * @modified 2024-11-19
+ * @modified 2024-12-18
  */
 
 import { debounce, merge, uniqBy } from "lodash-es";
@@ -16,14 +16,7 @@ import {
   loadEnv,
   formatJsonWithColor,
 } from "@qi/core/utils";
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  it,
-  vi,
-} from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { promises as fsPromises } from "fs";
 import chalk from "chalk";
 
@@ -83,7 +76,7 @@ describe("Utils", () => {
   describe("retryOperation", () => {
     beforeEach(() => {
       vi.useFakeTimers({
-        legacyFakeTimers: true
+        legacyFakeTimers: true,
       } as any);
     });
 

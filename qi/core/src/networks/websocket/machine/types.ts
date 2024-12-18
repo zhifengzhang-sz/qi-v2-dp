@@ -1,175 +1,31 @@
 /**
- * @fileoverview WebSocket Types and Defaults
- * @module @qi/core/networks/websocket/types
+ * @fileoverview WebSocket type definitions
+ * @module @qi/core/network/websocket/types
  */
 
-// Connection Configuration Types
-export interface WebSocketConfig {
-  /** Interval in ms between ping messages */
-  pingInterval?: number;
-  /** Timeout in ms to wait for pong response */
-  pongTimeout?: number;
-  /** Whether to attempt reconnection on disconnect */
-  reconnect?: boolean;
-  /** Interval in ms between reconnection attempts */
-  reconnectInterval?: number;
-  /** Maximum number of reconnection attempts */
-  maxReconnectAttempts?: number;
-  /** Timeout in ms for initial connection attempt */
-  connectionTimeout?: number;
-}
+import { NetworkErrorContext } from "../../errors.js";
+import { CONNECTION_STATES, DEFAULT_CONFIG } from "./constants.js";
+import type { EventObject } from "xstate";
 
-// Event Types
-export const EventTypes = {
-  // Connection Events
-  CONNECT: "CONNECT",
-  DISCONNECT: "DISCONNECT",
-  OPEN: "OPEN",
-  CLOSE: "CLOSE",
-  ERROR: "ERROR",
+export type ConnectionState =
+  (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES];
 
-  // Message Events
-  MESSAGE: "MESSAGE",
-  SEND: "SEND",
-
-  // Health Check Events
-  PING: "PING",
-  PONG: "PONG",
-
-  // Reconnection Events
-  RETRY: "RETRY",
-  MAX_RETRIES: "MAX_RETRIES",
-  TERMINATE: "TERMINATE",
-} as const;
-
-export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
-
-// Base Event Interface
-export interface BaseEvent {
-  type: EventType;
-  timestamp: number;
-}
-
-// Event Interfaces
-export interface ConnectEvent extends BaseEvent {
-  type: "CONNECT";
-  url: string;
-  protocols?: string[];
-  options?: ConnectionOptions;
-}
-
-export interface DisconnectEvent extends BaseEvent {
-  type: "DISCONNECT";
-  code?: number;
-  reason?: string;
-}
-
-export interface OpenEvent extends BaseEvent {
-  type: "OPEN";
-  event: Event;
-}
-
-export interface CloseEvent extends BaseEvent {
-  type: "CLOSE";
-  code: number;
-  reason: string;
-  wasClean: boolean;
-}
-
-export interface ErrorEvent extends BaseEvent {
-  type: "ERROR";
-  error: Error;
-  attempt?: number;
-}
-
-export interface MessageEvent extends BaseEvent {
-  type: "MESSAGE";
-  data: unknown;
-  id?: string;
-}
-
-export interface SendEvent extends BaseEvent {
-  type: "SEND";
-  data: unknown;
-  id?: string;
-  options?: SendOptions;
-}
-
-export interface PingEvent extends BaseEvent {
-  type: "PING";
-}
-
-export interface PongEvent extends BaseEvent {
-  type: "PONG";
-  latency: number;
-}
-
-export interface RetryEvent extends BaseEvent {
-  type: "RETRY";
-  attempt: number;
-  delay: number;
-}
-
-export interface MaxRetriesEvent extends BaseEvent {
-  type: "MAX_RETRIES";
-  attempts: number;
-  lastError?: Error;
-}
-
-export interface TerminateEvent extends BaseEvent {
-  type: "TERMINATE";
-  code?: number;
-  reason?: string;
-  immediate?: boolean;
-}
-
-// Union type for all WebSocket events
-export type WebSocketEvent =
-  | ConnectEvent
-  | DisconnectEvent
-  | OpenEvent
-  | CloseEvent
-  | ErrorEvent
-  | MessageEvent
-  | SendEvent
-  | PingEvent
-  | PongEvent
-  | RetryEvent
-  | MaxRetriesEvent
-  | TerminateEvent;
-
-// Connection Options
 export interface ConnectionOptions {
-  // Reconnection settings
   reconnect: boolean;
   maxReconnectAttempts: number;
   reconnectInterval: number;
   reconnectBackoffRate: number;
-
-  // Health check settings
+  connectionTimeout: number;
   pingInterval: number;
   pongTimeout: number;
-
-  // Message handling
   messageQueueSize: number;
   messageTimeout: number;
-
-  // Rate limiting
   rateLimit: {
     messages: number;
     window: number;
   };
 }
 
-// Message Options
-export interface SendOptions {
-  retry: boolean;
-  timeout: number;
-  priority: "high" | "normal";
-  queueIfOffline: boolean;
-}
-
-// Message Queue Types
 export interface QueuedMessage {
   id: string;
   data: unknown;
@@ -179,91 +35,103 @@ export interface QueuedMessage {
   priority: "high" | "normal";
 }
 
-// State Types
-export interface ConnectionStateInfo {
-  connectionAttempts: number;
-  lastConnectTime: number;
-  lastDisconnectTime: number;
-  lastError: Error | null;
-  lastMessageTime: number;
-}
-
-export interface QueueState {
-  messages: QueuedMessage[];
-  pending: boolean;
-  lastProcessed: number;
-}
-
 export interface ErrorRecord {
   timestamp: number;
   error: Error;
+  attempt?: number;
   context?: string;
 }
 
-export interface ConnectionMetrics {
+export interface WebSocketMetrics {
   messagesSent: number;
   messagesReceived: number;
   bytesReceived: number;
   bytesSent: number;
+  messageTimestamps: number[];
+  totalErrors: number;
+  consecutiveErrors: number;
+  lastSuccessfulConnection?: number;
+  errors: ErrorRecord[];
 }
 
-// Connection States
-export type ConnectionState =
-  | "disconnected"
-  | "connecting"
-  | "connected"
-  | "disconnecting"
-  | "reconnecting"
-  | "backingOff"
-  | "rateLimited"
-  | "suspended";
-
-// WebSocket Context
 export interface WebSocketContext {
-  // Connection
   url: string;
   protocols: string[];
   socket: WebSocket | null;
   status: ConnectionState;
   readyState: number;
-  options: ConnectionOptions;
-  state: ConnectionStateInfo;
-
-  // Message Queue
-  queue: QueueState;
-  messageQueueSize: number;
-
-  // Health Check
-  pingInterval: number;
-  pongTimeout: number;
-  lastPingTime: number;
-  lastPongTime: number;
-  latency: number[];
-
-  // Metrics
-  metrics: ConnectionMetrics;
-  errors: ErrorRecord[];
-
-  // Rate Limiting
-  messageCount: number;
-  windowStart: number;
-  rateLimit: {
-    messages: number;
-    window: number;
+  options: Required<ConnectionOptions>;
+  state: {
+    connectionAttempts: number;
+    lastConnectTime: number;
+    lastDisconnectTime: number;
+    lastError: Error | null;
+    lastMessageTime: number;
+    lastErrorTime: number;  // Add this property
+  };
+  metrics: WebSocketMetrics;
+  queue: {
+    messages: QueuedMessage[];
+    pending: boolean;
+    lastProcessed: number;
   };
 }
 
-// Message Handler Type
-export interface MessageHandler {
-  (data: unknown): void | Promise<void>;
+export interface WebSocketErrorContext extends NetworkErrorContext {
+  socket?: WebSocket | null;  // Add this line
+  connectionAttempts: number;
+  lastError?: Error;
+  closeCode?: number;
+  closeReason?: string;
+  lastSuccessfulConnection?: number;
+  totalErrors: number;
+  consecutiveErrors: number;
+  retryDelay?: number;
 }
 
-// Default Configuration
-export const defaultConfig: Required<WebSocketConfig> = {
-  pingInterval: 30000,
-  pongTimeout: 5000,
-  reconnect: true,
-  reconnectInterval: 5000,
-  maxReconnectAttempts: 5,
-  connectionTimeout: 30000,
+export interface WebSocketError extends Error {
+  statusCode: number;
+  context?: WebSocketErrorContext;
+}
+
+export interface WebSocketLogic extends EventObject {
+  type: "webSocketLogic"; // Required by EventObject
+  input: WebSocketContext;
+  events: WebSocketEvents;
+}
+
+export type WebSocketEvents =
+  | {
+      type: "CONNECT";
+      url: string;
+      protocols?: string[];
+      options?: Partial<ConnectionOptions>;
+    }
+  | { type: "DISCONNECT"; code?: number; reason?: string }
+  | { type: "OPEN"; timestamp: number }
+  | {
+      type: "CLOSE";
+      code: number;
+      reason: string;
+      wasClean: boolean;
+      error?: Error;
+    }
+  | { type: "ERROR"; error: Error; timestamp: number; attempt?: number }
+  | { type: "MESSAGE"; data: unknown; timestamp: number; id?: string }
+  | {
+      type: "SEND";
+      data: unknown;
+      id?: string;
+      options?: { priority: "high" | "normal" };
+    }
+  | { type: "PING"; timestamp: number }
+  | { type: "PONG"; latency: number; timestamp: number }
+  | { type: "RETRY"; attempt: number; delay: number };
+
+export type WebSocketServices = {
+  webSocketService: (context: WebSocketContext) => (send: Sender) => Cleanup;
+  pingService: (context: WebSocketContext) => (send: Sender) => Cleanup;
 };
+
+export type Cleanup = void | (() => void);
+export type Sender = <E extends WebSocketEvents>(event: E) => void;

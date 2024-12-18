@@ -1,140 +1,119 @@
 /**
- * @fileoverview
- * @module guards.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-14
+ * @fileoverview WebSocket state machine guards
+ * @module @qi/core/network/websocket/guards
  */
 
-// guards.ts
+import { logger } from "@qi/core/logger";
+import { formatJsonWithColor } from "@qi/core/utils";
 import type {
   WebSocketContext,
-  WebSocketEvent,
-  ConnectEvent,
-  DisconnectEvent,
-  SendEvent,
-  ConnectionState,
+  WebSocketEvents,
+  WebSocketError,
 } from "./types.js";
-import { EventTypes } from "./types.js";
-import {
-  TIMING,
-  LIMITS,
-  DEFAULT_CONFIG,
-  CONNECTION_STATES,
-} from "./constants.js";
+import { isRecoverableError } from "./utils.js";
 
-// Type Guards
-const isConnectEvent = (event: WebSocketEvent): event is ConnectEvent =>
-  event.type === EventTypes.CONNECT;
+export function canInitiateConnection(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "CONNECT" }>
+): boolean {
+  if (!event.url) {
+    logger.error("Invalid WebSocket URL", { url: event.url });
+    return false;
+  }
 
-const isDisconnectEvent = (event: WebSocketEvent): event is DisconnectEvent =>
-  event.type === EventTypes.DISCONNECT;
+  try {
+    const url = new URL(event.url);
+    const validProtocol = ["ws:", "wss:"].includes(url.protocol);
+    const validState =
+      !context.socket || context.socket.readyState === WebSocket.CLOSED;
 
-const isSendEvent = (event: WebSocketEvent): event is SendEvent =>
-  event.type === EventTypes.SEND;
+    if (!validProtocol) {
+      logger.error("Invalid WebSocket protocol", { protocol: url.protocol });
+    }
+
+    return validProtocol && validState;
+  } catch (error) {
+    logger.error("URL parsing failed", { error });
+    return false;
+  }
+}
+
+export function canReconnect(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "ERROR" }>
+): boolean {
+  if (!context.options.reconnect) {
+    logger.debug("Reconnection disabled by configuration", {
+      context: formatJsonWithColor(context.options),
+    });
+    return false;
+  }
+
+  if (
+    context.state.connectionAttempts >= context.options.maxReconnectAttempts
+  ) {
+    logger.warn("Maximum reconnection attempts reached", {
+      attempts: context.state.connectionAttempts,
+      maxAttempts: context.options.maxReconnectAttempts,
+    });
+    return false;
+  }
+
+  const error = event.error as WebSocketError;
+  const canRetry = isRecoverableError(error);
+
+  logger.debug("Reconnection evaluation", {
+    canRetry,
+    error: error.message,
+    attempts: context.state.connectionAttempts,
+    consecutiveErrors: context.metrics.consecutiveErrors,
+  });
+
+  return canRetry;
+}
+
+export function shouldThrottle(context: WebSocketContext): boolean {
+  const { consecutiveErrors } = context.metrics;
+  const timeSinceLastError = Date.now() - (context.state.lastErrorTime || 0);
+  const backoffDelay =
+    context.options.reconnectInterval * Math.pow(2, consecutiveErrors - 3);
+
+  const shouldThrottle =
+    consecutiveErrors > 3 && timeSinceLastError < backoffDelay;
+
+  if (shouldThrottle) {
+    logger.warn("Connection attempts throttled", {
+      consecutiveErrors,
+      backoffDelay,
+      timeSinceLastError,
+    });
+  }
+
+  return shouldThrottle;
+}
+
+export function canSendMessage(context: WebSocketContext): boolean {
+  if (!context.socket || context.socket.readyState !== WebSocket.OPEN) {
+    return false;
+  }
+
+  const { window, messages: limit } = context.options.rateLimit;
+  const now = Date.now();
+  const recentMessages = context.metrics.messageTimestamps.filter(
+    (t) => now - t <= window
+  );
+
+  return recentMessages.length < limit;
+}
+
+export function hasQueueSpace(context: WebSocketContext): boolean {
+  return context.queue.messages.length < context.options.messageQueueSize;
+}
 
 export const guards = {
-  canInitiateConnection: (
-    context: WebSocketContext,
-    event: WebSocketEvent
-  ): boolean => {
-    if (!isConnectEvent(event)) return false;
-
-    try {
-      const url = new URL(event.url);
-      return (
-        (url.protocol === "ws:" || url.protocol === "wss:") &&
-        context.status === CONNECTION_STATES.DISCONNECTED &&
-        !context.socket
-      );
-    } catch {
-      return false;
-    }
-  },
-
-  canDisconnect: (
-    context: WebSocketContext,
-    event: WebSocketEvent
-  ): boolean => {
-    if (!isDisconnectEvent(event)) return false;
-    return context.socket?.readyState === WebSocket.OPEN;
-  },
-
-  hasActiveConnection: (context: WebSocketContext): boolean => {
-    return (
-      context.socket?.readyState === WebSocket.OPEN &&
-      context.status === CONNECTION_STATES.CONNECTED
-    );
-  },
-
-  canReconnect: (context: WebSocketContext): boolean => {
-    return (
-      context.options.reconnect &&
-      context.state.connectionAttempts < DEFAULT_CONFIG.maxReconnectAttempts &&
-      context.status !== CONNECTION_STATES.SUSPENDED
-    );
-  },
-
-  isRateLimited: (context: WebSocketContext): boolean => {
-    const now = Date.now();
-    const windowEnd = context.windowStart + TIMING.RATE_LIMIT_WINDOW;
-
-    if (now > windowEnd) {
-      return false;
-    }
-
-    return context.messageCount >= DEFAULT_CONFIG.rateLimit.messages;
-  },
-
-  canSendMessage: (
-    context: WebSocketContext,
-    event: WebSocketEvent
-  ): boolean => {
-    if (!isSendEvent(event)) return false;
-
-    const messageSize =
-      typeof event.data === "string"
-        ? event.data.length
-        : JSON.stringify(event.data).length;
-
-    return (
-      guards.hasActiveConnection(context) &&
-      !guards.isRateLimited(context) &&
-      messageSize <= LIMITS.MAX_MESSAGE_SIZE
-    );
-  },
-
-  canQueueMessage: (
-    context: WebSocketContext,
-    event: WebSocketEvent
-  ): boolean => {
-    if (!isSendEvent(event)) return false;
-
-    return (
-      context.queue.messages.length < LIMITS.MAX_QUEUE_SIZE &&
-      event.options?.queueIfOffline !== false
-    );
-  },
-
-  canProcessQueue: (context: WebSocketContext): boolean => {
-    return (
-      !context.queue.pending &&
-      guards.hasActiveConnection(context) &&
-      context.queue.messages.length > 0
-    );
-  },
-
-  shouldReconnect: (context: WebSocketContext): boolean => {
-    const reconnectableStates: ConnectionState[] = [
-      "disconnected",
-      "backingOff",
-    ];
-    return (
-      context.options.reconnect &&
-      context.state.connectionAttempts < DEFAULT_CONFIG.maxReconnectAttempts &&
-      reconnectableStates.includes(context.status)
-    );
-  },
+  canInitiateConnection,
+  canReconnect,
+  shouldThrottle,
+  canSendMessage,
+  hasQueueSpace
 };
-export default guards;

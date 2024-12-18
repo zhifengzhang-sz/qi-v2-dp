@@ -3,11 +3,10 @@
  * @module test-helpers.ts
  *
  * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-14
+ * @created 2024-12-18
+ * @modified 2024-12-18
  */
 
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { vi } from "vitest";
 import type { AnyActorRef, Subscription } from "xstate";
 import { WebSocketStates } from "../../../../src/networks/websocket/machine/websocket-states.js";

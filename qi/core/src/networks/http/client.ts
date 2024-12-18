@@ -4,53 +4,45 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-10
- * @modified 2024-12-12
+ * @modified 2024-12-18
  */
 
-/**
- * @fileoverview HTTP Client Implementation
- * @module @qi/core/networks/http/client
- */
-
-import { logger } from "@qi/core/logger";
-import { retryOperation } from "@qi/core/utils";
 import axios, {
   AxiosInstance,
-  AxiosRequestConfig,
   AxiosResponse,
   InternalAxiosRequestConfig,
+  AxiosError,
 } from "axios";
-import { transformAxiosError } from "../errors.js";
+import { logger } from "@qi/core/logger";
+import {
+  createNetworkError,
+  transformAxiosError,
+  HttpStatusCode,
+  mapHttpStatusToErrorCode,
+} from "../errors.js";
+import { ApplicationError } from "@qi/core/errors";
+import { retryOperation } from "@qi/core/utils";
+import type { HttpConfig, RequestConfig } from "./types.js";
 
-declare module "axios" {
-  export interface InternalAxiosRequestConfig {
-    startTime?: number;
-  }
-}
-
-export interface HttpConfig {
-  baseURL?: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-  retries?: number;
-  retryDelay?: number;
-}
-
-export interface RequestConfig extends AxiosRequestConfig {
-  retry?: boolean;
-}
+export { HttpStatusCode, mapHttpStatusToErrorCode };
+export type { HttpConfig, RequestConfig };
 
 export class HttpClient {
+  public readonly config: Required<HttpConfig>;
   private readonly client: AxiosInstance;
-  private readonly config: Required<HttpConfig>;
 
   constructor(config: HttpConfig = {}) {
     this.config = {
       baseURL: config.baseURL || "",
       timeout: config.timeout || 30000,
       headers: config.headers || {},
-      retries: config.retries || 3,
-      retryDelay: config.retryDelay || 1000,
+      retry: {
+        limit: 3,
+        delay: 1000,
+        enabled: true,
+        ...config.retry,
+      },
+      logger: config.logger || logger,
     };
 
     this.client = axios.create({
@@ -71,33 +63,63 @@ export class HttpClient {
       }
     );
 
-    // Response interceptor for logging and error handling
+    // Update response interceptor setup
     this.client.interceptors.response.use(
       (response) => {
-        const duration = response.config.startTime
-          ? Date.now() - response.config.startTime
+        const config = response.config as InternalAxiosRequestConfig;
+        const duration = config.startTime
+          ? Date.now() - config.startTime
           : undefined;
 
-        logger.debug("HTTP Response", {
-          url: response.config.url,
+        this.config.logger.debug("HTTP Response", {
+          url: config.url,
           status: response.status,
           duration,
         });
         return response;
       },
-      (error) => {
-        const duration = error.config?.startTime
-          ? Date.now() - error.config.startTime
-          : undefined;
+      (error: unknown) => {
+        if (error instanceof AxiosError) {
+          const status =
+            error.response?.status || HttpStatusCode.INTERNAL_SERVER_ERROR;
+          const errorCode = mapHttpStatusToErrorCode(status);
 
-        logger.error("HTTP Error", {
-          url: error.config?.url,
-          status: error.response?.status,
-          error: error.message,
-          duration,
-        });
+          const transformedError = new ApplicationError(
+            error.message,
+            errorCode,
+            status,
+            {
+              url: error.config?.url,
+              method: error.config?.method,
+              code: error.code,
+              response: error.response && {
+                data: error.response.data,
+                headers: error.response.headers,
+                status: error.response.status,
+              },
+            }
+          );
 
-        throw transformAxiosError(error);
+          if (error.config) {
+            const config = error.config as InternalAxiosRequestConfig;
+            const duration = config.startTime
+              ? Date.now() - config.startTime
+              : undefined;
+
+            this.config.logger.error("HTTP Error", {
+              url: config.url,
+              status: error.response?.status,
+              error: error.message,
+              duration,
+            });
+          }
+
+          throw transformedError;
+        }
+        throw createNetworkError(
+          "Unknown error occurred",
+          HttpStatusCode.INTERNAL_SERVER_ERROR
+        );
       }
     );
   }
@@ -105,23 +127,37 @@ export class HttpClient {
   private async executeRequest<T>(
     config: RequestConfig
   ): Promise<AxiosResponse<T>> {
+    const requestConfig = { ...config }; // Cache config for retry logging
+
     try {
       if (config.retry === false) {
         return await this.client.request<T>(config);
       }
 
-      return await retryOperation(() => this.client.request<T>(config), {
-        retries: this.config.retries,
-        minTimeout: this.config.retryDelay,
-        onRetry: (times) => {
-          logger.warn("Retrying HTTP request", {
-            url: config.url,
-            attempt: times,
-          });
+      return await retryOperation(
+        async () => {
+          try {
+            return await this.client.request<T>(requestConfig);
+          } catch (error) {
+            // Don't transform here - let interceptor handle it
+            throw error;
+          }
         },
-      });
+        {
+          retries: this.config.retry.limit,
+          minTimeout: this.config.retry.delay,
+          onRetry: (times) => {
+            // Use cached config for logging
+            this.config.logger.warn("Retrying request", {
+              url: requestConfig.url,
+              attempt: times,
+            });
+          },
+        }
+      );
     } catch (error) {
-      throw transformAxiosError(error);
+      // Error is already transformed by interceptor
+      throw error;
     }
   }
 

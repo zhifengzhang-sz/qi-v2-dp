@@ -4,10 +4,10 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-19
- * @modified 2024-11-21
+ * @modified 2024-12-18
  */
 
-import { defineConfig } from "vite";
+import { defineConfig } from "vitest/config";
 import { resolve } from "path";
 
 export default defineConfig({
@@ -17,8 +17,9 @@ export default defineConfig({
     include: ["tests/unit/**/*.{test,spec}.ts"],
     setupFiles: ["tests/vitest.setup.ts"],
     typecheck: {
-      tsconfig: './tsconfig.test.json',
-    }
+      tsconfig: "./tsconfig.test.json",
+      include: ["tests/**/*.{test,spec}.ts"],
+    },
   },
   resolve: {
     alias: {

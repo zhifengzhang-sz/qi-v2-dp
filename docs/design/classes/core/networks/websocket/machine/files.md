@@ -55,7 +55,7 @@
    - Type-safe event handlers
    - Service creation
 
-8. **__tests__/machine.test.ts**:
+8. **qi/core/tests/unit/networks/websocket/machine.test.ts**:
    - Test suites for:
      - Connection lifecycle
      - Message handling

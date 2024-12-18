@@ -1,18 +1,23 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "rootDir": ".",
     "noEmit": true,
     "types": ["vitest/globals", "node"],
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext"
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "baseUrl": ".",
+    "paths": {
+      "@qi/core/*": ["src/*"]
+    },
+    "rootDir": "."
   },
   "include": [
-    "src/**/*.ts",
     "tests/**/*.ts",
+    "vitest.config.ts",
     "vitest.setup.ts",
-    "vitest.config.ts"
+    "src/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
 }

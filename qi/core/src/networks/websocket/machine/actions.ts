@@ -4,194 +4,165 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-14
+ * @modified 2024-12-18
  */
 
-import type {
-  WebSocketContext,
-  WebSocketEvent,
-  ErrorRecord,
-  QueuedMessage,
-} from "./types.js";
-import { TIMING } from "./constants.js";
+import { logger } from "@qi/core/logger";
+import type { WebSocketContext, WebSocketEvents } from "./types.js";
+
+export function prepareConnection(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "CONNECT" }>
+): WebSocketContext {
+  return {
+    ...context,
+    url: event.url,
+    protocols: event.protocols || [],
+    options: { ...context.options, ...event.options },
+    state: {
+      ...context.state,
+      connectionAttempts: 0
+    }
+  };
+}
+
+export function handleOpen(context: WebSocketContext): WebSocketContext {
+  logger.info("WebSocket connection established", {
+    url: context.url,
+    attempts: context.state.connectionAttempts
+  });
+
+  return {
+    ...context,
+    metrics: {
+      ...context.metrics,
+      consecutiveErrors: 0,
+      lastSuccessfulConnection: Date.now()
+    },
+    state: {
+      ...context.state,
+      connectionAttempts: 0,
+      lastConnectTime: Date.now(),
+      lastError: null
+    }
+  };
+}
+
+export function handleError(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "ERROR" }>
+): WebSocketContext {
+  return {
+    ...context,
+    metrics: {
+      ...context.metrics,
+      totalErrors: context.metrics.totalErrors + 1,
+      consecutiveErrors: context.metrics.consecutiveErrors + 1,
+      errors: [
+        ...context.metrics.errors.slice(-99),
+        {
+          timestamp: Date.now(),
+          error: event.error,
+          attempt: context.state.connectionAttempts
+        }
+      ]
+    },
+    state: {
+      ...context.state,
+      lastError: event.error,
+      lastErrorTime: Date.now()
+    }
+  };
+}
+
+export function handleMessage(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "MESSAGE" }>
+): WebSocketContext {
+  return {
+    ...context,
+    metrics: {
+      ...context.metrics,
+      messagesReceived: context.metrics.messagesReceived + 1,
+      bytesReceived: context.metrics.bytesReceived + 
+        (typeof event.data === 'string' ? new Blob([event.data]).size : 0),
+      messageTimestamps: [
+        ...context.metrics.messageTimestamps.slice(-99),
+        event.timestamp
+      ]
+    },
+    state: {
+      ...context.state,
+      lastMessageTime: event.timestamp
+    }
+  };
+}
+
+export function enqueueMessage(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "SEND" }>
+): WebSocketContext {
+  if (context.queue.messages.length >= context.options.messageQueueSize) {
+    logger.warn("Message queue full, dropping oldest message");
+  }
+
+  return {
+    ...context,
+    queue: {
+      ...context.queue,
+      messages: [
+        ...(context.queue.messages.length >= context.options.messageQueueSize
+          ? context.queue.messages.slice(1)
+          : context.queue.messages),
+        {
+          id: event.id || crypto.randomUUID(),
+          data: event.data,
+          timestamp: Date.now(),
+          attempts: 0,
+          priority: event.options?.priority ?? "normal"
+        }
+      ]
+    }
+  };
+}
+
+export function handleClose(
+  context: WebSocketContext,
+  event: Extract<WebSocketEvents, { type: "CLOSE" }>
+): WebSocketContext {
+  logger.info("WebSocket connection closed", {
+    code: event.code,
+    reason: event.reason,
+    wasClean: event.wasClean
+  });
+
+  return {
+    ...context,
+    state: {
+      ...context.state,
+      lastDisconnectTime: Date.now()
+    }
+  };
+}
+
+export function cleanup(context: WebSocketContext): WebSocketContext {
+  return {
+    ...context,
+    socket: null,
+    queue: {
+      messages: [],
+      pending: false,
+      lastProcessed: 0
+    }
+  };
+}
 
 export const actions = {
-  // Connection Management
-  establishConnection: (context: WebSocketContext, event: WebSocketEvent) => {
-    if (event.type !== "CONNECT") return;
-    try {
-      const socket = new WebSocket(event.url, context.protocols);
-      context.socket = socket;
-      context.url = event.url;
-      context.state.lastConnectTime = Date.now();
-      context.state.connectionAttempts = 0;
-
-      if (event.options) {
-        context.options = { ...context.options, ...event.options };
-      }
-    } catch (error) {
-      actions.recordError(context, {
-        type: "ERROR",
-        error: error as Error,
-        timestamp: Date.now(),
-      });
-    }
-  },
-
-  bindSocketEvents: (context: WebSocketContext) => {
-    if (!context.socket) return;
-
-    context.socket.onopen = () => {
-      context.status = "connected";
-      context.state.lastConnectTime = Date.now();
-      context.state.connectionAttempts = 0;
-    };
-
-    context.socket.onclose = () => {
-      context.state.lastDisconnectTime = Date.now();
-      context.socket = null;
-    };
-
-    context.socket.onerror = (error) => {
-      context.state.lastError =
-        error instanceof Error ? error : new Error("WebSocket error");
-      actions.recordError(context, {
-        type: "ERROR",
-        error: context.state.lastError,
-        timestamp: Date.now(),
-      });
-    };
-
-    context.socket.onmessage = (event) => {
-      context.state.lastMessageTime = Date.now();
-      actions.handleMessage(context, {
-        type: "MESSAGE",
-        data: event.data,
-        timestamp: Date.now(),
-      });
-    };
-  },
-
-  // Message Handling
-  handleMessage: (context: WebSocketContext, event: WebSocketEvent) => {
-    if (event.type !== "MESSAGE") return;
-    context.metrics.messagesReceived++;
-    if (typeof event.data === "string") {
-      context.metrics.bytesReceived += event.data.length;
-    }
-
-    if (event.data === "pong") {
-      actions.handlePong(context);
-    }
-  },
-
-  enqueueMessage: (context: WebSocketContext, event: WebSocketEvent) => {
-    if (event.type !== "SEND") return;
-
-    const message: QueuedMessage = {
-      id: event.id || crypto.randomUUID(),
-      data: event.data,
-      timestamp: Date.now(),
-      attempts: 0,
-      priority: event.options?.priority || "normal",
-    };
-
-    context.queue.messages.push(message);
-    actions.processQueue(context);
-  },
-
-  processQueue: (context: WebSocketContext) => {
-    if (context.queue.pending || !context.socket) return;
-
-    context.queue.pending = true;
-    try {
-      while (
-        context.queue.messages.length > 0 &&
-        context.socket?.readyState === WebSocket.OPEN
-      ) {
-        const message = context.queue.messages[0];
-        context.socket.send(JSON.stringify(message.data));
-        context.metrics.messagesSent++;
-        context.queue.messages.shift();
-        context.queue.lastProcessed = Date.now();
-      }
-    } finally {
-      context.queue.pending = false;
-    }
-  },
-
-  // Health Check
-  sendPing: (context: WebSocketContext) => {
-    if (context.socket?.readyState === WebSocket.OPEN) {
-      context.socket.send("ping");
-      context.lastPingTime = Date.now();
-    }
-  },
-
-  startHeartbeat: (context: WebSocketContext) => {
-    actions.sendPing(context);
-    setInterval(() => {
-      if (context.socket?.readyState === WebSocket.OPEN) {
-        actions.sendPing(context);
-      }
-    }, context.pingInterval);
-  },
-
-  handlePong: (context: WebSocketContext) => {
-    const now = Date.now();
-    context.lastPongTime = now;
-    const latency = now - context.lastPingTime;
-
-    context.latency.push(latency);
-    if (context.latency.length > 50) {
-      context.latency.shift();
-    }
-  },
-
-  // Error Handling
-  recordError: (context: WebSocketContext, event: WebSocketEvent) => {
-    if (event.type !== "ERROR") return;
-
-    const errorRecord: ErrorRecord = {
-      timestamp: event.timestamp,
-      error: event.error,
-      context: event.attempt
-        ? `Reconnection attempt ${event.attempt}`
-        : undefined,
-    };
-
-    context.errors.push(errorRecord);
-    if (context.errors.length > 100) {
-      context.errors.shift();
-    }
-
-    context.state.lastError = errorRecord.error;
-  },
-
-  // State Management
-  resetState: (context: WebSocketContext) => {
-    context.socket = null;
-    context.queue.messages = [];
-    context.queue.pending = false;
-    context.state.connectionAttempts = 0;
-  },
-
-  // Reconnection Management
-  incrementRetryCounter: (context: WebSocketContext) => {
-    context.state.connectionAttempts++;
-  },
-
-  calculateBackoff: (context: WebSocketContext) => {
-    return Math.min(
-      context.options.reconnectInterval *
-        Math.pow(2, context.state.connectionAttempts),
-      TIMING.MAX_RECONNECT_DELAY
-    );
-  },
-
-  initiateClose: (context: WebSocketContext) => {
-    context.socket?.close();
-  },
+  prepareConnection,
+  handleOpen,
+  handleError,
+  handleMessage,
+  enqueueMessage,
+  handleClose,
+  cleanup
 };
-
-export default actions;

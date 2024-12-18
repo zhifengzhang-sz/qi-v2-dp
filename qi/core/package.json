@@ -87,6 +87,10 @@
       "import": "./dist/networks/index.js",
       "require": "./dist/networks/index.js"
     },
+    "./networks/websocket/machine/*": {
+      "import": "./dist/networks/websocket/machine/*.js",
+      "require": "./dist/networks/websocket/machine/*.js"
+    },
     "./services/*": {
       "import": "./dist/services/*/index.js",
       "require": "./dist/services/*/index.js"

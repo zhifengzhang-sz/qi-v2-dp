@@ -21,7 +21,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-12-11
+ * @modified 2024-12-18
  */
 
 export enum ErrorCode {
@@ -52,6 +52,8 @@ export enum ErrorCode {
   AUTH_ERROR = 1401, // 401 related errors
   RATE_LIMIT_ERROR = 1429, // 429 related errors
   NETWORK_ERROR = 1500, // Network connectivity issues
+  BAD_GATEWAY = 1502,
+  SERVICE_UNAVAILABLE = 1503,
   NOT_FOUND_ERROR = 1404, // Resource not found
 
   // === Configuration Errors (2000-2999) ===
