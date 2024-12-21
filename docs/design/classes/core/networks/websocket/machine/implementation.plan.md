@@ -133,6 +133,13 @@ graph TD
 - [ ] Implement state definitions
 - [ ] Add state validation
 
+### Layer 2: Core Types Updates
+- [ ] Add terminated state handling
+- [ ] Add message processing flags
+- [ ] Add timing metrics
+- [ ] Add byte counters
+- [ ] Add rate limiting context
+
 ### Layer 3
 - [ ] Create utility functions
 - [ ] Add validation helpers
@@ -144,6 +151,12 @@ graph TD
 - [ ] Create actions
 - [ ] Add services
 - [ ] Add behavior tests
+
+### Layer 4: Behavior Updates
+- [ ] Add cleanup actions for terminated state
+- [ ] Add resource management
+- [ ] Add metric tracking
+- [ ] Add rate limiting
 
 ### Layer 5
 - [ ] Configure machine
@@ -167,6 +180,12 @@ graph TD
 - Complete machine behavior
 - Real WebSocket interaction
 - Error scenarios
+
+### Testing Strategy Updates
+- Add terminated state tests
+- Add metric validation
+- Add rate limit testing
+- Add cleanup verification
 
 ## 5. Migration Notes
 

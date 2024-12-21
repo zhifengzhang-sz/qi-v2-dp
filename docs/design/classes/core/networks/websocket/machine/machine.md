@@ -28,7 +28,7 @@ Where:
 ### 1.2 States ($S$)
 
 \[
-S = \{s_i\mid i=1,2,\dots,n;\ n=5\}
+S = \{s_i\mid i=1,2,\dots,n;\ n=6\}
 \]
 where
 \[
@@ -36,33 +36,15 @@ where
 s_1 &=& \text{Disconnected}, \\
 s_2 &=& \text{Connecting}, \\
 s_3 &=& \text{Connected}, \\
-s_4 &=& \text{Reconnecting},\\
-s_5 &=& \text{Disconnecting}
+s_4 &=& \text{Reconnecting}, \\
+s_5 &=& \text{Disconnecting}, \\
+s_6 &=& \text{Terminated}
 \end{eqnarray}
 \]
 
 ### 1.3 Events (\( E \))
 
-\[
-E = \{\sigma_i\mid i=1,2,\dots,m;\ m=12\}
-\]
-where
-\[
-\begin{eqnarray}
-\sigma_1 &=& \text{CONNECT}, \\
-\sigma_2 &=& \text{DISCONNECT}, \\
-\sigma_3 &=& \text{OPEN}, \\
-\sigma_4 &=& \text{CLOSE}, \\
-\sigma_5 &=& \text{ERROR}, \\
-\sigma_6 &=& \text{MESSAGE}, \\
-\sigma_7 &=& \text{SEND}, \\
-\sigma_8 &=& \text{PING}, \\
-\sigma_9 &=& \text{PONG}, \\
-\sigma_{10} &=& \text{RETRY}, \\
-\sigma_{11} &=& \text{MAX\_RETRIES}, \\
-\sigma_{12} &=& \text{TERMINATE}
-\end{eqnarray}
-\]
+[Events section remains unchanged]
 
 ### 1.4 Transition Function (\( \delta \))
 
@@ -77,16 +59,24 @@ Applied to our states:
 \delta(s_{\tiny\text{Disconnected}}, \sigma_{\tiny\text{CONNECT}}) & = s_{\tiny\text{Connecting}} \\
 \delta(s_{\tiny\text{Connecting}}, \sigma_{\tiny\text{OPEN}}) & = s_{\tiny\text{Connected}} \\
 \delta(s_{\tiny\text{Connecting}}, \sigma_{\tiny\text{ERROR}}) & = s_{\tiny\text{Reconnecting}} \\
-\delta(s_{\tiny\text{Connecting}}, \sigma_{\tiny\text{CLOSE}}) & = s_{\tiny\text{Disconnected}} \\
 \delta(s_{\tiny\text{Connected}}, \sigma_{\tiny\text{DISCONNECT}}) & = s_{\tiny\text{Disconnecting}} \\
 \delta(s_{\tiny\text{Connected}}, \sigma_{\tiny\text{ERROR}}) & = s_{\tiny\text{Reconnecting}} \\
 \delta(s_{\tiny\text{Connected}}, \sigma_{\tiny\text{CLOSE}}) & = s_{\tiny\text{Reconnecting}} \\
 \delta(s_{\tiny\text{Reconnecting}}, \sigma_{\tiny\text{RETRY}}) & = s_{\tiny\text{Connecting}} \\
 \delta(s_{\tiny\text{Reconnecting}}, \sigma_{\tiny\text{MAX\_RETRIES}}) & = s_{\tiny\text{Disconnected}} \\
 \delta(s_{\tiny\text{Disconnecting}}, \sigma_{\tiny\text{CLOSE}}) & = s_{\tiny\text{Disconnected}} \\
-\delta(s, \sigma_{\tiny\text{TERMINATE}}) & = s_{\tiny\text{Disconnected}}, \forall s\in S
+\delta(s, \sigma_{\tiny\text{TERMINATE}}) & = s_{\tiny\text{Terminated}}, \forall s\in S
 \end{aligned}
 \]
+
+### 1.5 Final States (\( F \))
+
+The set of final states \( F \) consists of a single state:
+\[
+F = \{s_{\tiny\text{Terminated}}\}
+\]
+
+Once the machine enters the Terminated state, it cannot transition to any other state. This represents a complete shutdown of the WebSocket connection with no possibility of reconnection.
 
 ## 2. Implementation Specification
 

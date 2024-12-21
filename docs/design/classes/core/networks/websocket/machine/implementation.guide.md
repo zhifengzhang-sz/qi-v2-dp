@@ -11,7 +11,8 @@ export const STATES = {
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   RECONNECTING: 'reconnecting',
-  DISCONNECTING: 'disconnecting'
+  DISCONNECTING: 'disconnecting',
+  TERMINATED: 'terminated'
 } as const;
 
 export const EVENTS = {
@@ -81,6 +82,15 @@ interface WebSocketContext {
   readonly status: State;
   readonly options: Readonly<ConnectionOptions>;
   readonly metrics: Readonly<Metrics>;
+  isCleanDisconnect: boolean;
+  connectTime: number;
+  disconnectTime: number;
+  latency: number[];
+  bytesReceived: number;
+  bytesSent: number;
+  processingMessage: boolean;
+  lastMessageId: string;
+  windowStart: number;
 }
 
 interface ConnectionOptions {
@@ -255,7 +265,16 @@ const webSocketMachine = createMachine({
       messagesReceived: 0,
       messagesSent: 0,
       errors: []
-    }
+    },
+    isCleanDisconnect: false,
+    connectTime: 0,
+    disconnectTime: 0,
+    latency: [],
+    bytesReceived: 0,
+    bytesSent: 0,
+    processingMessage: false,
+    lastMessageId: '',
+    windowStart: 0
   },
   initial: 'disconnected',
   states: {
@@ -277,6 +296,10 @@ const webSocketMachine = createMachine({
           guard: 'canReconnect'
         }]
       }
+    },
+    terminated: {
+      type: 'final',
+      entry: 'cleanupResources'
     }
     // ... other states
   }
@@ -302,7 +325,16 @@ describe('Types', () => {
         messagesReceived: 0,
         messagesSent: 0,
         errors: []
-      }
+      },
+      isCleanDisconnect: false,
+      connectTime: 0,
+      disconnectTime: 0,
+      latency: [],
+      bytesReceived: 0,
+      bytesSent: 0,
+      processingMessage: false,
+      lastMessageId: '',
+      windowStart: 0
     };
 
     // @ts-expect-error - Should not allow mutation
@@ -384,6 +416,15 @@ function createTestContext(overrides?: Partial<WebSocketContext>): WebSocketCont
       messagesSent: 0,
       errors: []
     },
+    isCleanDisconnect: false,
+    connectTime: 0,
+    disconnectTime: 0,
+    latency: [],
+    bytesReceived: 0,
+    bytesSent: 0,
+    processingMessage: false,
+    lastMessageId: '',
+    windowStart: 0,
     ...overrides
   };
 }

@@ -2,196 +2,6 @@
 
 ## machine
 
-### actions.ts
-
-```typescript
-/**
- * @fileoverview
- * @module actions.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-19
- */
-
-import { logger } from "@qi/core/logger";
-import type { WebSocketContext, WebSocketEvents } from "./types.js";
-
-/**
- * Action: Prepare new WebSocket connection
- */
-export function prepareConnection(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "CONNECT" }>
-): WebSocketContext {
-  return {
-    ...context,
-    url: event.url,
-    protocols: event.protocols || [],
-    options: { ...context.options, ...event.options },
-    state: {
-      ...context.state,
-      connectionAttempts: 0,
-    },
-  };
-}
-
-/**
- * Action: Handle successful WebSocket connection
- */
-export function handleOpen(context: WebSocketContext): WebSocketContext {
-  logger.info("WebSocket connection established", {
-    url: context.url,
-    attempts: context.state.connectionAttempts,
-  });
-
-  return {
-    ...context,
-    metrics: {
-      ...context.metrics,
-      consecutiveErrors: 0,
-      lastSuccessfulConnection: Date.now(),
-    },
-    state: {
-      ...context.state,
-      connectionAttempts: 0,
-      lastConnectTime: Date.now(),
-      lastError: null,
-    },
-  };
-}
-
-/**
- * Action: Handle WebSocket error
- */
-export function handleError(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "ERROR" }>
-): WebSocketContext {
-  return {
-    ...context,
-    metrics: {
-      ...context.metrics,
-      totalErrors: context.metrics.totalErrors + 1,
-      consecutiveErrors: context.metrics.consecutiveErrors + 1,
-      errors: [
-        ...context.metrics.errors.slice(-99),
-        {
-          timestamp: Date.now(),
-          error: event.error,
-          attempt: context.state.connectionAttempts,
-        },
-      ],
-    },
-    state: {
-      ...context.state,
-      lastError: event.error,
-      lastErrorTime: Date.now(),
-    },
-  };
-}
-
-/**
- * Action: Process received WebSocket message
- */
-export function handleMessage(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "MESSAGE" }>
-): WebSocketContext {
-  return {
-    ...context,
-    metrics: {
-      ...context.metrics,
-      messagesReceived: context.metrics.messagesReceived + 1,
-      bytesReceived:
-        context.metrics.bytesReceived +
-        (typeof event.data === "string" ? new Blob([event.data]).size : 0),
-      messageTimestamps: [
-        ...context.metrics.messageTimestamps.slice(-99),
-        event.timestamp,
-      ],
-    },
-    state: {
-      ...context.state,
-      lastMessageTime: event.timestamp,
-    },
-  };
-}
-
-/**
- * Action: Add message to send queue
- */
-export function enqueueMessage(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "SEND" }>
-): WebSocketContext {
-  if (context.queue.messages.length >= context.options.messageQueueSize) {
-    logger.warn("Message queue full, dropping oldest message");
-  }
-
-  return {
-    ...context,
-    queue: {
-      ...context.queue,
-      messages: [
-        ...(context.queue.messages.length >= context.options.messageQueueSize
-          ? context.queue.messages.slice(1)
-          : context.queue.messages),
-        {
-          id: event.id || crypto.randomUUID(),
-          data: event.data,
-          timestamp: Date.now(),
-          attempts: 0,
-          priority: event.options?.priority ?? "normal",
-        },
-      ],
-    },
-  };
-}
-
-/**
- * Action: Handle WebSocket connection close
- */
-export function handleClose(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "CLOSE" }>
-): WebSocketContext {
-  return {
-    ...context,
-    state: {
-      ...context.state,
-      lastDisconnectTime: Date.now(),
-    },
-  };
-}
-
-/**
- * Action: Clean up resources
- */
-export function cleanup(context: WebSocketContext): WebSocketContext {
-  return {
-    ...context,
-    socket: null,
-    queue: {
-      messages: [],
-      pending: false,
-      lastProcessed: 0,
-    },
-  };
-}
-
-export const actions = {
-  prepareConnection,
-  handleOpen,
-  handleError,
-  handleMessage,
-  enqueueMessage,
-  handleClose,
-  cleanup,
-} as const;
-
-```
-
 ### constants.ts
 
 ```typescript
@@ -215,6 +25,25 @@ export const CONNECTION_STATES = {
   CONNECTED: "connected",
   RECONNECTING: "reconnecting",
   DISCONNECTING: "disconnecting",
+  TERMINATED: "terminated",
+} as const;
+
+/**
+ * WebSocket events
+ */
+export const EVENTS = {
+  CONNECT: "CONNECT",
+  DISCONNECT: "DISCONNECT",
+  OPEN: "OPEN",
+  CLOSE: "CLOSE",
+  ERROR: "ERROR",
+  MESSAGE: "MESSAGE",
+  SEND: "SEND",
+  PING: "PING",
+  PONG: "PONG",
+  RETRY: "RETRY",
+  MAX_RETRIES: "MAX_RETRIES",
+  TERMINATE: "TERMINATE",
 } as const;
 
 /**
@@ -252,542 +81,253 @@ export const WS_CLOSE_CODES = {
 
 ```
 
-### guards.ts
+### errors.ts
 
 ```typescript
-/**
- * @fileoverview WebSocket state machine guards
- * @module @qi/core/network/websocket/guards
- */
-
-import { logger } from "@qi/core/logger";
-import type {
-  WebSocketContext,
-  WebSocketEvents,
-  WebSocketError,
-} from "./types.js";
-import { isRecoverableError, validateConnectionParams } from "./utils.js";
+import { ErrorCode } from "@qi/core/errors";
 
 /**
- * Guard: Can initiate new WebSocket connection
+ * Enumerates WebSocket HTTP Status Codes.
  */
-export function canInitiateConnection(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "CONNECT" }>
-): boolean {
-  if (!event.url) {
-    logger.error("Invalid WebSocket URL", { url: event.url });
-    return false;
-  }
-
-  const validUrl = validateConnectionParams(event.url, event.protocols);
-  const validState =
-    !context.socket || context.socket.readyState === WebSocket.CLOSED;
-
-  if (!validUrl) {
-    logger.error("Invalid WebSocket URL or protocols", {
-      url: event.url,
-      protocols: event.protocols,
-    });
-  }
-
-  return validUrl && validState;
+export enum WebSocketHttpStatus {
+  NORMAL_CLOSURE = 1000,
+  GOING_AWAY = 1001,
+  PROTOCOL_ERROR = 1002,
+  UNSUPPORTED_DATA = 1003,
+  INVALID_FRAME = 1007,
+  POLICY_VIOLATION = 1008,
+  MESSAGE_TOO_BIG = 1009,
+  INTERNAL_ERROR = 1011,
+  ABNORMAL_CLOSURE = 1006,
 }
 
 /**
- * Guard: Can attempt reconnection after failure
+ * Maps WebSocket HTTP Status Codes to internal Error Codes.
  */
-export function canReconnect(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvents, { type: "ERROR" }>
-): boolean {
-  if (!context.options.reconnect) {
-    logger.debug("Reconnection disabled by configuration");
-    return false;
-  }
-
-  if (
-    context.state.connectionAttempts >= context.options.maxReconnectAttempts
-  ) {
-    logger.warn("Maximum reconnection attempts reached", {
-      attempts: context.state.connectionAttempts,
-      max: context.options.maxReconnectAttempts,
-    });
-    return false;
-  }
-
-  const error = event.error as WebSocketError;
-  return isRecoverableError(error);
-}
-
-/**
- * Guard: Should throttle reconnection attempts
- */
-export function shouldThrottle(context: WebSocketContext): boolean {
-  const { consecutiveErrors } = context.metrics;
-  const timeSinceLastError = Date.now() - (context.state.lastErrorTime || 0);
-  const backoffDelay =
-    context.options.reconnectInterval *
-    Math.pow(context.options.reconnectBackoffRate, consecutiveErrors - 3);
-
-  const shouldThrottle =
-    consecutiveErrors > 3 && timeSinceLastError < backoffDelay;
-
-  if (shouldThrottle) {
-    logger.warn("Connection attempts throttled", {
-      consecutiveErrors,
-      backoffDelay,
-      timeSinceLastError,
-    });
-  }
-
-  return shouldThrottle;
-}
-
-/**
- * Guard: Can send message through WebSocket
- */
-export function canSendMessage(context: WebSocketContext): boolean {
-  if (!context.socket || context.socket.readyState !== WebSocket.OPEN) {
-    return false;
-  }
-
-  const { window, messages: limit } = context.options.rateLimit;
-  const now = Date.now();
-  const recentMessages = context.metrics.messageTimestamps.filter(
-    (t) => now - t <= window
-  );
-
-  return recentMessages.length < limit;
-}
-
-/**
- * Guard: Has space in message queue
- */
-export function hasQueueSpace(context: WebSocketContext): boolean {
-  return context.queue.messages.length < context.options.messageQueueSize;
-}
-
-export const guards = {
-  canInitiateConnection,
-  canReconnect,
-  shouldThrottle,
-  canSendMessage,
-  hasQueueSpace,
+export const WS_ERROR_CODES = {
+  WEBSOCKET_CLOSED: ErrorCode.WEBSOCKET_CLOSED,
+  WEBSOCKET_DISCONNECT: ErrorCode.WEBSOCKET_DISCONNECT,
+  WEBSOCKET_PROTOCOL: ErrorCode.WEBSOCKET_PROTOCOL,
+  WEBSOCKET_INVALID_DATA: ErrorCode.WEBSOCKET_INVALID_DATA,
+  WEBSOCKET_POLICY: ErrorCode.WEBSOCKET_POLICY,
+  WEBSOCKET_MESSAGE_SIZE: ErrorCode.WEBSOCKET_MESSAGE_SIZE,
+  WEBSOCKET_ERROR: ErrorCode.WEBSOCKET_ERROR,
+  WEBSOCKET_ABNORMAL: ErrorCode.WEBSOCKET_ABNORMAL,
+  WEBSOCKET_INTERNAL: ErrorCode.WEBSOCKET_INTERNAL,
 } as const;
 
-```
+export type WebSocketErrorCode =
+  (typeof WS_ERROR_CODES)[keyof typeof WS_ERROR_CODES];
 
-### machine.ts
-
-```typescript
 /**
- * @fileoverview
- * @module machine.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-18
+ * NetworkErrorContext Interface
+ * Defines the structure for network-related error contexts.
  */
-
-import { createMachine } from "xstate";
-import { actions } from "./actions.js";
-import { guards } from "./guards.js";
-import { services } from "./services.js";
-import { states } from "./states.js";
-import { INITIAL_CONTEXT, CONNECTION_STATES } from "./constants.js";
-import type {
-  WebSocketContext,
-  WebSocketEvents,
-  ConnectionOptions,
-} from "./types.js";
-
-const defaultContext: WebSocketContext = {
-  ...INITIAL_CONTEXT,
-  protocols: [],
-  metrics: {
-    ...INITIAL_CONTEXT.metrics,
-    errors: [],
-    messageTimestamps: [],
-  },
-  queue: {
-    ...INITIAL_CONTEXT.queue,
-    messages: [],
-  }
-} satisfies WebSocketContext;
-
-export const webSocketMachine = createMachine({
-  id: "webSocket",
-  initial: CONNECTION_STATES.DISCONNECTED,
-  context: defaultContext,
-  states: {
-    [CONNECTION_STATES.DISCONNECTED]: {
-      on: {
-        CONNECT: {
-          target: CONNECTION_STATES.CONNECTING,
-          guard: 'canInitiateConnection',
-          actions: 'prepareConnection'
-        }
-      }
-    },
-    [CONNECTION_STATES.CONNECTING]: {
-      invoke: {
-        src: 'webSocketService',
-        onError: {
-          target: CONNECTION_STATES.RECONNECTING,
-          actions: 'handleError'
-        }
-      },
-      on: {
-        OPEN: {
-          target: CONNECTION_STATES.CONNECTED,
-          actions: 'handleOpen'
-        }
-      }
-    }
-  }
-} satisfies {
-  context: WebSocketContext,
-  events: WebSocketEvents
-});
-
-export function createWebSocketMachine(options?: Partial<ConnectionOptions>) {
-  return createMachine({
-    ...webSocketMachine.definition,
-    context: {
-      ...defaultContext,
-      options: {
-        ...defaultContext.options,
-        ...options,
-      },
-    },
-  }).provide({
-    actions,
-    guards,
-    services,
-  });
+export interface NetworkErrorContext {
+  readonly errorMessage: string;
+  readonly errorCode?: number;
+  readonly timestamp: number;
+  readonly url?: string;
+  // Add other relevant properties as needed
 }
 
-export const createWebSocketEvent = {
-  connect: (url: string, protocols?: string[], options?: Partial<ConnectionOptions>) => ({
-    type: "CONNECT",
-    url,
-    protocols,
-    options,
-  }),
-  disconnect: (code?: number, reason?: string) => ({
-    type: "DISCONNECT" as const,
-    code,
-    reason,
-  }),
-  send: (data: unknown, options?: { priority: "high" | "normal" }) => ({
-    type: "SEND" as const,
-    data,
-    id: crypto.randomUUID(),
-    options,
-  }),
-} as const;
-
-```
-
-### services.ts
-
-```typescript
 /**
- * @fileoverview WebSocket state machine services
- * @module @qi/core/network/websocket/services
+ * Maps WebSocket HTTP Status Codes to internal Error Codes.
+ * @param code - The WebSocket HTTP status code.
+ * @returns The corresponding internal ErrorCode.
  */
-
-/// <reference lib="dom" />
-
-import { createActor } from "xstate";
-import { logger } from "@qi/core/logger";
-import type {
-  WebSocketContext,
-  WebSocketEvents,
-  WebSocketActor,
-  WebSocketError,
-} from "./types.js";
-import { createWebSocketError, retryWithBackoff } from "./utils.js";
-import { HttpStatusCode } from "../../errors.js";
-
-interface WebSocketCloseEvent extends Event {
-  code: number;
-  reason: string;
-  wasClean: boolean;
-}
-
-type WebSocketType = globalThis.WebSocket;
-type WebSocketErrorType = Event & {
-  error?: Error;
-};
-type WebSocketMessageType = MessageEvent;
-type WebSocketCloseType = WebSocketCloseEvent;
-
-function cleanupWebSocket(
-  socket: WebSocketType | null,
-  reason = "Service cleanup"
-): void {
-  if (!socket) return;
-
-  socket.onmessage = null;
-  socket.onerror = null;
-  socket.onclose = null;
-  socket.onopen = null;
-
-  if (
-    socket.readyState !== WebSocket.CLOSED &&
-    socket.readyState !== WebSocket.CLOSING
-  ) {
-    socket.close(HttpStatusCode.WEBSOCKET_NORMAL_CLOSURE, reason);
+export const mapCloseCodeToErrorCode = (code: number): ErrorCode => {
+  switch (code) {
+    case WebSocketHttpStatus.NORMAL_CLOSURE:
+      return WS_ERROR_CODES.WEBSOCKET_CLOSED;
+    case WebSocketHttpStatus.GOING_AWAY:
+      return WS_ERROR_CODES.WEBSOCKET_DISCONNECT;
+    case WebSocketHttpStatus.PROTOCOL_ERROR:
+      return WS_ERROR_CODES.WEBSOCKET_PROTOCOL;
+    case WebSocketHttpStatus.UNSUPPORTED_DATA:
+      return WS_ERROR_CODES.WEBSOCKET_INVALID_DATA;
+    case WebSocketHttpStatus.INVALID_FRAME:
+      return WS_ERROR_CODES.WEBSOCKET_INVALID_DATA;
+    case WebSocketHttpStatus.POLICY_VIOLATION:
+      return WS_ERROR_CODES.WEBSOCKET_POLICY;
+    case WebSocketHttpStatus.MESSAGE_TOO_BIG:
+      return WS_ERROR_CODES.WEBSOCKET_MESSAGE_SIZE;
+    case WebSocketHttpStatus.INTERNAL_ERROR:
+      return WS_ERROR_CODES.WEBSOCKET_INTERNAL;
+    case WebSocketHttpStatus.ABNORMAL_CLOSURE:
+      return WS_ERROR_CODES.WEBSOCKET_ABNORMAL;
+    default:
+      return WS_ERROR_CODES.WEBSOCKET_ERROR;
   }
+};
+
+/**
+ * Maps common WebSocket errors to HTTP status codes.
+ * @param error - The error object to map.
+ * @returns The corresponding WebSocketHttpStatus.
+ */
+export function mapWebSocketErrorToStatus(error: Error): WebSocketHttpStatus {
+  if ("statusCode" in error && typeof (error as any).statusCode === "number") {
+    return (error as any).statusCode as WebSocketHttpStatus;
+  }
+  return WebSocketHttpStatus.ABNORMAL_CLOSURE;
 }
-
-export const webSocketService = ({ input: context, self }: WebSocketActor) => {
-  let socket: WebSocket | null = null;
-
-  const handleConnectionError = (error: Error) => {
-    const wsError = createWebSocketError(
-      "Failed to establish WebSocket connection",
-      error,
-      {
-        url: context.url,
-        connectionAttempts: context.state.connectionAttempts,
-        totalErrors: context.metrics.totalErrors + 1,
-        consecutiveErrors: context.metrics.consecutiveErrors + 1,
-        readyState: socket?.readyState ?? WebSocket.CLOSED,
-        socket,
-      }
-    );
-
-    self.send({
-      type: "ERROR",
-      error: wsError,
-      timestamp: Date.now(),
-    });
-  };
-
-  const handleSocketError = (event: WebSocketErrorType) => {
-    const wsError = createWebSocketError(
-      "WebSocket encountered an error",
-      event.error || new Error("WebSocket error occurred"),
-      {
-        url: context.url,
-        connectionAttempts: context.state.connectionAttempts,
-        totalErrors: context.metrics.totalErrors + 1,
-        consecutiveErrors: context.metrics.consecutiveErrors + 1,
-        lastSuccessfulConnection: context.metrics.lastSuccessfulConnection,
-        readyState: socket?.readyState ?? WebSocket.CLOSED,
-        socket,
-      }
-    );
-
-    self.send({
-      type: "ERROR",
-      error: wsError,
-      timestamp: Date.now(),
-    });
-  };
-
-  const handleClose = (event: WebSocketCloseType) => {
-    const wsError = createWebSocketError(
-      "WebSocket connection closed",
-      new Error(event.reason || "Connection closed"),
-      {
-        closeCode: event.code,
-        closeReason: event.reason,
-        wasClean: event.wasClean,
-        url: context.url,
-        totalErrors: context.metrics.totalErrors,
-        consecutiveErrors: context.metrics.consecutiveErrors,
-        connectionAttempts: context.state.connectionAttempts,
-        readyState: socket?.readyState ?? WebSocket.CLOSED,
-        socket,
-      }
-    );
-
-    self.send({
-      type: "CLOSE",
-      code: event.code,
-      reason: event.reason,
-      wasClean: event.wasClean,
-      error: wsError,
-    });
-  };
-
-  const connect = async () => {
-    try {
-      socket = await retryWithBackoff(async () => {
-        // Convert readonly array to mutable
-        const protocols = context.protocols ? Array.from(context.protocols) : undefined;
-        const ws = new WebSocket(context.url, protocols);
-
-        return new Promise<WebSocket>((resolve, reject) => {
-          const timeout = setTimeout(() => {
-            reject(new Error("Connection timeout"));
-          }, context.options.connectionTimeout);
-
-          ws.onopen = function (this: WebSocket) {
-            clearTimeout(timeout);
-            resolve(ws);
-          };
-
-          ws.onerror = function (this: WebSocket, event: Event) {
-            reject(new Error("Connection failed"));
-          };
-        });
-      }, context);
-
-      if (socket) {
-        socket.onmessage = function (this: WebSocket, ev: MessageEvent) {
-          self.send({
-            type: "MESSAGE",
-            data: ev.data,
-            timestamp: Date.now(),
-          });
-        };
-
-        socket.onerror = function (this: WebSocket, event: Event) {
-          handleSocketError(event);
-        };
-
-        socket.onclose = handleClose;
-      }
-
-      self.send({ type: "OPEN", timestamp: Date.now() });
-    } catch (error) {
-      handleConnectionError(error as Error);
-    }
-  };
-
-  connect();
-
-  return () => {
-    if (socket) {
-      cleanupWebSocket(socket);
-    }
-  };
-};
-
-export const pingService = ({ input: context, self }: WebSocketActor) => {
-  const interval = setInterval(() => {
-    if (context.socket?.readyState === WebSocket.OPEN) {
-      self.send({
-        type: "PING",
-        timestamp: Date.now(),
-      });
-    }
-  }, context.options.pingInterval);
-
-  return () => clearInterval(interval);
-};
-
-export const services = {
-  webSocketService,
-  pingService,
-} as const;
 
 ```
 
 ### states.ts
 
 ```typescript
+import { WebSocketContext, WebSocketEvents, ConnectionState } from "./types.js";
+
 /**
- * @fileoverview WebSocket state machine states
- * @module @qi/core/network/websocket/states
+ * StateDefinition defines the structure for each state in the WebSocket machine.
  */
+export interface StateDefinition {
+  /**
+   * The name of the state.
+   */
+  name: ConnectionState;
 
-import { CONNECTION_STATES } from "./constants.js";
+  /**
+   * A set of event types that are allowed in this state.
+   */
+  allowedEvents: ReadonlySet<WebSocketEvents["type"]>;
 
-export const states = {
-  [CONNECTION_STATES.DISCONNECTED]: {
-    on: {
-      CONNECT: {
-        target: CONNECTION_STATES.CONNECTING,
-        guard: "canInitiateConnection",
-        actions: "prepareConnection",
-      },
+  /**
+   * A list of invariant functions that must hold true for the state to be valid.
+   */
+  invariants: ReadonlyArray<(context: WebSocketContext) => boolean>;
+
+  /**
+   * Transition definitions for the state.
+   * Made partial to allow for states not handling every event.
+   */
+  transitions: Partial<Record<WebSocketEvents["type"], ConnectionState>>;
+}
+
+/**
+ * States Configuration aligned with the formal specification
+ * States and transitions include:
+ * - Regular states: disconnected, connecting, connected, reconnecting, disconnecting
+ * - Final state: terminated
+ * - All TERMINATE events transition to terminated state
+ */
+export const states: Record<ConnectionState, StateDefinition> = {
+  disconnected: {
+    name: "disconnected",
+    allowedEvents: new Set(["CONNECT", "TERMINATE"]),
+    invariants: [
+      (ctx) => ctx.socket === null,
+      (ctx) => ctx.status === "disconnected",
+    ],
+    transitions: {
+      CONNECT: "connecting",
+      TERMINATE: "terminated",
     },
   },
-
-  [CONNECTION_STATES.CONNECTING]: {
-    invoke: {
-      src: "webSocketService",
-      onError: {
-        target: CONNECTION_STATES.RECONNECTING,
-        actions: "handleError",
-      },
-    },
-    on: {
-      OPEN: {
-        target: CONNECTION_STATES.CONNECTED,
-        actions: "handleOpen",
-      },
-      ERROR: [
-        {
-          target: CONNECTION_STATES.RECONNECTING,
-          guard: "canReconnect",
-          actions: "handleError",
-        },
-      ],
-      CLOSE: {
-        target: CONNECTION_STATES.DISCONNECTED,
-        actions: ["handleClose", "cleanup"],
-      },
+  connecting: {
+    name: "connecting",
+    allowedEvents: new Set(["OPEN", "CLOSE", "ERROR", "TERMINATE"]),
+    invariants: [
+      (ctx) => ctx.socket !== null,
+      (ctx) => ctx.status === "connecting",
+    ],
+    transitions: {
+      OPEN: "connected",
+      ERROR: "reconnecting",
+      CLOSE: "reconnecting",
+      TERMINATE: "terminated",
     },
   },
-
-  [CONNECTION_STATES.CONNECTED]: {
-    invoke: {
-      src: "pingService",
-    },
-    on: {
-      SEND: {
-        guard: "canSendMessage",
-        actions: "enqueueMessage",
-      },
-      MESSAGE: {
-        actions: "handleMessage",
-      },
-      ERROR: {
-        target: CONNECTION_STATES.RECONNECTING,
-        guard: "canReconnect",
-        actions: "handleError",
-      },
-      CLOSE: {
-        target: CONNECTION_STATES.RECONNECTING,
-        guard: "canReconnect",
-        actions: "handleClose",
-      },
-      DISCONNECT: {
-        target: CONNECTION_STATES.DISCONNECTING,
-      },
+  connected: {
+    name: "connected",
+    allowedEvents: new Set([
+      "SEND",
+      "MESSAGE",
+      "DISCONNECT",
+      "CLOSE",
+      "ERROR",
+      "PING",
+      "PONG",
+      "TERMINATE",
+    ]),
+    invariants: [
+      (ctx) => ctx.socket !== null,
+      (ctx) => ctx.status === "connected",
+    ],
+    transitions: {
+      DISCONNECT: "disconnecting",
+      CLOSE: "reconnecting",
+      ERROR: "reconnecting",
+      TERMINATE: "terminated",
     },
   },
-
-  [CONNECTION_STATES.RECONNECTING]: {
-    on: {
-      RETRY: {
-        target: CONNECTION_STATES.CONNECTING,
-        guard: "canReconnect",
-      },
-      CONNECT: {
-        target: CONNECTION_STATES.CONNECTING,
-        guard: "canInitiateConnection",
-        actions: "prepareConnection",
-      },
+  reconnecting: {
+    name: "reconnecting",
+    allowedEvents: new Set(["RETRY", "MAX_RETRIES", "TERMINATE"]),
+    invariants: [
+      (ctx) => ctx.reconnectAttempts <= ctx.options.maxReconnectAttempts,
+      (ctx) => ctx.status === "reconnecting",
+    ],
+    transitions: {
+      RETRY: "connecting",
+      MAX_RETRIES: "disconnected",
+      TERMINATE: "terminated",
     },
   },
-
-  [CONNECTION_STATES.DISCONNECTING]: {
-    on: {
-      CLOSE: {
-        target: CONNECTION_STATES.DISCONNECTED,
-        actions: ["handleClose", "cleanup"],
-      },
+  disconnecting: {
+    name: "disconnecting",
+    allowedEvents: new Set(["CLOSE", "TERMINATE"]),
+    invariants: [(ctx) => ctx.status === "disconnecting"],
+    transitions: {
+      CLOSE: "disconnected",
+      TERMINATE: "terminated",
     },
   },
-} as const;
+  terminated: {
+    name: "terminated",
+    allowedEvents: new Set([]), // No events allowed in terminated state
+    invariants: [
+      (ctx) => ctx.socket === null,
+      (ctx) => ctx.status === "terminated",
+    ],
+    transitions: {}, // No transitions out of terminated state
+  },
+};
+
+/**
+ * Validate a transition between states
+ */
+export function validateTransition(
+  from: ConnectionState,
+  event: WebSocketEvents["type"],
+  to: ConnectionState
+): boolean {
+  const state = states[from];
+  const allowedTransition = state.transitions[event];
+  return allowedTransition === to;
+}
+
+/**
+ * Check if an event is allowed in the current state
+ */
+export function isEventAllowed(
+  state: ConnectionState,
+  event: WebSocketEvents["type"]
+): boolean {
+  return states[state].allowedEvents.has(event);
+}
+
+/**
+ * Validate state invariants
+ */
+export function validateStateInvariants(
+  state: ConnectionState,
+  context: WebSocketContext
+): boolean {
+  return states[state].invariants.every((inv) => inv(context));
+}
 
 ```
 
@@ -797,210 +337,332 @@ export const states = {
 /**
  * @fileoverview WebSocket type definitions
  * @module @qi/core/network/websocket/types
- *
- * @author zhifengzhang-sz
- * @created 2024-12-14
- * @modified 2024-12-19
  */
 
-import { NetworkErrorContext } from "../../errors.js";
+import { Snapshot, EventObject, ActorLogic } from "xstate";
+import { WebSocketErrorCode, NetworkErrorContext } from "./errors.js";
 import { ApplicationError } from "@qi/core/errors";
-import {
-  CONNECTION_STATES,
-  DEFAULT_CONFIG,
-  WS_CLOSE_CODES,
-} from "./constants.js";
-
-// === 1. Base Types ===
 
 /**
- * Connection state type derived from constants
+ * Base Types
  */
 export type ConnectionState =
-  (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES];
+  | "disconnected"
+  | "connecting"
+  | "connected"
+  | "reconnecting"
+  | "disconnecting"
+  | "terminated";
 
-/**
- * WebSocket connection configuration options
- */
 export interface ConnectionOptions {
-  readonly reconnect: boolean;
-  readonly maxReconnectAttempts: number;
-  readonly reconnectInterval: number;
-  readonly reconnectBackoffRate: number;
-  readonly connectionTimeout: number;
-  readonly pingInterval: number;
-  readonly pongTimeout: number;
-  readonly messageQueueSize: number;
-  readonly messageTimeout: number;
-  readonly rateLimit: {
-    readonly messages: number;
-    readonly window: number;
-  };
+  reconnect: boolean;
+  maxReconnectAttempts: number;
+  reconnectInterval: number;
+  reconnectBackoffRate: number;
+  pingInterval: number;
+  pongTimeout: number;
+  messageQueueSize: number;
+  messageTimeout: number;
+  rateLimit: RateLimit;
 }
 
-/**
- * Message in the send queue
- */
+export interface RateLimit {
+  messages: number;
+  window: number;
+}
+
 export interface QueuedMessage {
-  readonly id: string;
-  readonly data: unknown;
-  readonly timestamp: number;
-  readonly attempts: number;
-  readonly timeout?: number;
-  readonly priority: "high" | "normal";
+  id: string;
+  data: any;
+  timestamp: number;
+  attempts: number;
+  timeout?: number;
+  priority: "high" | "normal";
 }
 
-// === 2. Error Types ===
+export interface SendOptions {
+  retry: boolean;
+  timeout: number;
+  priority: "high" | "normal";
+  queueIfOffline: boolean;
+}
 
-/**
- * WebSocket-specific error context
- */
+export interface WebSocketMetrics {
+  messagesSent: number;
+  messagesReceived: number;
+  bytesReceived: number;
+  bytesSent: number;
+  errors: ErrorRecord[];
+  messageTimestamps: number[];
+}
+
+export interface ErrorRecord {
+  timestamp: number;
+  error: Error;
+  context?: string;
+}
+
 export interface WebSocketErrorContext extends NetworkErrorContext {
-  readonly socket?: WebSocket | null;
+  readonly url: string;
   readonly connectionAttempts: number;
-  readonly lastError?: Error;
+  readonly totalErrors: number;
+  readonly consecutiveErrors: number;
+  readonly readyState?: number;
+  readonly socket?: WebSocket | null;
   readonly closeCode?: number;
   readonly closeReason?: string;
-  readonly lastSuccessfulConnection?: number;
-  readonly totalErrors: number;
-  readonly consecutiveErrors: number;
-  readonly retryDelay?: number;
+  readonly wasClean?: boolean;
+
+  // Included metrics from WebSocketContext
+  readonly metrics: WebSocketMetrics;
 }
 
-/**
- * WebSocket specific error
- */
-export interface WebSocketError extends ApplicationError {
-  readonly statusCode: number;
-  readonly code: number;
-  readonly details?: WebSocketErrorContext;
+export class WebSocketError extends ApplicationError {
+  readonly context: WebSocketErrorContext;
+
+  constructor(
+    message: string,
+    code: WebSocketErrorCode,
+    context: WebSocketErrorContext
+  ) {
+    super(message, code);
+    this.context = context;
+  }
 }
 
-/**
- * Error record for tracking
- */
-export interface ErrorRecord {
-  readonly timestamp: number;
-  readonly error: Error;
-  readonly attempt?: number;
-  readonly context?: string;
+export interface WebSocketErrorEntry {
+  error: WebSocketError;
+  timestamp: number;
 }
 
-// === 3. Context and Metrics ===
-
-/**
- * WebSocket metrics tracking
- */
-export interface WebSocketMetrics {
-  readonly messagesSent: number;
-  readonly messagesReceived: number;
-  readonly bytesReceived: number;
-  readonly bytesSent: number;
-  readonly messageTimestamps: readonly number[];
-  readonly totalErrors: number;
-  readonly consecutiveErrors: number;
-  readonly lastSuccessfulConnection: number;
-  readonly errors: readonly ErrorRecord[];
-}
-
-/**
- * Core WebSocket context
- */
+// 1. Complete WebSocketContext with all required properties
 export interface WebSocketContext {
-  readonly url: string;
-  readonly protocols: readonly string[];
+  readonly url: string | null;
+  readonly protocols: ReadonlyArray<string>;
   readonly socket: WebSocket | null;
   readonly status: ConnectionState;
-  readonly readyState: number;
-  readonly options: Required<ConnectionOptions>;
-  readonly state: {
-    readonly connectionAttempts: number;
-    readonly lastConnectTime: number;
-    readonly lastDisconnectTime: number;
-    readonly lastError: Error | null;
-    readonly lastMessageTime: number;
-    readonly lastErrorTime: number;
-  };
-  readonly metrics: WebSocketMetrics;
+
+  // Connection tracking
+  readonly reconnectAttempts: number;
+  readonly lastConnectTime: number | null;
+  readonly lastError: WebSocketError | null;
+  readonly connectionTimeout: number | null;
+
+  // Message queue
   readonly queue: {
-    readonly messages: readonly QueuedMessage[];
+    readonly messages: ReadonlyArray<QueuedMessage>;
     readonly pending: boolean;
-    readonly lastProcessed: number;
+    readonly lastProcessed: number | null;
+    readonly capacity: number;
+    readonly droppedMessages: number;
   };
+
+  // Connection settings
+  readonly options: Readonly<ConnectionOptions>;
+
+  // Metrics
+  readonly metrics: Readonly<WebSocketMetrics>;
+
+  // Health checks
+  readonly health: Readonly<{
+    lastPingTime: number | null;
+    lastPongTime: number | null;
+    latencies: ReadonlyArray<number>;
+    averageLatency: number | null;
+    status: "healthy" | "degraded" | "unhealthy";
+  }>;
 }
 
-// === 4. Event Types ===
-
-/**
- * WebSocket events union type
- */
+// 2. Complete event types with proper discriminated unions
 export type WebSocketEvents =
   | {
-      readonly type: "CONNECT";
-      readonly url: string;
-      readonly protocols?: string[];
-      readonly options?: Partial<ConnectionOptions>;
+      type: "CONNECT";
+      url: string;
+      protocols?: string[];
+      options?: Partial<ConnectionOptions>;
     }
+  | { type: "DISCONNECT"; code?: number; reason?: string }
+  | { type: "OPEN"; timestamp: number }
+  | { type: "CLOSE"; code: number; reason: string; wasClean: boolean }
   | {
-      readonly type: "DISCONNECT";
-      readonly code?: number;
-      readonly reason?: string;
+      type: "ERROR";
+      error: WebSocketError;
+      timestamp: number;
+      attempt?: number;
     }
-  | { readonly type: "OPEN"; readonly timestamp: number }
-  | {
-      readonly type: "CLOSE";
-      readonly code: number;
-      readonly reason: string;
-      readonly wasClean: boolean;
-      readonly error?: WebSocketError;
-    }
-  | {
-      readonly type: "ERROR";
-      readonly error: WebSocketError;
-      readonly timestamp: number;
-      readonly attempt?: number;
-    }
-  | {
-      readonly type: "MESSAGE";
-      readonly data: unknown;
-      readonly timestamp: number;
-      readonly id?: string;
-    }
-  | {
-      readonly type: "SEND";
-      readonly data: unknown;
-      readonly id?: string;
-      readonly options?: { readonly priority: "high" | "normal" };
-    }
-  | { readonly type: "PING"; readonly timestamp: number }
-  | {
-      readonly type: "PONG";
-      readonly latency: number;
-      readonly timestamp: number;
-    }
-  | {
-      readonly type: "RETRY";
-      readonly attempt: number;
-      readonly delay: number;
-    };
+  | { type: "MESSAGE"; data: unknown; timestamp: number; id?: string }
+  | { type: "SEND"; data: unknown; id?: string; options?: SendOptions }
+  | { type: "PING"; timestamp: number }
+  | { type: "PONG"; latency: number; timestamp: number }
+  | { type: "RETRY"; attempt: number; delay: number }
+  | { type: "MAX_RETRIES"; attempts: number; lastError?: WebSocketError }
+  | { type: "TERMINATE"; code?: number; reason?: string; immediate?: boolean }
+  | { type: "QUEUE_OVERFLOW"; dropped: QueuedMessage }
+  | { type: "CONNECTION_TIMEOUT" }
+  | { type: "HEALTH_CHECK" };
 
 /**
- * WebSocket machine type helper
+ * WebSocket machine state schema
  */
-export type WebSocketMachine = {
+export type WebSocketState = {
+  value: ConnectionState;
   context: WebSocketContext;
-  events: WebSocketEvents;
 };
 
 /**
- * WebSocket actor type for services
+ * Correctly defined WebSocketSnapshot as an intersection type
  */
-export interface WebSocketActor {
-  input: WebSocketContext;
-  self: {
-    send: (event: WebSocketEvents) => void;
+export type WebSocketSnapshot = Snapshot<ConnectionState> & {
+  context: WebSocketContext;
+};
+
+/**
+ * Correct WebSocketActor type with proper generics
+ */
+export type WebSocketActor = ActorLogic<
+  WebSocketSnapshot, // TSnapshot
+  WebSocketEvents // TEvent
+>;
+
+// 3. XState v5 specific type definitions
+// Remove duplicate type
+// export type WebSocketMachineTypes = {...}
+
+/**
+ * WebSocket service types
+ */
+export type WebSocketServices = {
+  connect: {
+    data: WebSocket;
   };
-}
+  disconnect: {
+    data: void;
+  };
+};
+
+// 1. State Schema
+export type WebSocketStateValue = {
+  idle:
+    | "disconnected"
+    | "connecting"
+    | "connected"
+    | "reconnecting"
+    | "disconnecting";
+};
+
+// 2. Machine Configuration Types
+export type WebSocketMachineConfig = {
+  context: WebSocketContext;
+  events: WebSocketEvents;
+  input: ConnectionOptions;
+  output: void;
+};
+
+// 3. Event Creators (Type-safe event factories)
+export const createWebSocketEvent = {
+  connect: (
+    url: string,
+    options?: Partial<ConnectionOptions>
+  ): WebSocketEvent<"CONNECT"> => ({
+    type: "CONNECT",
+    url,
+    options,
+  }),
+  disconnect: (
+    code?: number,
+    reason?: string
+  ): WebSocketEvent<"DISCONNECT"> => ({
+    type: "DISCONNECT",
+    code,
+    reason,
+  }),
+  // ... other event creators
+};
+
+// 4. Guard Types
+export type WebSocketGuards = {
+  canConnect: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"CONNECT">
+  ) => boolean;
+  canReconnect: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"RETRY">
+  ) => boolean;
+  hasReachedMaxRetries: (context: WebSocketContext) => boolean;
+  isValidMessage: (
+    context: WebSocketContext,
+    event: Extract<WebSocketEvents, { type: "SEND" | "MESSAGE" }>
+  ) => boolean;
+  isHealthy: (context: WebSocketContext) => boolean;
+};
+
+// 5. Action Types (as pure functions returning partial context updates)
+export type WebSocketActions = {
+  connect: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"CONNECT">
+  ) => Partial<WebSocketContext>;
+  disconnect: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"DISCONNECT">
+  ) => Partial<WebSocketContext>;
+  handleMessage: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"MESSAGE">
+  ) => Partial<WebSocketContext>;
+  handleError: (
+    context: WebSocketContext,
+    event: WebSocketEvent<"ERROR">
+  ) => Partial<WebSocketContext>;
+  updateMetrics: (
+    context: WebSocketContext,
+    event: WebSocketEvents
+  ) => Partial<WebSocketContext>;
+  enqueueMessage: (
+    context: WebSocketContext,
+    event: Extract<WebSocketEvents, { type: "SEND" }>
+  ) => WebSocketContext;
+  updateHealth: (
+    context: WebSocketContext,
+    event: Extract<WebSocketEvents, { type: "HEALTH_CHECK" }>
+  ) => WebSocketContext;
+};
+
+// 6. Helper type for event extraction
+export type WebSocketEvent<T extends WebSocketEvents["type"]> = Extract<
+  WebSocketEvents,
+  { type: T }
+>;
+
+// 7. XState v5 Machine Types
+export type WebSocketMachine = {
+  types: {
+    context: WebSocketContext;
+    events: WebSocketEvents;
+    input: ConnectionOptions;
+    output: void;
+    actions: WebSocketActions;
+    guards: WebSocketGuards;
+    actors: WebSocketActors;
+  };
+};
+
+// 8. Actor Types
+export type WebSocketActors = {
+  websocket: {
+    src: typeof WebSocket;
+    input: ConnectionOptions;
+  };
+  healthCheck: {
+    src: () => Promise<void>;
+  };
+  messageQueue: {
+    src: () => Promise<void>;
+  };
+};
+
+// Remove WebSocketState type as it's handled by XState v5's internal types
 
 ```
 
@@ -1013,8 +675,14 @@ export interface WebSocketActor {
  */
 
 import { logger } from "@qi/core/logger";
-import { HttpStatusCode } from "../../errors.js";
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
+import {
+  WebSocketErrorCode,
+  WebSocketHttpStatus,
+  WS_ERROR_CODES,
+  mapWebSocketErrorToStatus,
+} from "./errors.js";
+import { retryOperation, formatBytes, truncate } from "@qi/core/utils";
 import type {
   WebSocketContext,
   WebSocketErrorContext,
@@ -1028,50 +696,56 @@ import type {
 export function createWebSocketError(
   message: string,
   originalError: Error,
-  context: WebSocketErrorContext
+  errorContext: WebSocketErrorContext,
+  wsContext: WebSocketContext // Added parameter
 ): WebSocketError {
+  const truncatedMessage = truncate(message, 100);
+
+  const bytesReceived =
+    typeof wsContext.metrics.bytesReceived === "number"
+      ? wsContext.metrics.bytesReceived
+      : 0;
+
   const statusCode = mapWebSocketErrorToStatus(originalError);
+  const errorCode = mapHttpStatusToErrorCode(statusCode);
   const timestamp = Date.now();
 
-  // Create error by extending ApplicationError with proper ErrorCode
-  const error = new ApplicationError(
-    message,
-    ErrorCode.WEBSOCKET_ERROR, // Use proper enum value
-    statusCode,
-    {
-      ...context,
-      error: originalError,
-      readyState: context.socket?.readyState ?? WebSocket.CLOSED,
-      timestamp,
-    }
-  ) as WebSocketError;
+  const error = new ApplicationError(truncatedMessage, errorCode, statusCode, {
+    ...errorContext,
+    error: originalError,
+    readyState: errorContext.socket?.readyState ?? WebSocket.CLOSED,
+    timestamp,
+    bytesReceived, // Include bytesReceived in the error context
+  }) as WebSocketError;
 
-  logger.error(`WebSocket Error: ${message}`, {
+  logger.error(`WebSocket Error: ${truncatedMessage}`, {
     error,
-    context,
+    bytesReceived: formatBytes(bytesReceived),
     stackTrace: originalError.stack,
   });
 
   return error;
 }
 
-/**
- * Maps common WebSocket errors to HTTP status codes
- */
-function mapWebSocketErrorToStatus(
-  error: Error
-): (typeof HttpStatusCode)[keyof typeof HttpStatusCode] {
-  switch (error.name) {
-    case "SecurityError":
-      return HttpStatusCode.WEBSOCKET_POLICY_VIOLATION;
-    case "InvalidStateError":
-      return HttpStatusCode.WEBSOCKET_INVALID_FRAME;
-    case "SyntaxError":
-      return HttpStatusCode.WEBSOCKET_PROTOCOL_ERROR;
-    case "NetworkError":
-      return HttpStatusCode.SERVICE_UNAVAILABLE;
+export function mapHttpStatusToErrorCode(
+  status: WebSocketHttpStatus
+): ErrorCode {
+  switch (status) {
+    case WebSocketHttpStatus.NORMAL_CLOSURE:
+      return WS_ERROR_CODES.WEBSOCKET_CLOSED;
+    case WebSocketHttpStatus.GOING_AWAY:
+      return WS_ERROR_CODES.WEBSOCKET_DISCONNECT;
+    case WebSocketHttpStatus.PROTOCOL_ERROR:
+      return WS_ERROR_CODES.WEBSOCKET_PROTOCOL;
+    case WebSocketHttpStatus.UNSUPPORTED_DATA:
+      return WS_ERROR_CODES.WEBSOCKET_INVALID_DATA;
+    case WebSocketHttpStatus.POLICY_VIOLATION:
+      return WS_ERROR_CODES.WEBSOCKET_POLICY;
+    case WebSocketHttpStatus.MESSAGE_TOO_BIG:
+      return WS_ERROR_CODES.WEBSOCKET_MESSAGE_SIZE;
+    case WebSocketHttpStatus.INTERNAL_ERROR:
     default:
-      return HttpStatusCode.WEBSOCKET_INTERNAL_ERROR;
+      return WS_ERROR_CODES.WEBSOCKET_ERROR;
   }
 }
 
@@ -1094,11 +768,15 @@ export function calculateBackoffDelay(
  * Determines if an error type allows for reconnection attempts
  */
 export function isRecoverableError(error: WebSocketError): boolean {
-  return (
-    error.statusCode !== HttpStatusCode.WEBSOCKET_POLICY_VIOLATION &&
-    error.statusCode !== HttpStatusCode.WEBSOCKET_PROTOCOL_ERROR &&
-    error.statusCode !== HttpStatusCode.WEBSOCKET_INVALID_FRAME
-  );
+  switch (error.statusCode) {
+    case WebSocketHttpStatus.POLICY_VIOLATION:
+    case WebSocketHttpStatus.PROTOCOL_ERROR:
+      // Add additional recoverable status codes as needed
+      return false;
+    // ... other cases
+    default:
+      return true;
+  }
 }
 
 /**
@@ -1137,30 +815,36 @@ export function checkRateLimit(
   const windowStart = timestamp - window;
 
   const recentMessages = context.metrics.messageTimestamps.filter(
-    (t) => t >= windowStart
+    (t: number) => t >= windowStart
   );
 
   return recentMessages.length < messages;
 }
 
-// Add retryWithBackoff implementation
+export interface RetryContext {
+  options: {
+    reconnectInterval: number;
+    reconnectBackoffRate: number;
+    maxReconnectAttempts: number;
+  };
+  state: {
+    connectionAttempts: number;
+  };
+}
+
 export async function retryWithBackoff<T>(
   operation: () => Promise<T>,
-  context: {
-    options: {
-      reconnectInterval: number;
-      reconnectBackoffRate: number;
-    };
-    state: {
-      connectionAttempts: number;
-    };
-  }
+  context: RetryContext
 ): Promise<T> {
-  const delay = context.options.reconnectInterval * 
-    Math.pow(context.options.reconnectBackoffRate, context.state.connectionAttempts - 1);
-  
-  await new Promise(resolve => setTimeout(resolve, delay));
-  return operation();
+  return retryOperation(operation, {
+    retries: context.options.maxReconnectAttempts,
+    minTimeout: context.options.reconnectInterval,
+    onRetry: (times) => {
+      logger.info(
+        `Retry attempt ${times}/${context.options.maxReconnectAttempts}`
+      );
+    },
+  });
 }
 
 export const utils = {
@@ -1171,34 +855,5 @@ export const utils = {
   checkRateLimit,
 } as const;
 
-```
-
-### websocket-states.ts
-
-```typescript
-/**
- * @fileoverview
- * @module websocket-states.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-18
- * @modified 2024-12-18
- */
-
-// qi/core/src/networks/websocket/machine/websocket-states.ts
-
-export type WebSocketReadyState = 0 | 1 | 2 | 3;
-
-export const WebSocketStates = {
-  CONNECTING: 0,
-  OPEN: 1,
-  CLOSING: 2,
-  CLOSED: 3,
-} as const;
-
-export const isWebSocketOpen = (readyState: number): boolean =>
-  readyState === WebSocketStates.OPEN;
-
-export default WebSocketStates;
 ```
 
