@@ -339,9 +339,10 @@ export function validateStateInvariants(
  * @module @qi/core/network/websocket/types
  */
 
-import { Snapshot, EventObject, ActorLogic } from "xstate";
+import { ErrorCode } from "@qi/core/errors";
 import { WebSocketErrorCode, NetworkErrorContext } from "./errors.js";
 import { ApplicationError } from "@qi/core/errors";
+import { CONNECTION_STATES, EVENTS } from "./constants.js";
 
 /**
  * Base Types
@@ -412,8 +413,6 @@ export interface WebSocketErrorContext extends NetworkErrorContext {
   readonly closeCode?: number;
   readonly closeReason?: string;
   readonly wasClean?: boolean;
-
-  // Included metrics from WebSocketContext
   readonly metrics: WebSocketMetrics;
 }
 
@@ -430,12 +429,6 @@ export class WebSocketError extends ApplicationError {
   }
 }
 
-export interface WebSocketErrorEntry {
-  error: WebSocketError;
-  timestamp: number;
-}
-
-// 1. Complete WebSocketContext with all required properties
 export interface WebSocketContext {
   readonly url: string | null;
   readonly protocols: ReadonlyArray<string>;
@@ -473,7 +466,6 @@ export interface WebSocketContext {
   }>;
 }
 
-// 2. Complete event types with proper discriminated unions
 export type WebSocketEvents =
   | {
       type: "CONNECT";
@@ -502,167 +494,34 @@ export type WebSocketEvents =
   | { type: "HEALTH_CHECK" };
 
 /**
- * WebSocket machine state schema
+ * Type guard for WebSocketError
  */
-export type WebSocketState = {
-  value: ConnectionState;
-  context: WebSocketContext;
-};
+export function isWebSocketError(error: unknown): error is WebSocketError {
+  return (
+    error instanceof WebSocketError &&
+    error instanceof ApplicationError &&
+    "context" in error &&
+    error.context !== undefined &&
+    typeof error.context === "object" &&
+    "url" in error.context &&
+    "metrics" in error.context
+  );
+}
 
 /**
- * Correctly defined WebSocketSnapshot as an intersection type
+ * Type guard for WebSocket events
  */
-export type WebSocketSnapshot = Snapshot<ConnectionState> & {
-  context: WebSocketContext;
-};
+export function isWebSocketEvent(event: unknown): event is WebSocketEvents {
+  if (!event || typeof event !== "object" || !("type" in event)) {
+    return false;
+  }
 
-/**
- * Correct WebSocketActor type with proper generics
- */
-export type WebSocketActor = ActorLogic<
-  WebSocketSnapshot, // TSnapshot
-  WebSocketEvents // TEvent
->;
-
-// 3. XState v5 specific type definitions
-// Remove duplicate type
-// export type WebSocketMachineTypes = {...}
-
-/**
- * WebSocket service types
- */
-export type WebSocketServices = {
-  connect: {
-    data: WebSocket;
-  };
-  disconnect: {
-    data: void;
-  };
-};
-
-// 1. State Schema
-export type WebSocketStateValue = {
-  idle:
-    | "disconnected"
-    | "connecting"
-    | "connected"
-    | "reconnecting"
-    | "disconnecting";
-};
-
-// 2. Machine Configuration Types
-export type WebSocketMachineConfig = {
-  context: WebSocketContext;
-  events: WebSocketEvents;
-  input: ConnectionOptions;
-  output: void;
-};
-
-// 3. Event Creators (Type-safe event factories)
-export const createWebSocketEvent = {
-  connect: (
-    url: string,
-    options?: Partial<ConnectionOptions>
-  ): WebSocketEvent<"CONNECT"> => ({
-    type: "CONNECT",
-    url,
-    options,
-  }),
-  disconnect: (
-    code?: number,
-    reason?: string
-  ): WebSocketEvent<"DISCONNECT"> => ({
-    type: "DISCONNECT",
-    code,
-    reason,
-  }),
-  // ... other event creators
-};
-
-// 4. Guard Types
-export type WebSocketGuards = {
-  canConnect: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"CONNECT">
-  ) => boolean;
-  canReconnect: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"RETRY">
-  ) => boolean;
-  hasReachedMaxRetries: (context: WebSocketContext) => boolean;
-  isValidMessage: (
-    context: WebSocketContext,
-    event: Extract<WebSocketEvents, { type: "SEND" | "MESSAGE" }>
-  ) => boolean;
-  isHealthy: (context: WebSocketContext) => boolean;
-};
-
-// 5. Action Types (as pure functions returning partial context updates)
-export type WebSocketActions = {
-  connect: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"CONNECT">
-  ) => Partial<WebSocketContext>;
-  disconnect: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"DISCONNECT">
-  ) => Partial<WebSocketContext>;
-  handleMessage: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"MESSAGE">
-  ) => Partial<WebSocketContext>;
-  handleError: (
-    context: WebSocketContext,
-    event: WebSocketEvent<"ERROR">
-  ) => Partial<WebSocketContext>;
-  updateMetrics: (
-    context: WebSocketContext,
-    event: WebSocketEvents
-  ) => Partial<WebSocketContext>;
-  enqueueMessage: (
-    context: WebSocketContext,
-    event: Extract<WebSocketEvents, { type: "SEND" }>
-  ) => WebSocketContext;
-  updateHealth: (
-    context: WebSocketContext,
-    event: Extract<WebSocketEvents, { type: "HEALTH_CHECK" }>
-  ) => WebSocketContext;
-};
-
-// 6. Helper type for event extraction
-export type WebSocketEvent<T extends WebSocketEvents["type"]> = Extract<
-  WebSocketEvents,
-  { type: T }
->;
-
-// 7. XState v5 Machine Types
-export type WebSocketMachine = {
-  types: {
-    context: WebSocketContext;
-    events: WebSocketEvents;
-    input: ConnectionOptions;
-    output: void;
-    actions: WebSocketActions;
-    guards: WebSocketGuards;
-    actors: WebSocketActors;
-  };
-};
-
-// 8. Actor Types
-export type WebSocketActors = {
-  websocket: {
-    src: typeof WebSocket;
-    input: ConnectionOptions;
-  };
-  healthCheck: {
-    src: () => Promise<void>;
-  };
-  messageQueue: {
-    src: () => Promise<void>;
-  };
-};
-
-// Remove WebSocketState type as it's handled by XState v5's internal types
+  const eventType = (event as { type: unknown }).type;
+  return (
+    typeof eventType === "string" &&
+    (Object.values(EVENTS) as readonly string[]).includes(eventType)
+  );
+}
 
 ```
 
@@ -683,6 +542,7 @@ import {
   mapWebSocketErrorToStatus,
 } from "./errors.js";
 import { retryOperation, formatBytes, truncate } from "@qi/core/utils";
+import { CONNECTION_STATES } from "./constants.js";
 import type {
   WebSocketContext,
   WebSocketErrorContext,
@@ -697,7 +557,7 @@ export function createWebSocketError(
   message: string,
   originalError: Error,
   errorContext: WebSocketErrorContext,
-  wsContext: WebSocketContext // Added parameter
+  wsContext: WebSocketContext
 ): WebSocketError {
   const truncatedMessage = truncate(message, 100);
 
@@ -715,7 +575,7 @@ export function createWebSocketError(
     error: originalError,
     readyState: errorContext.socket?.readyState ?? WebSocket.CLOSED,
     timestamp,
-    bytesReceived, // Include bytesReceived in the error context
+    bytesReceived,
   }) as WebSocketError;
 
   logger.error(`WebSocket Error: ${truncatedMessage}`, {
@@ -771,9 +631,7 @@ export function isRecoverableError(error: WebSocketError): boolean {
   switch (error.statusCode) {
     case WebSocketHttpStatus.POLICY_VIOLATION:
     case WebSocketHttpStatus.PROTOCOL_ERROR:
-      // Add additional recoverable status codes as needed
       return false;
-    // ... other cases
     default:
       return true;
   }
@@ -790,7 +648,6 @@ export function validateConnectionParams(
     const wsUrl = new URL(url);
     const validProtocol = ["ws:", "wss:"].includes(wsUrl.protocol);
 
-    // If protocols provided, ensure they are valid strings
     if (protocols?.length) {
       return (
         validProtocol &&
@@ -800,6 +657,75 @@ export function validateConnectionParams(
 
     return validProtocol;
   } catch {
+    return false;
+  }
+}
+
+/**
+ * Validates WebSocketContext structure and types
+ */
+export function validateContext(context: WebSocketContext): boolean {
+  try {
+    // Connection validation
+    if (context.socket !== null && !(context.socket instanceof WebSocket))
+      return false;
+    if (context.url !== null && typeof context.url !== "string") return false;
+    if (!Array.isArray(context.protocols)) return false;
+
+    // State validation
+    if (!Object.values(CONNECTION_STATES).includes(context.status)) {
+      return false;
+    }
+
+    // Numeric fields validation
+    if (
+      typeof context.reconnectAttempts !== "number" ||
+      context.reconnectAttempts < 0
+    )
+      return false;
+    if (
+      context.lastConnectTime !== null &&
+      typeof context.lastConnectTime !== "number"
+    )
+      return false;
+
+    // Queue validation
+    if (!Array.isArray(context.queue.messages)) return false;
+    if (typeof context.queue.pending !== "boolean") return false;
+    if (
+      typeof context.queue.capacity !== "number" ||
+      context.queue.capacity < 0
+    )
+      return false;
+
+    // Health check validation
+    const { health } = context;
+    if (health.lastPingTime !== null && typeof health.lastPingTime !== "number")
+      return false;
+    if (health.lastPongTime !== null && typeof health.lastPongTime !== "number")
+      return false;
+    if (!Array.isArray(health.latencies)) return false;
+    if (!["healthy", "degraded", "unhealthy"].includes(health.status))
+      return false;
+
+    // Metrics validation
+    const { metrics } = context;
+    if (typeof metrics.messagesSent !== "number" || metrics.messagesSent < 0)
+      return false;
+    if (
+      typeof metrics.messagesReceived !== "number" ||
+      metrics.messagesReceived < 0
+    )
+      return false;
+    if (typeof metrics.bytesReceived !== "number" || metrics.bytesReceived < 0)
+      return false;
+    if (typeof metrics.bytesSent !== "number" || metrics.bytesSent < 0)
+      return false;
+    if (!Array.isArray(metrics.errors)) return false;
+    if (!Array.isArray(metrics.messageTimestamps)) return false;
+
+    return true;
+  } catch (error) {
     return false;
   }
 }
@@ -822,11 +748,10 @@ export function checkRateLimit(
 }
 
 export interface RetryContext {
-  options: {
-    reconnectInterval: number;
-    reconnectBackoffRate: number;
-    maxReconnectAttempts: number;
-  };
+  options: Pick<
+    ConnectionOptions,
+    "reconnectInterval" | "reconnectBackoffRate" | "maxReconnectAttempts"
+  >;
   state: {
     connectionAttempts: number;
   };
@@ -852,7 +777,9 @@ export const utils = {
   calculateBackoffDelay,
   isRecoverableError,
   validateConnectionParams,
+  validateContext,
   checkRateLimit,
+  retryWithBackoff,
 } as const;
 
 ```
