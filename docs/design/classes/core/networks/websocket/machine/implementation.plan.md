@@ -22,7 +22,7 @@ graph TD
     end
 
     %% Layer 3
-    subgraph "Layer 3: Utils & States"
+    subgraph "Layer 3: Utils & Transitions"
         utils[utils.ts]
         transitions[transitions.ts]
     end
@@ -55,43 +55,101 @@ graph TD
     services --> machine
 ```
 
+Updated diagram:
+
+```mermaid
+graph TD
+    L1[Layer 1: Type Definitions] --> L2[Layer 2: Type Extensions]
+    L2 --> L3[Layer 3: Implementations]
+    L3 --> L4[Layer 4: Behavior]
+    L4 --> L5[Layer 5: Machine]
+
+    %% Layer 1 - Type Definitions
+    subgraph "Layer 1: Foundation"
+        constants[constants.ts - Basic types]
+        errors[errors.ts - Error types]
+    end
+
+    %% Layer 2 - Type Extensions
+    subgraph "Layer 2: Core Types"
+        types[types.ts - Complex types]
+        states[states.ts - State types]
+    end
+
+    %% Layer 3 - Implementations
+    subgraph "Layer 3: Utils & Transitions"
+        utils[utils.ts - Helper implementations]
+        transitions[transitions.ts - State logic]
+    end
+
+    %% Layer 4
+    subgraph "Layer 4: Behavior"
+        guards[guards.ts]
+        actions[actions.ts]
+        services[services.ts]
+    end
+
+    %% Layer 5
+    subgraph "Layer 5: Machine"
+        machine[machine.ts]
+    end
+```
+
 ## 2. Implementation Sequence
 
-### 2.1 Layer 1: Foundation
-- **Purpose**: Define core constants and error handling
+### 2.1 Layer 1: Foundation (Type Definitions Only)
+- **Purpose**: Define fundamental types and constants
 - **Files**:
   1. `constants.ts`
-     - Socket states
-     - Event types
-     - Configuration constants
+     - Socket state constants (`as const`)
+     - Event type constants (`as const`)
+     - Configuration constants (`as const`)
+     - Basic type exports
+     - NO implementations or logic
+  
   2. `errors.ts`
-     - Error hierarchy
-     - Error types
-     - Error factories
+     - Error code constants (`as const`)
+     - Error type definitions
+     - Error interfaces
+     - NO error handling logic
+     - NO error creation implementations
 
-### 2.2 Layer 2: Core Types
-- **Purpose**: Define type system and state structure
+### 2.2 Layer 2: Core Types (Type Extensions & Interfaces)
+- **Purpose**: Define complex types and interfaces using Layer 1 definitions
 - **Files**:
-  1. `types.ts` (depends on: constants.ts, errors.ts)
-     - Event types
-     - Context types
-     - Configuration types
-  2. `states.ts` (depends on: types.ts)
-     - State definitions
-     - State metadata
-     - State validation
+  1. `types.ts`
+     - Event type interfaces
+     - Context type interfaces
+     - Configuration interfaces
+     - Message type interfaces
+     - NO type guard implementations
+     - NO validation logic
+  
+  2. `states.ts`
+     - State interface definitions
+     - State metadata interfaces
+     - State validation interfaces
+     - State history interfaces
+     - NO state implementations
+     - NO validation logic
 
-### 2.3 Layer 3: Utils & States
-- **Purpose**: Implement utility functions and transition logic
+### 2.3 Layer 3: Utils & Transitions (All Implementations)
+- **Purpose**: Implement all helper functions and business logic
 - **Files**:
-  1. `utils.ts` (depends on: types.ts)
-     - Helper functions
-     - Validation utilities
-     - Error handling utilities
-  2. `transitions.ts` (depends on: states.ts, types.ts)
-     - Transition definitions
-     - Transition validation
-     - Transition metadata
+  1. `utils.ts`
+     - Implementation of all helper functions
+     - Implementation of all validation utilities
+     - Implementation of error handling
+     - Implementation of type guards
+     - Context creation and manipulation
+     - State validation logic
+  
+  2. `transitions.ts`
+     - Implementation of transition logic
+     - Implementation of state management
+     - Implementation of validation rules
+     - Error handling implementations
+     - State history tracking
 
 ### 2.4 Layer 4: Behavior
 - **Purpose**: Implement machine behavior
@@ -119,32 +177,28 @@ graph TD
 
 ## 3. Implementation Checklist
 
-### Layer 1
+### Layer 1: Types & Constants
 - [ ] Define state constants
 - [ ] Define event constants
-- [ ] Define configuration constants
-- [ ] Create error hierarchy
-- [ ] Implement error utilities
+- [ ] Define config constants
+- [ ] Define error types
+- [ ] Define error interfaces
+- [ ] Verify no implementations
 
-### Layer 2
-- [ ] Define event types
-- [ ] Define context types
-- [ ] Create state types
-- [ ] Implement state definitions
-- [ ] Add state validation
+### Layer 2: Extended Types
+- [ ] Define event interfaces
+- [ ] Define context interfaces
+- [ ] Define state interfaces
+- [ ] Define metadata interfaces
+- [ ] Verify no implementations
 
-### Layer 2: Core Types Updates
-- [ ] Add terminated state handling
-- [ ] Add message processing flags
-- [ ] Add timing metrics
-- [ ] Add byte counters
-- [ ] Add rate limiting context
-
-### Layer 3
-- [ ] Create utility functions
-- [ ] Add validation helpers
-- [ ] Define transitions
-- [ ] Add transition validation
+### Layer 3: Implementations
+- [ ] Implement helper functions
+- [ ] Implement type guards
+- [ ] Implement validation logic
+- [ ] Implement error handling
+- [ ] Implement state management
+- [ ] Implement transitions
 
 ### Layer 4
 - [ ] Implement guards
