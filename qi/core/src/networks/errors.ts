@@ -8,7 +8,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-12
- * @modified 2024-12-18
+ * @modified 2024-12-25
  */
 
 import { ApplicationError, ErrorCode } from "@qi/core/errors";
@@ -148,9 +148,9 @@ export function transformAxiosError(error: unknown): ApplicationError {
   if (error instanceof AxiosError) {
     const status =
       error.response?.status || HttpStatusCode.INTERNAL_SERVER_ERROR;
-    
+
     // Special case for timeout errors
-    if (error.code === 'ECONNABORTED') {
+    if (error.code === "ECONNABORTED") {
       return new ApplicationError(
         error.message,
         ErrorCode.TIMEOUT_ERROR,

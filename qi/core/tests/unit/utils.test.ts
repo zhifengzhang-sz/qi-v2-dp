@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-11-19
- * @modified 2024-12-18
+ * @modified 2024-12-25
  */
 
 import { debounce, merge, uniqBy } from "lodash-es";
@@ -21,11 +21,13 @@ import { promises as fsPromises } from "fs";
 import chalk from "chalk";
 
 // Mock fs promises
-vi.mock("fs", () => ({
-  promises: {
-    readFile: vi.fn(),
-  },
-}));
+vi.mock("fs", () => {
+  const mockReadFile = vi.fn().mockResolvedValue("");
+  return {
+    promises: { readFile: mockReadFile },
+    default: { promises: { readFile: mockReadFile } },
+  };
+});
 
 vi.mock("chalk", () => ({
   default: {
@@ -142,8 +144,7 @@ describe("Utils", () => {
       vi.mocked(fsPromises.readFile).mockRejectedValueOnce(
         Object.assign(new Error(), { code: "ENOENT" })
       );
-
-      const result = await loadEnv("nonexistent.env");
+      const result = await loadEnv("test.env");
       expect(result).toBeNull();
     });
 
@@ -194,6 +195,26 @@ describe("Utils", () => {
         EMPTY: "",
         SPACES: "value with spaces",
       });
+    });
+
+    it("should parse env file correctly", async () => {
+      vi.mocked(fsPromises.readFile).mockResolvedValueOnce(
+        "KEY=value\nNUMBER=123"
+      );
+
+      const result = await loadEnv("test.env");
+      expect(result).toEqual({
+        KEY: "value",
+        NUMBER: "123",
+      });
+    });
+
+    it("should handle override option", async () => {
+      process.env.EXISTING = "old";
+      vi.mocked(fsPromises.readFile).mockResolvedValueOnce("EXISTING=new");
+
+      await loadEnv("test.env", { override: true });
+      expect(process.env.EXISTING).toBe("new");
     });
   });
 

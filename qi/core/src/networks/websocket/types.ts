@@ -55,7 +55,7 @@ export interface WebSocketError extends Error {
 }
 
 export interface WebSocketEvents {
-  type: 'OPEN' | 'CLOSE' | 'MESSAGE' | 'PING';
+  type: "OPEN" | "CLOSE" | "MESSAGE" | "PING";
   timestamp: number;
   data?: any;
   code?: number;

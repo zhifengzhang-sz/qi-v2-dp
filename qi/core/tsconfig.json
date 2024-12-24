@@ -6,8 +6,9 @@
     "declaration": true,
     "declarationMap": true,
     "composite": true,
-    "emitDeclarationOnly": false,      // Ensure JavaScript files are emitted
-    "noEmit": false                     // Ensure TypeScript emits files
+    "emitDeclarationOnly": false,
+    "noEmit": false,
+    "types": ["node"]
   },
   "ts-node": {
     "require": ["tsconfig-paths/register"],

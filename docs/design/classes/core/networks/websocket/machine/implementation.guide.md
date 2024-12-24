@@ -1,466 +1,569 @@
 # WebSocket State Machine Implementation Guide (XState v5)
 
-## Implementation Layers
+## Implementation Structure Overview
 
-### Layer 1: Foundation
+### Layer Architecture
+```mermaid
+graph TD
+    L1[Layer 1: Type Definitions] --> L2[Layer 2: Type Extensions]
+    L2 --> L3[Layer 3: Implementations]
+    L3 --> L4[Layer 4: Behavior]
+    L4 --> L5[Layer 5: Machine]
 
-#### constants.ts
+    %% Layer Details
+    subgraph "Layer 1: Foundation"
+        constants[constants.ts - Basic types]
+        errors[errors.ts - Error types]
+    end
+
+    subgraph "Layer 2: Core Types"
+        types[types.ts - Complex types]
+        states[states.ts - State types]
+    end
+
+    subgraph "Layer 3: Utils & Transitions"
+        utils[utils.ts - Helper implementations]
+        transitions[transitions.ts - State logic]
+    end
+```
+
+## Layer 1: Foundation Implementation
+
+### constants.ts
+**Purpose**: 
+Define fundamental constants and their associated types that will be used throughout the WebSocket state machine implementation.
+
+**Implementation Guide**:
 ```typescript
+// Core WebSocket states
 export const STATES = {
-  DISCONNECTED: 'disconnected',
-  CONNECTING: 'connecting',
-  CONNECTED: 'connected',
-  RECONNECTING: 'reconnecting',
-  DISCONNECTING: 'disconnecting',
-  TERMINATED: 'terminated'
+  DISCONNECTED: "disconnected",
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  RECONNECTING: "reconnecting",
+  DISCONNECTING: "disconnecting",
+  TERMINATED: "terminated",
 } as const;
 
-export const EVENTS = {
-  CONNECT: 'CONNECT',
-  DISCONNECT: 'DISCONNECT',
-  ERROR: 'ERROR',
-  MESSAGE: 'MESSAGE'
-} as const;
+// Derive type from constant
+export type State = typeof STATES[keyof typeof STATES];
 
-export const CONFIG = {
+// Configuration with type safety
+export const BASE_CONFIG = {
   reconnect: true,
   maxReconnectAttempts: 5,
   reconnectInterval: 1000,
-  reconnectBackoffRate: 1.5,
   messageQueueSize: 100,
-  pingInterval: 30000,
-  pongTimeout: 5000
 } as const;
 ```
 
-#### errors.ts
+**Key Points**:
+- Use `as const` assertions for all constant definitions
+- Export derived types immediately after constants
+- Keep constants grouped by logical function
+- No implementation logic, only definitions
+
+### errors.ts
+**Purpose**: 
+Define error types and interfaces that will be used for error handling throughout the system.
+
+**Implementation Guide**:
 ```typescript
-export enum ErrorCode {
-  CONNECTION_FAILED = 'CONNECTION_FAILED',
-  MESSAGE_FAILED = 'MESSAGE_FAILED',
-  TIMEOUT = 'TIMEOUT'
+// Error codes with type safety
+export const ERROR_CODES = {
+  CONNECTION_FAILED: "CONNECTION_FAILED",
+  MESSAGE_FAILED: "MESSAGE_FAILED",
+  TIMEOUT: "TIMEOUT",
+} as const;
+
+export type ErrorCode = typeof ERROR_CODES[keyof typeof ERROR_CODES];
+
+// Error context interface
+export interface ErrorContext {
+  readonly code: ErrorCode;
+  readonly timestamp: number;
+  readonly message: string;
+  readonly metadata?: Record<string, unknown>;
+}
+```
+
+**Key Points**:
+- Define error types as readonly
+- Use discriminated unions for error types
+- Keep error interfaces minimal and focused
+- No error handling logic, only types
+
+## Layer 2: Core Types Implementation
+
+### types.ts
+**Purpose**: 
+Define the core type system that describes all data structures used in the WebSocket state machine.
+
+**Implementation Guide**:
+```typescript
+// Base event interface
+export interface BaseEvent {
+  readonly timestamp: number;
+  readonly id?: string;
 }
 
-export class WebSocketError extends Error {
-  constructor(
-    message: string,
-    public code: ErrorCode,
-    public context: ErrorContext
-  ) {
-    super(message);
-    this.name = 'WebSocketError';
+// WebSocket events
+export type WebSocketEvent =
+  | ({ type: "CONNECT"; url: string } & BaseEvent)
+  | ({ type: "DISCONNECT"; code?: number } & BaseEvent)
+  | ({ type: "MESSAGE"; data: unknown } & BaseEvent);
+
+// Context interface
+export interface WebSocketContext {
+  readonly url: string | null;
+  readonly status: State;
+  readonly socket: WebSocket | null;
+  readonly error: ErrorContext | null;
+  readonly options: Options;
+  readonly metrics: Metrics;
+}
+```
+
+**Key Points**:
+- Use discriminated unions for events
+- Make all properties readonly where appropriate
+- Use intersection types for composition
+- No implementation details or type guards
+
+### states.ts
+**Purpose**: 
+Define interfaces and types that describe the state system and its metadata.
+
+**Implementation Guide**:
+```typescript
+// State metadata
+export interface StateMetadata {
+  readonly description: string;
+  readonly tags: ReadonlyArray<string>;
+  readonly timeoutMs?: number;
+  readonly retryable: boolean;
+}
+
+// State definition
+export interface StateDefinition {
+  readonly name: State;
+  readonly allowedEvents: ReadonlySet<WebSocketEvent["type"]>;
+  readonly metadata: StateMetadata;
+}
+```
+
+**Key Points**:
+- Define clear state interfaces
+- Use readonly arrays and sets
+- Keep metadata separate from logic
+- No validation or implementation code
+
+## Layer 3: Implementation Guide
+
+### utils.ts
+**Purpose**: 
+Implement reusable utility functions that handle common operations and data manipulations.
+
+**Implementation Guide**:
+```typescript
+// Generic validation
+export function validateUrl(url: string): ValidationResult {
+  try {
+    const parsed = new URL(url);
+    return {
+      isValid: parsed.protocol === "ws:" || parsed.protocol === "wss:",
+      reason: parsed.protocol !== "ws:" && parsed.protocol !== "wss:" 
+        ? "Invalid protocol" 
+        : undefined
+    };
+  } catch {
+    return { isValid: false, reason: "Invalid URL format" };
   }
 }
 
-export interface ErrorContext {
-  readonly url?: string;
-  readonly state?: string;
-  readonly attempt?: number;
+// Context manipulation
+export function createContext(options: Options): WebSocketContext {
+  return {
+    url: null,
+    status: "disconnected",
+    socket: null,
+    error: null,
+    options,
+    metrics: createInitialMetrics()
+  };
 }
 ```
 
-### Layer 2: Core Types
+**Key Points**:
+- Write pure functions only
+- Handle all error cases
+- Return new objects, don't mutate
+- Keep functions focused and simple
 
-#### types.ts
+### transitions.ts
+**Purpose**: 
+Implement state machine-specific logic for managing states and transitions.
+
+**Implementation Guide**:
 ```typescript
-type State = typeof STATES[keyof typeof STATES];
-type EventType = typeof EVENTS[keyof typeof EVENTS];
-
-interface BaseEvent {
-  readonly timestamp: number;
+// Transition validation
+export function validateTransition(
+  from: State,
+  event: WebSocketEvent,
+  to: State,
+  context: WebSocketContext
+): ValidationResult {
+  const allowedState = transitions[from]?.[event.type];
+  if (!allowedState || allowedState !== to) {
+    return {
+      isValid: false,
+      reason: `Invalid transition from ${from} to ${to}`
+    };
+  }
+  return { isValid: true };
 }
 
-type WebSocketEvent =
-  | { type: 'CONNECT'; url: string; options?: ConnectionOptions }
-  | { type: 'DISCONNECT'; code?: number }
-  | { type: 'MESSAGE'; data: unknown }
-  & BaseEvent;
-
-interface WebSocketContext {
-  readonly url: string | null;
-  readonly socket: WebSocket | null;
-  readonly status: State;
-  readonly options: Readonly<ConnectionOptions>;
-  readonly metrics: Readonly<Metrics>;
-  isCleanDisconnect: boolean;
-  connectTime: number;
-  disconnectTime: number;
-  latency: number[];
-  bytesReceived: number;
-  bytesSent: number;
-  processingMessage: boolean;
-  lastMessageId: string;
-  windowStart: number;
-}
-
-interface ConnectionOptions {
-  readonly reconnect: boolean;
-  readonly maxReconnectAttempts: number;
-  readonly reconnectInterval: number;
-}
-
-interface Metrics {
-  readonly messagesReceived: number;
-  readonly messagesSent: number;
-  readonly errors: ReadonlyArray<ErrorRecord>;
+// State management
+export function getNextState(
+  current: State,
+  event: WebSocketEvent
+): State | undefined {
+  return transitions[current]?.[event.type];
 }
 ```
 
-### Layer 3: Utils & States
+**Key Points**:
+- Focus on state machine logic
+- Validate all transitions
+- Handle all edge cases
+- Keep state management pure
 
-#### states.ts
+## XState v5 Implementation Notes
+
+### Action Implementation
 ```typescript
-export interface StateDefinition {
-  readonly name: State;
-  readonly allowedEvents: ReadonlySet<EventType>;
-  readonly invariants: ReadonlyArray<(context: WebSocketContext) => boolean>;
-}
-
-export const states: Record<State, StateDefinition> = {
-  disconnected: {
-    name: 'disconnected',
-    allowedEvents: new Set(['CONNECT']),
-    invariants: [
-      (ctx) => ctx.socket === null,
-      (ctx) => ctx.status === 'disconnected'
-    ]
-  },
-  // ... other states
+// Correct v5 action implementation
+export const actions = {
+  initializeConnection: assign((context, event) => ({
+    url: event.url,
+    status: "connecting"
+  }))
 };
 ```
 
-#### utils.ts
+### Guard Implementation
 ```typescript
-export function calculateBackoff(
-  attempts: number,
-  options: ConnectionOptions
-): number {
-  return Math.min(
-    options.reconnectInterval * Math.pow(options.reconnectBackoffRate, attempts),
-    30000
-  );
-}
-
-export function validateState(
-  context: WebSocketContext,
-  state: State
-): boolean {
-  return states[state].invariants.every(inv => inv(context));
-}
-
-export function createError(
-  code: ErrorCode,
-  message: string,
-  context: ErrorContext
-): WebSocketError {
-  return new WebSocketError(message, code, context);
-}
-```
-
-### Layer 4: Behavior
-
-#### actions.ts
-```typescript
-function initializeConnection(
-  context: WebSocketContext,
-  event: WebSocketEvent & { type: 'CONNECT' }
-): WebSocketContext {
-  return {
-    ...context,
-    url: event.url,
-    status: 'connecting',
-    reconnectAttempts: 0
-  };
-}
-
-function handleMessage(
-  context: WebSocketContext,
-  event: WebSocketEvent & { type: 'MESSAGE' }
-): WebSocketContext {
-  return {
-    ...context,
-    metrics: {
-      ...context.metrics,
-      messagesReceived: context.metrics.messagesReceived + 1
-    }
-  };
-}
-
-export const actions = {
-  initializeConnection,
-  handleMessage
-} as const;
-```
-
-#### guards.ts
-```typescript
-function canConnect(
-  context: WebSocketContext,
-  event: WebSocketEvent & { type: 'CONNECT' }
-): boolean {
-  return (
-    context.status === 'disconnected' &&
-    !context.socket &&
-    event.url.startsWith('ws')
-  );
-}
-
-function canReconnect(context: WebSocketContext): boolean {
-  return (
-    context.options.reconnect &&
-    context.reconnectAttempts < context.options.maxReconnectAttempts
-  );
-}
-
+// Correct v5 guard implementation
 export const guards = {
-  canConnect,
-  canReconnect
-} as const;
-```
-
-#### services.ts
-```typescript
-import { fromCallback } from 'xstate';
-
-function createWebSocketService({ input }: { input: WebSocketContext }) {
-  return fromCallback(({ self }) => {
-    const socket = new WebSocket(input.url!);
-    
-    socket.onopen = () => self.send({ 
-      type: 'OPEN',
-      timestamp: Date.now() 
-    });
-    
-    socket.onmessage = (event) => self.send({ 
-      type: 'MESSAGE',
-      data: event.data,
-      timestamp: Date.now()
-    });
-
-    return () => socket.close();
-  });
-}
-
-export const services = {
-  webSocket: createWebSocketService
-} as const;
-```
-
-### Layer 5: Machine
-
-#### machine.ts
-```typescript
-const webSocketMachine = createMachine({
-  id: 'webSocket',
-  types: {} as {
-    context: WebSocketContext,
-    events: WebSocketEvent
-  },
-  context: {
-    url: null,
-    socket: null,
-    status: 'disconnected',
-    options: CONFIG,
-    metrics: {
-      messagesReceived: 0,
-      messagesSent: 0,
-      errors: []
-    },
-    isCleanDisconnect: false,
-    connectTime: 0,
-    disconnectTime: 0,
-    latency: [],
-    bytesReceived: 0,
-    bytesSent: 0,
-    processingMessage: false,
-    lastMessageId: '',
-    windowStart: 0
-  },
-  initial: 'disconnected',
-  states: {
-    disconnected: {
-      on: {
-        CONNECT: {
-          target: 'connecting',
-          guard: 'canConnect',
-          action: 'initializeConnection'
-        }
-      }
-    },
-    connecting: {
-      invoke: {
-        src: 'webSocket',
-        onDone: 'connected',
-        onError: [{
-          target: 'reconnecting',
-          guard: 'canReconnect'
-        }]
-      }
-    },
-    terminated: {
-      type: 'final',
-      entry: 'cleanupResources'
-    }
-    // ... other states
+  canConnect: (context: WebSocketContext, event) => {
+    return context.status === "disconnected" && !!event.url;
   }
-}, {
-  actions,
-  guards,
-  services
-});
+};
 ```
 
-## Testing
-
-### Type Tests
+### Service Implementation
 ```typescript
-describe('Types', () => {
-  test('context is immutable', () => {
-    const context: WebSocketContext = {
-      url: 'ws://test',
+// Correct v5 service implementation
+export const services = {
+  webSocket: fromCallback(({ input, self }) => {
+    const socket = new WebSocket(input.url);
+    socket.onmessage = (event) => self.send({ type: "MESSAGE", data: event.data });
+    return () => socket.close();
+  })
+};
+```
+
+## Layer 4: Behavior Implementation
+
+### guards.ts
+**Purpose**: 
+Implement type-safe guard functions that determine when state transitions and actions can occur.
+
+**Implementation Guide**:
+```typescript
+// Type-safe guard implementations
+export const guards = {
+  canConnect: (context: WebSocketContext, event: WebSocketEvent) => {
+    if (event.type !== "CONNECT") return false;
+    return (
+      context.status === "disconnected" &&
+      !context.socket &&
+      validateUrl(event.url).isValid
+    );
+  },
+
+  canRetry: (context: WebSocketContext) => {
+    return (
+      context.options.reconnect &&
+      context.retryCount < context.options.maxReconnectAttempts &&
+      !isRateLimited(context)
+    );
+  },
+
+  isRateLimited: (context: WebSocketContext) => {
+    return context.rateLimit.count >= context.rateLimit.maxBurst;
+  }
+} satisfies Record<string, (context: WebSocketContext, event: WebSocketEvent) => boolean>;
+```
+
+**Key Points**:
+- Use type-safe guard functions
+- Keep guards pure and simple
+- Handle all edge cases
+- Return boolean values only
+
+### actions.ts
+**Purpose**: 
+Implement type-safe actions that handle state updates and side effects.
+
+**Implementation Guide**:
+```typescript
+// Type-safe action implementations
+export const actions = {
+  initializeConnection: assign((context, event) => {
+    if (event.type !== "CONNECT") return {};
+    return {
+      url: event.url,
+      status: "connecting" as const,
+      socket: null,
+      error: null,
+      retryCount: 0
+    };
+  }),
+
+  handleMessage: assign((context, event) => {
+    if (event.type !== "MESSAGE") return {};
+    return {
+      metrics: {
+        ...context.metrics,
+        messagesReceived: context.metrics.messagesReceived + 1,
+        lastMessageTime: Date.now()
+      }
+    };
+  }),
+
+  cleanup: assign((context) => ({
+    socket: null,
+    error: null,
+    status: "disconnected" as const
+  }))
+} satisfies Record<string, AssignAction<WebSocketContext, WebSocketEvent>>;
+```
+
+**Key Points**:
+- Use assign for context updates
+- Keep actions pure
+- Type-safe action creators
+- Handle all event types
+
+### services.ts
+**Purpose**: 
+Implement WebSocket services and actors that handle external communication.
+
+**Implementation Guide**:
+```typescript
+// WebSocket service implementation
+export const services = {
+  webSocket: fromCallback(({ input, self }) => {
+    const socket = new WebSocket(input.url);
+
+    socket.onopen = () => {
+      self.send({ type: "OPEN", timestamp: Date.now() });
+    };
+
+    socket.onmessage = (event) => {
+      self.send({ 
+        type: "MESSAGE", 
+        data: event.data,
+        timestamp: Date.now()
+      });
+    };
+
+    socket.onerror = (error) => {
+      self.send({ 
+        type: "ERROR",
+        error: createErrorContext(
+          ERROR_CODES.CONNECTION_FAILED,
+          error.message
+        ),
+        timestamp: Date.now()
+      });
+    };
+
+    socket.onclose = (event) => {
+      self.send({
+        type: "CLOSE",
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+        timestamp: Date.now()
+      });
+    };
+
+    // Cleanup function
+    return () => {
+      if (socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+    };
+  })
+} satisfies Record<string, ActorLogic<WebSocketContext, WebSocketEvent>>;
+```
+
+**Key Points**:
+- Use proper actor model
+- Handle all WebSocket events
+- Proper cleanup
+- Type-safe event sending
+
+## Layer 5: Machine Implementation
+
+### machine.ts
+**Purpose**: 
+Define the complete state machine configuration and behavior.
+
+**Implementation Guide**:
+```typescript
+import { createMachine, assign } from 'xstate';
+import { actions } from './actions';
+import { guards } from './guards';
+import { services } from './services';
+
+export function createWebSocketMachine(options: Options = BASE_CONFIG) {
+  return createMachine({
+    id: 'webSocket',
+    types: {} as {
+      context: WebSocketContext;
+      events: WebSocketEvent;
+    },
+    context: {
+      url: null,
       socket: null,
       status: 'disconnected',
-      options: CONFIG,
-      metrics: {
-        messagesReceived: 0,
-        messagesSent: 0,
-        errors: []
-      },
-      isCleanDisconnect: false,
-      connectTime: 0,
-      disconnectTime: 0,
-      latency: [],
-      bytesReceived: 0,
-      bytesSent: 0,
-      processingMessage: false,
-      lastMessageId: '',
-      windowStart: 0
-    };
-
-    // @ts-expect-error - Should not allow mutation
-    context.url = 'new-url';
-  });
-});
-```
-
-### Action Tests
-```typescript
-describe('Actions', () => {
-  test('initializeConnection', () => {
-    const context = createTestContext();
-    const event = {
-      type: 'CONNECT' as const,
-      url: 'ws://test',
-      timestamp: Date.now()
-    };
-
-    const result = actions.initializeConnection(context, event);
-    
-    expect(result.url).toBe('ws://test');
-    expect(result.status).toBe('connecting');
-    expect(result.reconnectAttempts).toBe(0);
-  });
-});
-```
-
-### Guard Tests
-```typescript
-describe('Guards', () => {
-  test('canConnect', () => {
-    const context = createTestContext();
-    const event = {
-      type: 'CONNECT' as const,
-      url: 'ws://test',
-      timestamp: Date.now()
-    };
-
-    const result = guards.canConnect(context, event);
-    expect(result).toBe(true);
-  });
-});
-```
-
-### Integration Tests
-```typescript
-describe('WebSocket Machine', () => {
-  test('full connection lifecycle', () => {
-    const machine = createWebSocketMachine();
-    
-    let state = machine.initialState;
-    expect(state.value).toBe('disconnected');
-    
-    state = machine.transition(state, {
-      type: 'CONNECT',
-      url: 'ws://test',
-      timestamp: Date.now()
-    });
-    
-    expect(state.value).toBe('connecting');
-    expect(state.context.url).toBe('ws://test');
-  });
-});
-```
-
-## Helper Functions
-
-### Test Context Creation
-```typescript
-function createTestContext(overrides?: Partial<WebSocketContext>): WebSocketContext {
-  return {
-    url: null,
-    socket: null,
-    status: 'disconnected',
-    options: CONFIG,
-    metrics: {
-      messagesReceived: 0,
-      messagesSent: 0,
-      errors: []
+      options,
+      metrics: createInitialMetrics(),
+      error: null,
+      retryCount: 0,
+      rateLimit: createInitialRateLimit()
     },
-    isCleanDisconnect: false,
-    connectTime: 0,
-    disconnectTime: 0,
-    latency: [],
-    bytesReceived: 0,
-    bytesSent: 0,
-    processingMessage: false,
-    lastMessageId: '',
-    windowStart: 0,
-    ...overrides
-  };
-}
-```
-
-### State Validation
-```typescript
-function validateMachineState(state: State): void {
-  const definition = states[state.value];
-  if (!definition) {
-    throw new Error(`Invalid state: ${state.value}`);
-  }
-
-  definition.invariants.forEach(invariant => {
-    if (!invariant(state.context)) {
-      throw new Error(`State invariant violation in ${state.value}`);
+    initial: 'disconnected',
+    states: {
+      disconnected: {
+        on: {
+          CONNECT: {
+            target: 'connecting',
+            guard: 'canConnect',
+            actions: 'initializeConnection'
+          }
+        }
+      },
+      connecting: {
+        invoke: {
+          src: 'webSocket',
+          onDone: 'connected',
+          onError: [{
+            target: 'reconnecting',
+            guard: 'canRetry'
+          }, {
+            target: 'disconnected'
+          }]
+        },
+        on: {
+          OPEN: 'connected',
+          ERROR: {
+            target: 'reconnecting',
+            guard: 'canRetry'
+          }
+        }
+      },
+      connected: {
+        on: {
+          DISCONNECT: {
+            target: 'disconnecting',
+            actions: 'cleanup'
+          },
+          MESSAGE: {
+            actions: 'handleMessage'
+          },
+          ERROR: {
+            target: 'reconnecting',
+            guard: 'canRetry'
+          }
+        }
+      },
+      reconnecting: {
+        after: {
+          RETRY_DELAY: {
+            target: 'connecting',
+            guard: 'canRetry'
+          }
+        },
+        on: {
+          MAX_RETRIES: 'disconnected'
+        }
+      },
+      disconnecting: {
+        on: {
+          CLOSE: 'disconnected'
+        }
+      },
+      terminated: {
+        type: 'final'
+      }
     }
+  }, {
+    actions,
+    guards,
+    services
   });
 }
 ```
 
-## Implementation Workflow
+**Key Points**:
+- Proper type definitions
+- Clear state hierarchy
+- Proper event handling
+- Clean transition logic
+- Proper service integration
 
-1. Start with foundation layer (constants.ts, errors.ts)
-2. Build core types (types.ts, states.ts)
-3. Implement utilities (utils.ts, transitions.ts)
-4. Add behavior (guards.ts, actions.ts, services.ts)
-5. Create machine definition (machine.ts)
-6. Add comprehensive tests
+## Testing Guidelines
 
-## Best Practices
+### Type Testing
+```typescript
+describe("Type Definitions", () => {
+  it("should enforce readonly properties", () => {
+    const context: WebSocketContext = createContext(DEFAULT_OPTIONS);
+    // @ts-expect-error - Should not allow mutation
+    context.url = "new-url";
+  });
+});
+```
 
-1. Always use pure functions for actions and guards
-2. Maintain immutability in context updates
-3. Use explicit typing over inference
-4. Test each component in isolation
-5. Validate state transitions
-6. Handle all error cases
-7. Document all public interfaces
+### Implementation Testing
+```typescript
+describe("Utils", () => {
+  it("should validate URLs correctly", () => {
+    expect(validateUrl("ws://localhost")).toEqual({
+      isValid: true
+    });
+    expect(validateUrl("http://localhost")).toEqual({
+      isValid: false,
+      reason: "Invalid protocol"
+    });
+  });
+});
+```
+
+### Integration Testing
+```typescript
+describe("State Machine", () => {
+  it("should handle connection lifecycle", () => {
+    const machine = createWebSocketMachine();
+    const state = machine.transition("disconnected", {
+      type: "CONNECT",
+      url: "ws://localhost"
+    });
+    expect(state.value).toBe("connecting");
+  });
+});
+```

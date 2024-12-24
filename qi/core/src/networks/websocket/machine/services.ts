@@ -1,227 +1,284 @@
 /**
- * @fileoverview WebSocket state machine services
+ * @fileoverview WebSocket state machine services for XState v5
  * @module @qi/core/network/websocket/services
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-24
+ * @modified 2024-12-25
  */
 
-/// <reference lib="dom" />
+import { AnyActorRef } from "xstate";
+import { WebSocketContext, WebSocketEvent } from "./types.js";
+import { ApplicationError, ErrorCode, StatusCode } from "@qi/core/errors";
+import { validateUrl } from "./utils.js";
+import { mapTransitionCloseCodeToError } from "./transitions.js";
 
-import { fromCallback } from "xstate";
-import { logger } from "@qi/core/logger";
-import type {
-  WebSocketContext,
-  WebSocketEvents as WebSocketStateEvents,
-  WebSocketLogic,
-} from "./types.js";
-import { createWebSocketError, retryWithBackoff } from "./utils.js";
-import { HttpStatusCode } from "../../errors.js";
-import type { WebSocket as BrowserWebSocket } from 'ws';
-
-interface WebSocketCloseEvent extends Event {
-  code: number;
-  reason: string;
-  wasClean: boolean;
+function isValidMessageData(
+  data: unknown
+): data is string | ArrayBufferLike | Blob | ArrayBufferView {
+  return (
+    typeof data === "string" ||
+    data instanceof ArrayBuffer ||
+    data instanceof Blob ||
+    ArrayBuffer.isView(data)
+  );
 }
 
-interface WebSocketEvents extends Event {
-  data?: any;
-  code?: number;
-  reason?: string;
-  wasClean?: boolean;
-}
+/**
+ * Type-safe service implementations for XState v5
+ */
+export const services = {
+  /**
+   * Main WebSocket service implementation
+   */
+  webSocket: ({ context }: { context: WebSocketContext }) => ({
+    init: ({ self }: { self: AnyActorRef }) => {
+      let socket: WebSocket | null = null;
+      let heartbeatInterval: NodeJS.Timeout | null = null;
 
-type WebSocketType = globalThis.WebSocket;
-type WebSocketErrorType = Event;
-type WebSocketMessageType = MessageEvent;
-type WebSocketCloseType = WebSocketCloseEvent;
-
-// Helper function (was missing)
-function cleanupWebSocket(
-  socket: WebSocketType | null,
-  reason = "Service cleanup"
-) {
-  if (!socket) return;
-
-  socket.onmessage = null;
-  socket.onerror = null;
-  socket.onclose = null;
-  socket.onopen = null;
-
-  if (
-    socket.readyState !== WebSocket.CLOSED &&
-    socket.readyState !== WebSocket.CLOSING
-  ) {
-    socket.close(HttpStatusCode.WEBSOCKET_NORMAL_CLOSURE, reason);
-  }
-}
-
-export const webSocketService = fromCallback(
-  ({
-    input: context,
-    self,
-  }: {
-    input: WebSocketContext;
-    self: { send: (event: WebSocketStateEvents) => void };
-  }) => {
-    let socket: WebSocketType | null = null;
-
-    // Error handlers defined at service level
-    const handleConnectionError = (error: Error) => {
-      const wsError = createWebSocketError(
-        "Failed to establish WebSocket connection",
-        error,
-        {
-          url: context.url,
-          connectionAttempts: context.state.connectionAttempts,
-          totalErrors: context.metrics.totalErrors + 1,
-          consecutiveErrors: context.metrics.consecutiveErrors + 1,
-          readyState: socket?.readyState ?? WebSocket.CLOSED,
-          socket,
+      // Cleanup function to handle resource disposal
+      const cleanup = () => {
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
         }
-      );
-
-      self.send({
-        type: "ERROR",
-        error: wsError,
-        timestamp: Date.now(),
-      });
-    };
-
-    const handleSocketError = (event: WebSocketErrorType) => {
-      const wsError = createWebSocketError(
-        "WebSocket encountered an error",
-        new Error("WebSocket error occurred"),
-        {
-          url: context.url,
-          connectionAttempts: context.state.connectionAttempts,
-          totalErrors: context.metrics.totalErrors + 1,
-          consecutiveErrors: context.metrics.consecutiveErrors + 1,
-          lastSuccessfulConnection: context.metrics.lastSuccessfulConnection,
-          readyState: socket?.readyState ?? WebSocket.CLOSED,
-          socket,
+        if (socket) {
+          try {
+            socket.close();
+          } catch (error) {
+            console.error("Error closing socket:", error);
+          }
+          socket = null;
         }
-      );
+      };
 
-      self.send({
-        type: "ERROR",
-        error: wsError,
-        timestamp: Date.now(),
-      });
-    };
+      // Validate URL before attempting connection
+      const urlValidation = validateUrl(context.url || "");
+      if (!urlValidation.isValid) {
+        self.send({
+          type: "ERROR",
+          error: new ApplicationError(
+            urlValidation.reason || "Invalid WebSocket URL",
+            ErrorCode.WEBSOCKET_INVALID_URL,
+            StatusCode.BAD_REQUEST,
+            { url: context.url }
+          ),
+          timestamp: Date.now(),
+        });
+        return cleanup;
+      }
 
-    const handleClose = (event: {
-      code: number;
-      reason: string;
-      wasClean: boolean;
-    }) => {
-      const wsError = createWebSocketError(
-        "WebSocket connection closed",
-        new Error(event.reason || "Connection closed"),
-        {
-          closeCode: event.code,
-          closeReason: event.reason,
-          wasClean: event.wasClean,
-          url: context.url,
-          totalErrors: context.metrics.totalErrors,
-          consecutiveErrors: context.metrics.consecutiveErrors,
-          connectionAttempts: context.state.connectionAttempts,
-          readyState: socket?.readyState ?? WebSocket.CLOSED,
-          socket,
-        }
-      );
-
-      self.send({
-        type: "CLOSE",
-        code: event.code,
-        reason: event.reason,
-        wasClean: event.wasClean,
-        error: wsError,
-      });
-    };
-
-    const connect = async () => {
+      // Initialize WebSocket connection
       try {
-        socket = await retryWithBackoff(async () => {
-          const ws = new WebSocket(context.url, context.protocols);
+        socket = new WebSocket(
+          context.url!,
+          context.options.protocols
+            ? Array.from(context.options.protocols)
+            : undefined
+        );
 
-          return new Promise<WebSocketType>((resolve, reject) => {
-            const timeout = setTimeout(() => {
-              reject(new Error("Connection timeout"));
-            }, context.options.connectionTimeout);
+        // Configure connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (socket?.readyState !== WebSocket.OPEN) {
+            self.send({
+              type: "ERROR",
+              error: new ApplicationError(
+                "Connection timeout",
+                ErrorCode.WEBSOCKET_TIMEOUT,
+                StatusCode.GATEWAY_TIMEOUT,
+                { url: context.url }
+              ),
+              timestamp: Date.now(),
+            });
+            cleanup();
+          }
+        }, context.options.connectionTimeout || 10000);
 
-            ws.onopen = function(this: WebSocket) {
-              clearTimeout(timeout);
-              resolve(ws);
-            };
+        // WebSocket event handlers
+        socket.onopen = () => {
+          clearTimeout(connectionTimeout);
+          self.send({ type: "OPEN", timestamp: Date.now() });
 
-            ws.onerror = function(this: WebSocket, ev: Event) {
-              reject(new Error("Connection failed"));
-            };
-          });
-        }, context);
+          // Setup heartbeat if configured
+          if (context.options.heartbeatInterval) {
+            heartbeatInterval = setInterval(() => {
+              if (socket?.readyState === WebSocket.OPEN) {
+                socket.send("ping");
+              }
+            }, context.options.heartbeatInterval);
+          }
+        };
 
-        socket.onmessage = function(this: WebSocket, ev: MessageEvent) {
-          logger.debug("WebSocket message received", {
-            size: ev.data.length,
-            type: typeof ev.data,
-          });
+        socket.onmessage = (event) => {
+          // Skip processing of heartbeat messages
+          if (event.data === "ping" || event.data === "pong") {
+            return;
+          }
 
           self.send({
             type: "MESSAGE",
-            data: ev.data,
+            data: event.data,
+            size: event.data.length,
             timestamp: Date.now(),
           });
         };
 
-        socket.onerror = function(this: WebSocket, ev: Event) {
-          handleSocketError(ev);
+        socket.onerror = (error) => {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "WebSocket error occurred",
+              ErrorCode.WEBSOCKET_ERROR,
+              StatusCode.INTERNAL_SERVER_ERROR,
+              {
+                error: error instanceof Error ? error.message : "Unknown error",
+                url: context.url,
+                readyState: socket?.readyState,
+              }
+            ),
+            timestamp: Date.now(),
+          });
         };
 
-        socket.onclose = handleClose;
+        socket.onclose = (event) => {
+          const { errorCode, statusCode, recoverable } =
+            mapTransitionCloseCodeToError(event.code);
 
-        self.send({ type: "OPEN", timestamp: Date.now() });
+          self.send({
+            type: "CLOSE",
+            code: event.code,
+            reason: event.reason || "",
+            wasClean: event.wasClean,
+            timestamp: Date.now(),
+          });
+
+          if (!event.wasClean) {
+            self.send({
+              type: "ERROR",
+              error: new ApplicationError(
+                event.reason || `Connection closed with code ${event.code}`,
+                errorCode,
+                statusCode,
+                {
+                  code: event.code,
+                  wasClean: event.wasClean,
+                  recoverable,
+                  url: context.url,
+                }
+              ),
+              timestamp: Date.now(),
+            });
+          }
+
+          cleanup();
+        };
       } catch (error) {
-        handleConnectionError(error as Error);
+        self.send({
+          type: "ERROR",
+          error: new ApplicationError(
+            error instanceof Error
+              ? error.message
+              : "Failed to initialize WebSocket",
+            ErrorCode.WEBSOCKET_ERROR,
+            StatusCode.INTERNAL_SERVER_ERROR,
+            { error, url: context.url }
+          ),
+          timestamp: Date.now(),
+        });
+        cleanup();
       }
-    };
 
-    // Start connection
-    connect();
+      // Return cleanup function
+      return cleanup;
+    },
 
-    // Return cleanup function
-    return () => {
-      logger.info("Cleaning up WebSocket connection", {
-        url: context.url,
-        readyState: socket?.readyState,
-      });
+    /**
+     * Handle machine events
+     */
+    update: ({ event }: { event: WebSocketEvent }) => {
+      if (
+        event.type === "SEND" &&
+        context.socket?.readyState === WebSocket.OPEN
+      ) {
+        if (!isValidMessageData(event.data)) {
+          return {
+            type: "ERROR",
+            error: new ApplicationError(
+              "Invalid message data type",
+              ErrorCode.WEBSOCKET_INVALID_DATA,
+              StatusCode.UNPROCESSABLE_ENTITY,
+              { dataType: typeof event.data }
+            ),
+            timestamp: Date.now(),
+          };
+        }
 
-      if (socket) {
-        cleanupWebSocket(socket);
+        try {
+          context.socket.send(event.data);
+        } catch (error) {
+          return {
+            type: "ERROR",
+            error: new ApplicationError(
+              "Failed to send message",
+              ErrorCode.WEBSOCKET_SEND_FAILED,
+              StatusCode.INTERNAL_SERVER_ERROR,
+              { error, data: event.data }
+            ),
+            timestamp: Date.now(),
+          };
+        }
       }
-    };
-  }
-);
+    },
+  }),
 
-export const pingService = fromCallback(
-  ({
-    input: context,
-    self,
-  }: {
-    input: WebSocketContext;
-    self: { send: (event: WebSocketStateEvents) => void };
-  }) => {
-    const pingInterval = setInterval(() => {
-      if (context.socket?.readyState === WebSocket.OPEN) {
-        const timestamp = Date.now();
-        self.send({ type: "PING", timestamp });
+  /**
+   * Health check service implementation
+   */
+  healthCheck: ({ context }: { context: WebSocketContext }) => ({
+    init: ({ self }: { self: AnyActorRef }) => {
+      const checkHealth = () => {
+        if (!context.socket || context.socket.readyState !== WebSocket.OPEN) {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "Health check failed - socket not connected",
+              ErrorCode.WEBSOCKET_NOT_CONNECTED,
+              StatusCode.SERVICE_UNAVAILABLE,
+              { readyState: context.socket?.readyState }
+            ),
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
+        try {
+          context.socket.send("ping");
+          self.send({ type: "HEALTH_OK", timestamp: Date.now() });
+        } catch (error) {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "Health check failed",
+              ErrorCode.WEBSOCKET_ERROR,
+              StatusCode.SERVICE_UNAVAILABLE,
+              { error }
+            ),
+            timestamp: Date.now(),
+          });
+        }
+      };
+
+      // Initial check
+      checkHealth();
+
+      // Setup interval if configured
+      const interval = context.options.healthCheckInterval;
+      if (interval) {
+        const timer = setInterval(checkHealth, interval);
+        return () => clearInterval(timer);
       }
-    }, context.options.pingInterval);
 
-    // Return cleanup function
-    return () => clearInterval(pingInterval);
-  }
-);
-
-export const services = {
-  webSocketService,
-  pingService
-};
+      return () => {};
+    },
+  }),
+} as const;

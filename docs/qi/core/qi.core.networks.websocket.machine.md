@@ -2,6 +2,294 @@
 
 ## machine
 
+### actions.ts
+
+```typescript
+/**
+ * @fileoverview WebSocket state machine actions
+ * @module @qi/core/network/websocket/actions
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
+ */
+
+import { ApplicationError, ErrorCode, StatusCode } from "@qi/core/errors";
+import { WebSocketContext, WebSocketEvent } from "./types.js";
+import { NetworkErrorContext } from "@qi/core/networks/errors";
+import { calculateBackoff } from "./utils.js";
+import { mapTransitionCloseCodeToError } from "./transitions.js";
+import { ErrorSeverity } from "./errors.js";
+
+/**
+ * WebSocket specific error class
+ */
+class WebSocketError extends Error {
+  readonly code: ErrorCode;
+  readonly severity: ErrorSeverity;
+  readonly timestamp: number;
+  readonly metadata?: Record<string, unknown>;
+
+  constructor({
+    code,
+    message,
+    severity,
+    metadata,
+  }: {
+    code: ErrorCode;
+    message: string;
+    severity: ErrorSeverity;
+    metadata?: Record<string, unknown>;
+  }) {
+    super(message);
+    this.name = "WebSocketError";
+    this.code = code;
+    this.severity = severity;
+    this.timestamp = Date.now();
+    this.metadata = metadata;
+  }
+}
+
+/**
+ * Creates a WebSocket error with context
+ */
+export function createWebSocketError(
+  code: ErrorCode,
+  message: string,
+  severity: ErrorSeverity,
+  metadata?: Record<string, unknown>
+): WebSocketError {
+  return new WebSocketError({
+    code,
+    message,
+    severity,
+    metadata,
+  });
+}
+
+/**
+ * Type-safe action implementations for XState v5
+ */
+export const actions = {
+  initConnection: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "CONNECT" }>;
+  }) => ({
+    url: event.url,
+    socket: null,
+    error: null,
+    retryCount: 0,
+    timing: {
+      ...context.timing,
+      connectStart: Date.now(),
+      connectEnd: null,
+    },
+  }),
+
+  onConnected: ({ context }: { context: WebSocketContext }) => ({
+    timing: {
+      ...context.timing,
+      connectEnd: Date.now(),
+      lastEventTime: Date.now(),
+    },
+    error: null,
+    retryCount: 0,
+    backoffDelay: 0,
+  }),
+
+  onError: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "ERROR" }>;
+  }) => {
+    const errorContext: NetworkErrorContext = {
+      url: context.url || undefined,
+      readyState: context.socket?.readyState,
+      currentState: context.status,
+      ...event.error,
+    };
+
+    const error = new ApplicationError(
+      event.error.message || "WebSocket error",
+      ErrorCode.WEBSOCKET_ERROR,
+      StatusCode.INTERNAL_SERVER_ERROR,
+      errorContext
+    );
+
+    return {
+      error,
+      metrics: {
+        ...context.metrics,
+        errors: [...context.metrics.errors, error],
+        eventHistory: [
+          ...context.metrics.eventHistory,
+          {
+            type: "ERROR",
+            timestamp: Date.now(),
+            metadata: { error: errorContext },
+          },
+        ],
+      },
+    };
+  },
+
+  cleanup: ({ context }: { context: WebSocketContext }) => {
+    if (context.socket?.readyState === WebSocket.OPEN) {
+      context.socket.close();
+    }
+
+    return {
+      socket: null,
+      error: null,
+      messageFlags: {
+        ...context.messageFlags,
+        isProcessing: false,
+        lastProcessedMessageId: null,
+      },
+    };
+  },
+
+  scheduleReconnect: ({ context }: { context: WebSocketContext }) => {
+    const retryCount = context.retryCount + 1;
+    const backoffDelay = calculateBackoff(
+      retryCount,
+      context.options.reconnectInterval
+    );
+
+    return {
+      retryCount,
+      backoffDelay,
+      metrics: {
+        ...context.metrics,
+        eventHistory: [
+          ...context.metrics.eventHistory,
+          {
+            type: "RETRY",
+            timestamp: Date.now(),
+            metadata: { attempt: retryCount, delay: backoffDelay },
+          },
+        ],
+      },
+    };
+  },
+
+  handleMessage: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "MESSAGE" }>;
+  }) => {
+    const messageId = crypto.randomUUID();
+    const timestamp = Date.now();
+
+    return {
+      messageFlags: {
+        ...context.messageFlags,
+        isProcessing: true,
+        lastProcessedMessageId: messageId,
+        processingHistory: [
+          ...context.messageFlags.processingHistory,
+          { messageId, startTime: timestamp, status: "success" as const },
+        ],
+      },
+      metrics: {
+        ...context.metrics,
+        messagesReceived: context.metrics.messagesReceived + 1,
+        bytesReceived: context.metrics.bytesReceived + (event.size || 0),
+        lastMessageTime: timestamp,
+        eventHistory: [
+          ...context.metrics.eventHistory,
+          { type: "MESSAGE", timestamp, metadata: { size: event.size } },
+        ],
+      },
+      timing: {
+        ...context.timing,
+        lastMessageTime: timestamp,
+        lastEventTime: timestamp,
+      },
+    };
+  },
+
+  handleClose: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "CLOSE" }>;
+  }) => {
+    const { errorCode, statusCode, recoverable } =
+      mapTransitionCloseCodeToError(event.code);
+
+    const error = new ApplicationError(
+      event.reason || `WebSocket closed with code ${event.code}`,
+      errorCode,
+      statusCode,
+      {
+        code: event.code,
+        reason: event.reason,
+        wasClean: event.wasClean,
+        url: context.url || undefined,
+        readyState: context.socket?.readyState,
+        currentState: context.status,
+      }
+    );
+
+    return {
+      socket: null,
+      error: recoverable ? error : null,
+      metrics: {
+        ...context.metrics,
+        errors: recoverable
+          ? [...context.metrics.errors, error]
+          : context.metrics.errors,
+        eventHistory: [
+          ...context.metrics.eventHistory,
+          {
+            type: "CLOSE",
+            timestamp: Date.now(),
+            metadata: {
+              code: event.code,
+              reason: event.reason,
+              wasClean: event.wasClean,
+              recoverable,
+            },
+          },
+        ],
+      },
+    };
+  },
+
+  onMaxRetries: ({ context }: { context: WebSocketContext }) => ({
+    error: new ApplicationError(
+      "Maximum retry attempts exceeded",
+      ErrorCode.WEBSOCKET_ERROR,
+      StatusCode.SERVICE_UNAVAILABLE,
+      { maxAttempts: context.options.maxReconnectAttempts }
+    ),
+    retryCount: 0,
+    backoffDelay: 0,
+  }),
+
+  logTransition: ({ context }: { context: WebSocketContext }) => ({
+    timing: {
+      ...context.timing,
+      lastEventTime: Date.now(),
+      stateHistory: [
+        ...context.timing.stateHistory,
+        { state: context.status, timestamp: Date.now() },
+      ],
+    },
+  }),
+} as const;
+
+```
+
 ### constants.ts
 
 ```typescript
@@ -11,7 +299,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-23
+ * @modified 2024-12-24
  */
 
 /**
@@ -25,6 +313,8 @@ export const STATES = {
   DISCONNECTING: "disconnecting",
   TERMINATED: "terminated",
 } as const;
+
+export type State = (typeof STATES)[keyof typeof STATES];
 
 /**
  * Core WebSocket events
@@ -42,6 +332,8 @@ export const EVENTS = {
   TERMINATE: "TERMINATE",
 } as const;
 
+export type EventType = (typeof EVENTS)[keyof typeof EVENTS];
+
 /**
  * Basic configuration defaults
  */
@@ -55,6 +347,8 @@ export const BASE_CONFIG = {
   maxStateHistory: 200,
 } as const;
 
+export type BaseConfig = typeof BASE_CONFIG;
+
 /**
  * WebSocket close codes
  */
@@ -66,8 +360,10 @@ export const CLOSE_CODES = {
   POLICY_VIOLATION: 1008,
   MESSAGE_TOO_BIG: 1009,
   INTERNAL_ERROR: 1011,
-  CONNECTION_FAILED: 1006, // Add abnormal closure code
+  CONNECTION_FAILED: 1006,
 } as const;
+
+export type CloseCode = (typeof CLOSE_CODES)[keyof typeof CLOSE_CODES];
 
 ```
 
@@ -77,12 +373,17 @@ export const CLOSE_CODES = {
 /**
  * @fileoverview Basic WebSocket error definitions
  * @module @qi/core/network/websocket/errors
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
  */
 
 /**
  * Basic error codes
  */
 export const ERROR_CODES = {
+  INVALID_URL: "INVALID_URL",
   CONNECTION_FAILED: "CONNECTION_FAILED",
   MESSAGE_FAILED: "MESSAGE_FAILED",
   TIMEOUT: "TIMEOUT",
@@ -93,28 +394,400 @@ export const ERROR_CODES = {
 export type ErrorCode = (typeof ERROR_CODES)[keyof typeof ERROR_CODES];
 
 /**
+ * Error severity levels
+ */
+export const ERROR_SEVERITY = {
+  LOW: "low",
+  MEDIUM: "medium",
+  HIGH: "high",
+  CRITICAL: "critical",
+} as const;
+
+export type ErrorSeverity =
+  (typeof ERROR_SEVERITY)[keyof typeof ERROR_SEVERITY];
+
+/**
  * Basic error context
  */
 export interface ErrorContext {
   readonly code: ErrorCode;
   readonly timestamp: number;
   readonly message: string;
+  readonly severity?: ErrorSeverity;
   readonly metadata?: Record<string, unknown>;
 }
 
 /**
- * WebSocket base error
+ * Error recovery options
  */
-export class WebSocketError extends Error {
-  constructor(
-    message: string,
-    public readonly code: ErrorCode,
-    public readonly context: ErrorContext
-  ) {
-    super(message);
-    this.name = "WebSocketError";
-  }
+export const ERROR_RECOVERY = {
+  RETRY: "retry",
+  RESET: "reset",
+  TERMINATE: "terminate",
+} as const;
+
+export type ErrorRecovery =
+  (typeof ERROR_RECOVERY)[keyof typeof ERROR_RECOVERY];
+
+```
+
+### guards.ts
+
+```typescript
+/**
+ * @fileoverview WebSocket state machine guards
+ * @module @qi/core/network/websocket/guards
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
+ */
+
+import { WebSocketContext, WebSocketEvent } from "./types.js";
+import { validateUrl } from "./utils.js";
+
+/**
+ * Type-safe guard implementations for XState v5
+ */
+export const guards = {
+  canConnect: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "CONNECT" }>;
+  }): boolean => {
+    return context.socket === null && validateUrl(event.url).isValid;
+  },
+
+  isSocketValid: ({ context }: { context: WebSocketContext }): boolean => {
+    return (
+      context.socket !== null && context.socket.readyState === WebSocket.OPEN
+    );
+  },
+
+  canRetry: ({ context }: { context: WebSocketContext }): boolean => {
+    return (
+      context.options.reconnect &&
+      context.retryCount < context.options.maxReconnectAttempts
+    );
+  },
+
+  hasValidUrl: ({
+    context,
+    event,
+  }: {
+    context: WebSocketContext;
+    event: Extract<WebSocketEvent, { type: "CONNECT" | "RETRY" }>;
+  }): boolean => {
+    if (event.type === "CONNECT") {
+      return validateUrl(event.url).isValid;
+    }
+    return context.url !== null && validateUrl(context.url).isValid;
+  },
+
+  isRateLimited: ({ context }: { context: WebSocketContext }): boolean => {
+    const { rateLimit } = context;
+    const now = Date.now();
+
+    // Reset rate limit window if needed
+    if (now - rateLimit.lastReset >= rateLimit.window) {
+      return false;
+    }
+
+    return rateLimit.count >= rateLimit.maxBurst;
+  },
+} as const;
+
+```
+
+### services.ts
+
+```typescript
+/**
+ * @fileoverview WebSocket state machine services for XState v5
+ * @module @qi/core/network/websocket/services
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-24
+ * @modified 2024-12-24
+ */
+
+import { AnyActorRef } from "xstate";
+import { WebSocketContext, WebSocketEvent } from "./types.js";
+import { ApplicationError, ErrorCode, StatusCode } from "@qi/core/errors";
+import { validateUrl } from "./utils.js";
+import { mapTransitionCloseCodeToError } from "./transitions.js";
+
+function isValidMessageData(
+  data: unknown
+): data is string | ArrayBufferLike | Blob | ArrayBufferView {
+  return (
+    typeof data === "string" ||
+    data instanceof ArrayBuffer ||
+    data instanceof Blob ||
+    ArrayBuffer.isView(data)
+  );
 }
+
+/**
+ * Type-safe service implementations for XState v5
+ */
+export const services = {
+  /**
+   * Main WebSocket service implementation
+   */
+  webSocket: ({ context }: { context: WebSocketContext }) => ({
+    init: ({ self }: { self: AnyActorRef }) => {
+      let socket: WebSocket | null = null;
+      let heartbeatInterval: NodeJS.Timeout | null = null;
+
+      // Cleanup function to handle resource disposal
+      const cleanup = () => {
+        if (heartbeatInterval) {
+          clearInterval(heartbeatInterval);
+          heartbeatInterval = null;
+        }
+        if (socket) {
+          try {
+            socket.close();
+          } catch (error) {
+            console.error("Error closing socket:", error);
+          }
+          socket = null;
+        }
+      };
+
+      // Validate URL before attempting connection
+      const urlValidation = validateUrl(context.url || "");
+      if (!urlValidation.isValid) {
+        self.send({
+          type: "ERROR",
+          error: new ApplicationError(
+            urlValidation.reason || "Invalid WebSocket URL",
+            ErrorCode.WEBSOCKET_INVALID_URL,
+            StatusCode.BAD_REQUEST,
+            { url: context.url }
+          ),
+          timestamp: Date.now(),
+        });
+        return cleanup;
+      }
+
+      // Initialize WebSocket connection
+      try {
+        socket = new WebSocket(
+          context.url!,
+          context.options.protocols
+            ? Array.from(context.options.protocols)
+            : undefined
+        );
+
+        // Configure connection timeout
+        const connectionTimeout = setTimeout(() => {
+          if (socket?.readyState !== WebSocket.OPEN) {
+            self.send({
+              type: "ERROR",
+              error: new ApplicationError(
+                "Connection timeout",
+                ErrorCode.WEBSOCKET_TIMEOUT,
+                StatusCode.GATEWAY_TIMEOUT,
+                { url: context.url }
+              ),
+              timestamp: Date.now(),
+            });
+            cleanup();
+          }
+        }, context.options.connectionTimeout || 10000);
+
+        // WebSocket event handlers
+        socket.onopen = () => {
+          clearTimeout(connectionTimeout);
+          self.send({ type: "OPEN", timestamp: Date.now() });
+
+          // Setup heartbeat if configured
+          if (context.options.heartbeatInterval) {
+            heartbeatInterval = setInterval(() => {
+              if (socket?.readyState === WebSocket.OPEN) {
+                socket.send("ping");
+              }
+            }, context.options.heartbeatInterval);
+          }
+        };
+
+        socket.onmessage = (event) => {
+          // Skip processing of heartbeat messages
+          if (event.data === "ping" || event.data === "pong") {
+            return;
+          }
+
+          self.send({
+            type: "MESSAGE",
+            data: event.data,
+            size: event.data.length,
+            timestamp: Date.now(),
+          });
+        };
+
+        socket.onerror = (error) => {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "WebSocket error occurred",
+              ErrorCode.WEBSOCKET_ERROR,
+              StatusCode.INTERNAL_SERVER_ERROR,
+              {
+                error: error instanceof Error ? error.message : "Unknown error",
+                url: context.url,
+                readyState: socket?.readyState,
+              }
+            ),
+            timestamp: Date.now(),
+          });
+        };
+
+        socket.onclose = (event) => {
+          const { errorCode, statusCode, recoverable } =
+            mapTransitionCloseCodeToError(event.code);
+
+          self.send({
+            type: "CLOSE",
+            code: event.code,
+            reason: event.reason || "",
+            wasClean: event.wasClean,
+            timestamp: Date.now(),
+          });
+
+          if (!event.wasClean) {
+            self.send({
+              type: "ERROR",
+              error: new ApplicationError(
+                event.reason || `Connection closed with code ${event.code}`,
+                errorCode,
+                statusCode,
+                {
+                  code: event.code,
+                  wasClean: event.wasClean,
+                  recoverable,
+                  url: context.url,
+                }
+              ),
+              timestamp: Date.now(),
+            });
+          }
+
+          cleanup();
+        };
+      } catch (error) {
+        self.send({
+          type: "ERROR",
+          error: new ApplicationError(
+            error instanceof Error
+              ? error.message
+              : "Failed to initialize WebSocket",
+            ErrorCode.WEBSOCKET_ERROR,
+            StatusCode.INTERNAL_SERVER_ERROR,
+            { error, url: context.url }
+          ),
+          timestamp: Date.now(),
+        });
+        cleanup();
+      }
+
+      // Return cleanup function
+      return cleanup;
+    },
+
+    /**
+     * Handle machine events
+     */
+    update: ({ event }: { event: WebSocketEvent }) => {
+      if (
+        event.type === "SEND" &&
+        context.socket?.readyState === WebSocket.OPEN
+      ) {
+        if (!isValidMessageData(event.data)) {
+          return {
+            type: "ERROR",
+            error: new ApplicationError(
+              "Invalid message data type",
+              ErrorCode.WEBSOCKET_INVALID_DATA,
+              StatusCode.UNPROCESSABLE_ENTITY,
+              { dataType: typeof event.data }
+            ),
+            timestamp: Date.now(),
+          };
+        }
+
+        try {
+          context.socket.send(event.data);
+        } catch (error) {
+          return {
+            type: "ERROR",
+            error: new ApplicationError(
+              "Failed to send message",
+              ErrorCode.WEBSOCKET_SEND_FAILED,
+              StatusCode.INTERNAL_SERVER_ERROR,
+              { error, data: event.data }
+            ),
+            timestamp: Date.now(),
+          };
+        }
+      }
+    },
+  }),
+
+  /**
+   * Health check service implementation
+   */
+  healthCheck: ({ context }: { context: WebSocketContext }) => ({
+    init: ({ self }: { self: AnyActorRef }) => {
+      const checkHealth = () => {
+        if (!context.socket || context.socket.readyState !== WebSocket.OPEN) {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "Health check failed - socket not connected",
+              ErrorCode.WEBSOCKET_NOT_CONNECTED,
+              StatusCode.SERVICE_UNAVAILABLE,
+              { readyState: context.socket?.readyState }
+            ),
+            timestamp: Date.now(),
+          });
+          return;
+        }
+
+        try {
+          context.socket.send("ping");
+          self.send({ type: "HEALTH_OK", timestamp: Date.now() });
+        } catch (error) {
+          self.send({
+            type: "ERROR",
+            error: new ApplicationError(
+              "Health check failed",
+              ErrorCode.WEBSOCKET_ERROR,
+              StatusCode.SERVICE_UNAVAILABLE,
+              { error }
+            ),
+            timestamp: Date.now(),
+          });
+        }
+      };
+
+      // Initial check
+      checkHealth();
+
+      // Setup interval if configured
+      const interval = context.options.healthCheckInterval;
+      if (interval) {
+        const timer = setInterval(checkHealth, interval);
+        return () => clearInterval(timer);
+      }
+
+      return () => {};
+    },
+  }),
+} as const;
 
 ```
 
@@ -122,14 +795,19 @@ export class WebSocketError extends Error {
 
 ```typescript
 /**
- * @fileoverview Enhanced WebSocket state definitions
+ * @fileoverview WebSocket state type definitions
  * @module @qi/core/network/websocket/states
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
  */
 
-import { WebSocketContext, State, WebSocketEvent } from "./types.js";
+import { State, EventType } from "./constants.js";
+import { WebSocketContext } from "./types.js";
 
 /**
- * Enhanced state metadata
+ * State metadata
  */
 export interface StateMetadata {
   readonly description: string;
@@ -140,251 +818,58 @@ export interface StateMetadata {
 }
 
 /**
- * Enhanced state definition
+ * State invariant
+ */
+export interface StateInvariant {
+  readonly check: (context: WebSocketContext) => boolean;
+  readonly description: string;
+}
+
+/**
+ * State definition
  */
 export interface StateDefinition {
   readonly name: State;
-  readonly allowedEvents: ReadonlySet<WebSocketEvent["type"]>;
-  readonly invariants: ReadonlyArray<{
-    readonly check: (context: WebSocketContext) => boolean;
-    readonly description: string;
-  }>;
+  readonly allowedEvents: ReadonlySet<EventType>;
+  readonly invariants: ReadonlyArray<StateInvariant>;
   readonly metadata: StateMetadata;
-  readonly onEnter?: (context: WebSocketContext) => WebSocketContext;
-  readonly onExit?: (context: WebSocketContext) => WebSocketContext;
 }
 
 /**
- * Enhanced state definitions with metadata and multiple invariants
+ * State validation result
  */
-export const states: Record<State, StateDefinition> = {
-  disconnected: {
-    name: "disconnected",
-    allowedEvents: new Set(["CONNECT"]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket === null,
-        description: "Socket must be null in disconnected state",
-      },
-      {
-        check: (ctx) => ctx.messageFlags.isProcessing === false,
-        description: "No message processing should be active",
-      },
-      {
-        check: (ctx) => ctx.retryCount === 0,
-        description: "Retry count should be reset",
-      },
-    ],
-    metadata: {
-      description: "WebSocket is disconnected and ready for new connection",
-      tags: ["idle", "ready", "stable"],
-      retryable: true,
-    },
-  },
-  connecting: {
-    name: "connecting",
-    allowedEvents: new Set(["OPEN", "ERROR", "CLOSE"]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket !== null,
-        description: "Socket must be non-null while connecting",
-      },
-      {
-        check: (ctx) => ctx.url !== null,
-        description: "URL must be set while connecting",
-      },
-      {
-        check: (ctx) => ctx.retryCount <= ctx.options.maxReconnectAttempts,
-        description: "Must not exceed max retry attempts",
-      },
-    ],
-    metadata: {
-      description: "WebSocket is attempting to establish connection",
-      tags: ["transitional", "active"],
-      timeoutMs: 30000,
-      retryable: true,
-    },
-  },
-  connected: {
-    name: "connected",
-    allowedEvents: new Set(["DISCONNECT", "MESSAGE", "SEND", "ERROR", "CLOSE"]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket !== null,
-        description: "Socket must be non-null while connected",
-      },
-      {
-        check: (ctx) => ctx.url !== null,
-        description: "URL must be set while connected",
-      },
-      {
-        check: (ctx) => ctx.timing.connectEnd !== null,
-        description: "Connection end time must be set",
-      },
-      {
-        check: (ctx) => ctx.error === null,
-        description: "No errors should be present in connected state",
-      },
-    ],
-    metadata: {
-      description: "WebSocket connection is established and active",
-      tags: ["stable", "active", "ready"],
-      retryable: true,
-    },
-  },
-  reconnecting: {
-    name: "reconnecting",
-    allowedEvents: new Set(["RETRY", "MAX_RETRIES"]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket === null,
-        description: "Socket must be null while reconnecting",
-      },
-      {
-        check: (ctx) => ctx.url !== null,
-        description: "URL must be present for reconnection",
-      },
-      {
-        check: (ctx) => ctx.retryCount <= ctx.options.maxReconnectAttempts,
-        description: "Must not exceed max retry attempts",
-      },
-      {
-        check: (ctx) => ctx.backoffDelay > 0,
-        description: "Must have positive backoff delay",
-      },
-    ],
-    metadata: {
-      description: "WebSocket is attempting to reconnect after failure",
-      tags: ["transitional", "recovery"],
-      timeoutMs: 5000,
-      retryable: true,
-    },
-  },
-  disconnecting: {
-    name: "disconnecting",
-    allowedEvents: new Set(["CLOSE"]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket !== null,
-        description: "Socket must be non-null while disconnecting",
-      },
-      {
-        check: (ctx) => !ctx.messageFlags.isProcessing,
-        description: "No message processing should be active",
-      },
-    ],
-    metadata: {
-      description: "WebSocket is in the process of disconnecting",
-      tags: ["transitional", "cleanup"],
-      timeoutMs: 5000,
-      retryable: false,
-    },
-  },
-  terminated: {
-    name: "terminated",
-    allowedEvents: new Set([]),
-    invariants: [
-      {
-        check: (ctx) => ctx.socket === null,
-        description: "Socket must be null in terminated state",
-      },
-      {
-        check: (ctx) => !ctx.messageFlags.isProcessing,
-        description: "No message processing should be active",
-      },
-      {
-        check: (ctx) => ctx.messageFlags.processingHistory.length === 0,
-        description: "Processing history should be clear",
-      },
-    ],
-    metadata: {
-      description: "WebSocket connection is permanently terminated",
-      tags: ["final", "terminal"],
-      retryable: false,
-    },
-  },
-};
-
-/**
- * Enhanced state validation
- */
-export function validateState(
-  state: State,
-  context: WebSocketContext
-): { isValid: boolean; failures: string[] } {
-  const stateDefinition = states[state];
-  const failures: string[] = [];
-
-  stateDefinition.invariants.forEach((invariant) => {
-    if (!invariant.check(context)) {
-      failures.push(invariant.description);
-    }
-  });
-
-  return {
-    isValid: failures.length === 0,
-    failures,
-  };
+export interface StateValidationResult {
+  readonly isValid: boolean;
+  readonly failures: ReadonlyArray<string>;
 }
 
 /**
- * Event validation with detailed feedback
+ * State transition definition
  */
-export function validateEvent(
-  state: State,
-  event: WebSocketEvent,
-  context: WebSocketContext
-): { isValid: boolean; reason?: string } {
-  const stateDefinition = states[state];
-
-  // Check if event is allowed in current state
-  if (!stateDefinition.allowedEvents.has(event.type)) {
-    return {
-      isValid: false,
-      reason: `Event ${event.type} is not allowed in state ${state}`,
-    };
-  }
-
-  // Check rate limiting for message events
-  if (event.type === "MESSAGE" || event.type === "SEND") {
-    const isRateLimited = context.rateLimit.count >= context.rateLimit.maxBurst;
-    if (isRateLimited) {
-      return {
-        isValid: false,
-        reason: "Rate limit exceeded",
-      };
-    }
-  }
-
-  return { isValid: true };
+export interface StateTransition {
+  readonly from: State;
+  readonly to: State;
+  readonly event: EventType;
+  readonly metadata?: Record<string, unknown>;
 }
 
 /**
- * Get state metadata
+ * State transition validation result
  */
-export function getStateMetadata(state: State): StateMetadata {
-  return states[state].metadata;
+export interface TransitionValidationResult {
+  readonly isValid: boolean;
+  readonly reason?: string;
 }
 
 /**
- * Check if state is retriable
+ * State history entry
  */
-export function isStateRetriable(state: State): boolean {
-  return states[state].metadata.retryable;
-}
-
-/**
- * Check if state has timeout
- */
-export function getStateTimeout(state: State): number | undefined {
-  return states[state].metadata.timeoutMs;
-}
-
-/**
- * Get state tags
- */
-export function getStateTags(state: State): ReadonlyArray<string> {
-  return states[state].metadata.tags;
+export interface StateHistoryEntry {
+  readonly state: State;
+  readonly enteredAt: number;
+  readonly exitedAt?: number;
+  readonly duration?: number;
+  readonly transitions: ReadonlyArray<StateTransition>;
 }
 
 ```
@@ -393,54 +878,24 @@ export function getStateTags(state: State): ReadonlyArray<string> {
 
 ```typescript
 /**
- * @fileoverview Enhanced state transitions and validations
+ * @fileoverview WebSocket state transition definitions and validation
  * @module @qi/core/network/websocket/transitions
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-22
+ * @modified 2024-12-24
  */
 
-import { State, WebSocketContext, WebSocketEvent } from "./types.js";
-import { CLOSE_CODES } from "./constants.js";
-import { ErrorCode, ERROR_CODES, ErrorContext } from "./errors.js";
-import { validateState } from "./states.js";
-
-// Enhanced transition types
-type EventType = WebSocketEvent["type"];
-type TransitionConfig = Partial<Record<EventType, State>>;
-type TransitionMap = Record<State, TransitionConfig>;
+import { State, EventType, CLOSE_CODES } from "./constants.js";
+import { ErrorCode, StatusCode } from "@qi/core/errors";
+import { WebSocketContext, WebSocketEvent, ValidationResult } from "./types.js";
 
 /**
- * Enhanced transition metadata
+ * Core state transition map
  */
-export interface TransitionMetadata {
-  readonly description: string;
-  readonly guards: ReadonlyArray<string>;
-  readonly actions: ReadonlyArray<string>;
-  readonly timeout?: number;
-  readonly retryable: boolean;
-  readonly clearErrors: boolean;
-}
-
-export type TransitionMetaMap = Record<
-  State,
-  Partial<Record<EventType, TransitionMetadata>>
->;
-
-/**
- * Enhanced transition history entry
- */
-export interface TransitionHistoryEntry {
-  readonly from: State;
-  readonly to: State;
-  readonly event: EventType;
-  readonly timestamp: number;
-  readonly duration?: number;
-  readonly success: boolean;
-  readonly error?: ErrorContext;
-}
-
-/**
- * Core transition map
- */
-export const transitions: TransitionMap = {
+export const transitions: Readonly<
+  Record<State, Partial<Record<EventType, State>>>
+> = {
   disconnected: {
     CONNECT: "connecting",
     TERMINATE: "terminated",
@@ -470,9 +925,23 @@ export const transitions: TransitionMap = {
 } as const;
 
 /**
- * Enhanced transition metadata
+ * Transition metadata type
  */
-export const transitionMeta: TransitionMetaMap = {
+export interface TransitionMetadata {
+  readonly description: string;
+  readonly guards: ReadonlyArray<string>;
+  readonly actions: ReadonlyArray<string>;
+  readonly timeout?: number;
+  readonly retryable: boolean;
+  readonly clearErrors: boolean;
+}
+
+/**
+ * Transition metadata map
+ */
+export const transitionMeta: Readonly<
+  Record<State, Partial<Record<EventType, TransitionMetadata>>>
+> = {
   disconnected: {
     CONNECT: {
       description: "Initiate connection",
@@ -512,6 +981,13 @@ export const transitionMeta: TransitionMetaMap = {
       retryable: true,
       clearErrors: true,
     },
+    TERMINATE: {
+      description: "Force termination during connect",
+      guards: [],
+      actions: ["cleanup", "logTransition"],
+      retryable: false,
+      clearErrors: true,
+    },
   },
   connected: {
     DISCONNECT: {
@@ -536,6 +1012,13 @@ export const transitionMeta: TransitionMetaMap = {
       retryable: true,
       clearErrors: true,
     },
+    TERMINATE: {
+      description: "Force termination while connected",
+      guards: [],
+      actions: ["cleanup", "logTransition"],
+      retryable: false,
+      clearErrors: true,
+    },
   },
   reconnecting: {
     RETRY: {
@@ -553,10 +1036,24 @@ export const transitionMeta: TransitionMetaMap = {
       retryable: false,
       clearErrors: false,
     },
+    TERMINATE: {
+      description: "Force termination during reconnect",
+      guards: [],
+      actions: ["cleanup", "logTransition"],
+      retryable: false,
+      clearErrors: true,
+    },
   },
   disconnecting: {
     CLOSE: {
       description: "Cleanup connection",
+      guards: [],
+      actions: ["cleanup", "logTransition"],
+      retryable: false,
+      clearErrors: true,
+    },
+    TERMINATE: {
+      description: "Force termination during disconnect",
       guards: [],
       actions: ["cleanup", "logTransition"],
       retryable: false,
@@ -567,15 +1064,15 @@ export const transitionMeta: TransitionMetaMap = {
 } as const;
 
 /**
- * Enhanced transition validation
+ * Validate state transition
  */
 export function validateTransition(
   from: State,
   event: WebSocketEvent,
   to: State,
   context: WebSocketContext
-): { isValid: boolean; reason?: string } {
-  // Check basic transition existence
+): ValidationResult {
+  // Check if transition exists
   const allowedState = transitions[from]?.[event.type];
   if (!allowedState || allowedState !== to) {
     return {
@@ -584,29 +1081,7 @@ export function validateTransition(
     };
   }
 
-  // Check state invariants
-  const stateValidation = validateState(to, context);
-  if (!stateValidation.isValid) {
-    return {
-      isValid: false,
-      reason: `State invariants failed: ${stateValidation.failures.join(", ")}`,
-    };
-  }
-
-  // Check transition metadata guards
-  const meta = transitionMeta[from]?.[event.type];
-  if (meta?.guards.length) {
-    // Note: Actual guard checking would be done in Layer 4
-    // Here we just validate the structure
-    if (!meta.guards.every((guard) => typeof guard === "string")) {
-      return {
-        isValid: false,
-        reason: "Invalid guard configuration",
-      };
-    }
-  }
-
-  // Check special conditions based on event type
+  // Special conditions based on event type
   switch (event.type) {
     case "RETRY":
       if (context.retryCount >= context.options.maxReconnectAttempts) {
@@ -624,63 +1099,69 @@ export function validateTransition(
         };
       }
       break;
-    case "CLOSE":
-      if (context.socket === null) {
-        return {
-          isValid: false,
-          reason: "No socket to close",
-        };
-      }
-      break;
   }
 
   return { isValid: true };
 }
 
 /**
- * Map close codes to error codes with enhanced validation
+ * Maps WebSocket close codes to error codes and status codes
  */
-export function mapCloseCodeToError(code: number): {
+export function mapTransitionCloseCodeToError(code: number): {
   errorCode: ErrorCode;
+  statusCode: StatusCode;
   recoverable: boolean;
 } {
   const closeCodeMap: Record<
     number,
-    { errorCode: ErrorCode; recoverable: boolean }
+    { errorCode: ErrorCode; statusCode: StatusCode; recoverable: boolean }
   > = {
+    [CLOSE_CODES.NORMAL_CLOSURE]: {
+      errorCode: ErrorCode.WEBSOCKET_CLOSED,
+      statusCode: StatusCode.OK,
+      recoverable: false,
+    },
     [CLOSE_CODES.GOING_AWAY]: {
-      errorCode: ERROR_CODES.CONNECTION_FAILED,
-      recoverable: true,
-    },
-    [CLOSE_CODES.CONNECTION_FAILED]: {
-      errorCode: ERROR_CODES.CONNECTION_FAILED,
-      recoverable: true,
-    },
-    [CLOSE_CODES.MESSAGE_TOO_BIG]: {
-      errorCode: ERROR_CODES.MESSAGE_FAILED,
+      errorCode: ErrorCode.WEBSOCKET_DISCONNECT,
+      statusCode: StatusCode.SERVICE_UNAVAILABLE,
       recoverable: true,
     },
     [CLOSE_CODES.PROTOCOL_ERROR]: {
-      errorCode: ERROR_CODES.PROTOCOL_ERROR,
+      errorCode: ErrorCode.WEBSOCKET_PROTOCOL,
+      statusCode: StatusCode.BAD_REQUEST,
       recoverable: false,
     },
     [CLOSE_CODES.INVALID_DATA]: {
-      errorCode: ERROR_CODES.PROTOCOL_ERROR,
+      errorCode: ErrorCode.WEBSOCKET_INVALID_DATA,
+      statusCode: StatusCode.UNPROCESSABLE_ENTITY,
       recoverable: false,
     },
     [CLOSE_CODES.POLICY_VIOLATION]: {
-      errorCode: ERROR_CODES.PROTOCOL_ERROR,
+      errorCode: ErrorCode.WEBSOCKET_POLICY,
+      statusCode: StatusCode.FORBIDDEN,
       recoverable: false,
     },
+    [CLOSE_CODES.MESSAGE_TOO_BIG]: {
+      errorCode: ErrorCode.WEBSOCKET_MESSAGE_SIZE,
+      statusCode: StatusCode.BAD_REQUEST,
+      recoverable: true,
+    },
     [CLOSE_CODES.INTERNAL_ERROR]: {
-      errorCode: ERROR_CODES.INVALID_STATE,
+      errorCode: ErrorCode.WEBSOCKET_INTERNAL,
+      statusCode: StatusCode.INTERNAL_SERVER_ERROR,
+      recoverable: true,
+    },
+    [CLOSE_CODES.CONNECTION_FAILED]: {
+      errorCode: ErrorCode.WEBSOCKET_ABNORMAL,
+      statusCode: StatusCode.BAD_GATEWAY,
       recoverable: true,
     },
   };
 
   return (
     closeCodeMap[code] ?? {
-      errorCode: ERROR_CODES.INVALID_STATE,
+      errorCode: ErrorCode.WEBSOCKET_ERROR,
+      statusCode: StatusCode.INTERNAL_SERVER_ERROR,
       recoverable: true,
     }
   );
@@ -690,9 +1171,9 @@ export function mapCloseCodeToError(code: number): {
  * Get available transitions for a state
  */
 export function getAvailableTransitions(state: State): ReadonlyArray<{
-  event: EventType;
-  targetState: State;
-  metadata: TransitionMetadata;
+  readonly event: EventType;
+  readonly targetState: State;
+  readonly metadata: TransitionMetadata;
 }> {
   const stateTransitions = transitions[state];
   return Object.entries(stateTransitions).map(([event, targetState]) => ({
@@ -700,43 +1181,6 @@ export function getAvailableTransitions(state: State): ReadonlyArray<{
     targetState,
     metadata: transitionMeta[state][event as EventType]!,
   }));
-}
-
-/**
- * Check if transition is retryable
- */
-export function isTransitionRetryable(from: State, event: EventType): boolean {
-  return transitionMeta[from]?.[event]?.retryable ?? false;
-}
-
-/**
- * Get transition timeout
- */
-export function getTransitionTimeout(
-  from: State,
-  event: EventType
-): number | undefined {
-  return transitionMeta[from]?.[event]?.timeout;
-}
-
-/**
- * Get required guards for transition
- */
-export function getTransitionGuards(
-  from: State,
-  event: EventType
-): ReadonlyArray<string> {
-  return transitionMeta[from]?.[event]?.guards ?? [];
-}
-
-/**
- * Get required actions for transition
- */
-export function getTransitionActions(
-  from: State,
-  event: EventType
-): ReadonlyArray<string> {
-  return transitionMeta[from]?.[event]?.actions ?? [];
 }
 
 ```
@@ -747,15 +1191,14 @@ export function getTransitionActions(
 /**
  * @fileoverview Core WebSocket types with enhanced state tracking
  * @module @qi/core/network/websocket/types
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
  */
 
-import { STATES } from "./constants.js";
+import { State, EventType, BaseConfig, CloseCode } from "./constants.js";
 import { ErrorContext } from "./errors.js";
-
-/**
- * Core state type
- */
-export type State = (typeof STATES)[keyof typeof STATES];
 
 /**
  * Base event with timing
@@ -766,15 +1209,15 @@ export interface BaseEvent {
 }
 
 /**
- * Enhanced WebSocket events
+ * WebSocket events
  */
 export type WebSocketEvent =
   | ({ type: "CONNECT"; url: string } & BaseEvent)
-  | ({ type: "DISCONNECT"; code?: number; reason?: string } & BaseEvent)
+  | ({ type: "DISCONNECT"; code?: CloseCode; reason?: string } & BaseEvent)
   | ({ type: "OPEN" } & BaseEvent)
   | ({
       type: "CLOSE";
-      code: number;
+      code: CloseCode;
       reason: string;
       wasClean: boolean;
     } & BaseEvent)
@@ -783,10 +1226,10 @@ export type WebSocketEvent =
   | ({ type: "SEND"; data: unknown; size?: number } & BaseEvent)
   | ({ type: "RETRY"; attempt: number; delay: number } & BaseEvent)
   | ({ type: "MAX_RETRIES"; attempts: number } & BaseEvent)
-  | ({ type: "TERMINATE"; code?: number; reason?: string } & BaseEvent);
+  | ({ type: "TERMINATE"; code?: CloseCode; reason?: string } & BaseEvent);
 
 /**
- * Enhanced timing metrics
+ * Timing metrics
  */
 export interface Timing {
   readonly connectStart: number | null;
@@ -801,7 +1244,7 @@ export interface Timing {
 }
 
 /**
- * Enhanced rate limiting
+ * Rate limiting configuration
  */
 export interface RateLimit {
   readonly count: number;
@@ -815,7 +1258,7 @@ export interface RateLimit {
 }
 
 /**
- * Enhanced metrics
+ * Connection metrics
  */
 export interface Metrics {
   readonly messagesSent: number;
@@ -825,27 +1268,25 @@ export interface Metrics {
   readonly bytesReceived: number;
   readonly latency: ReadonlyArray<number>;
   readonly eventHistory: ReadonlyArray<{
-    readonly type: WebSocketEvent["type"];
+    readonly type: EventType;
     readonly timestamp: number;
     readonly metadata?: Record<string, unknown>;
   }>;
 }
 
 /**
- * Enhanced options
+ * WebSocket configuration options
  */
-export interface Options {
-  readonly reconnect: boolean;
-  readonly maxReconnectAttempts: number;
-  readonly reconnectInterval: number;
-  readonly messageQueueSize: number;
-  readonly maxLatencyHistory: number;
-  readonly maxEventHistory: number;
-  readonly maxStateHistory: number;
+export interface Options extends BaseConfig {
+  readonly protocols?: ReadonlyArray<string>;
+  readonly headers?: ReadonlyMap<string, string>;
+  readonly connectionTimeout?: number;
+  readonly heartbeatInterval?: number;
+  readonly healthCheckInterval?: number;
 }
 
 /**
- * Enhanced message processing flags
+ * Message processing state
  */
 export interface MessageProcessingFlags {
   readonly isProcessing: boolean;
@@ -859,7 +1300,7 @@ export interface MessageProcessingFlags {
 }
 
 /**
- * Enhanced queue state
+ * Message queue state
  */
 export interface QueueState {
   readonly messages: ReadonlyArray<string>;
@@ -868,7 +1309,7 @@ export interface QueueState {
 }
 
 /**
- * Enhanced WebSocket context
+ * WebSocket context
  */
 export interface WebSocketContext {
   readonly url: string | null;
@@ -883,42 +1324,47 @@ export interface WebSocketContext {
   readonly queue: QueueState;
   readonly reconnectAttempts: number;
   readonly backoffDelay: number;
-  readonly retryCount: number; // Added property
+  readonly retryCount: number;
 }
 
 /**
- * Enhanced machine types for XState v5
+ * Validation result types
  */
-export interface WebSocketMachineTypes {
-  context: WebSocketContext;
-  events: WebSocketEvent;
-  guards: {
-    canConnect: (context: WebSocketContext) => boolean;
-    canRetry: (context: WebSocketContext) => boolean;
-    isRateLimited: (context: WebSocketContext) => boolean;
-    hasValidUrl: (context: WebSocketContext) => boolean;
-  };
-  actions: {
-    initConnection: (context: WebSocketContext) => WebSocketContext;
-    cleanupConnection: (context: WebSocketContext) => WebSocketContext;
-    updateMetrics: (
-      context: WebSocketContext,
-      event: WebSocketEvent
-    ) => WebSocketContext;
-    handleError: (
-      context: WebSocketContext,
-      event: Extract<WebSocketEvent, { type: "ERROR" }>
-    ) => WebSocketContext;
-  };
-  actors: {
-    webSocketActor: {
-      data: WebSocketContext;
-    };
-  };
+export interface ValidationResult {
+  readonly isValid: boolean;
+  readonly reason?: string;
 }
 
+export interface StateValidationResult extends ValidationResult {
+  readonly failures: ReadonlyArray<string>;
+}
+
+export type TransitionValidationResult = ValidationResult;
+
+```
+
+### utils.ts
+
+```typescript
 /**
- * Type guards
+ * @fileoverview Pure utility functions for WebSocket operations
+ * @module @qi/core/network/websocket/utils
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-24
+ */
+
+import {
+  WebSocketEvent,
+  WebSocketContext,
+  StateValidationResult,
+  TransitionValidationResult,
+} from "./types.js";
+import { StateDefinition } from "./states.js";
+
+/**
+ * Type guard for WebSocket events
  */
 export function isWebSocketEvent(value: unknown): value is WebSocketEvent {
   if (
@@ -933,47 +1379,14 @@ export function isWebSocketEvent(value: unknown): value is WebSocketEvent {
   return typeof event.type === "string" && typeof event.timestamp === "number";
 }
 
-```
-
-### utils.ts
-
-```typescript
 /**
- * @fileoverview Enhanced pure utility functions
- * @module @qi/core/network/websocket/utils
+ * Validate event payload structure
  */
-
-import {
-  WebSocketContext,
-  Options,
-  WebSocketEvent,
-  Metrics,
-  RateLimit,
-  Timing,
-  MessageProcessingFlags,
-  QueueState,
-} from "./types.js";
-import { ErrorCode, ErrorContext } from "./errors.js";
-import { validateState } from "./states.js";
-import { validateTransition } from "./transitions.js";
-
-/**
- * Enhanced event validation with metadata
- */
-export function validateEventPayload(event: WebSocketEvent): {
-  isValid: boolean;
-  reason?: string;
-} {
+export function validateEventPayload(
+  event: WebSocketEvent
+): TransitionValidationResult {
   if (!event || typeof event !== "object") {
     return { isValid: false, reason: "Event must be an object" };
-  }
-
-  if (!("type" in event)) {
-    return { isValid: false, reason: "Event must have a type" };
-  }
-
-  if (!("timestamp" in event)) {
-    return { isValid: false, reason: "Event must have a timestamp" };
   }
 
   // Type-specific validations
@@ -1011,276 +1424,22 @@ export function validateEventPayload(event: WebSocketEvent): {
 }
 
 /**
- * Enhanced URL validation
+ * Validate WebSocket URL
  */
-export function validateUrl(url: string): {
-  isValid: boolean;
-  reason?: string;
-} {
+export function validateUrl(url: string): TransitionValidationResult {
   try {
     const parsed = new URL(url);
     if (parsed.protocol !== "ws:" && parsed.protocol !== "wss:") {
-      return {
-        isValid: false,
-        reason: "URL must use ws: or wss: protocol",
-      };
+      return { isValid: false, reason: "URL must use ws: or wss: protocol" };
     }
     return { isValid: true };
   } catch {
-    return {
-      isValid: false,
-      reason: "Invalid URL format",
-    };
+    return { isValid: false, reason: "Invalid URL format" };
   }
 }
 
 /**
- * Create initial metrics
- */
-function createInitialMetrics(): Metrics {
-  return {
-    messagesSent: 0,
-    messagesReceived: 0,
-    errors: [],
-    bytesSent: 0,
-    bytesReceived: 0,
-    latency: [],
-    eventHistory: [],
-  };
-}
-
-/**
- * Create initial timing metrics
- */
-function createInitialTiming(): Timing {
-  return {
-    connectStart: null,
-    connectEnd: null,
-    lastMessageTime: null,
-    lastEventTime: null,
-    stateHistory: [],
-  };
-}
-
-/**
- * Create initial rate limit
- */
-function createInitialRateLimit(): RateLimit {
-  return {
-    count: 0,
-    window: 60000, // 1 minute default
-    lastReset: Date.now(),
-    maxBurst: 100,
-    history: [],
-  };
-}
-
-/**
- * Create initial message flags
- */
-function createInitialMessageFlags(): MessageProcessingFlags {
-  return {
-    isProcessing: false,
-    lastProcessedMessageId: null,
-    processingHistory: [],
-  };
-}
-
-/**
- * Create initial queue state
- */
-function createInitialQueue(): QueueState {
-  return {
-    messages: [],
-    pending: false,
-    droppedMessages: 0,
-  };
-}
-
-/**
- * Enhanced context creation
- */
-export function createContext(options: Options): WebSocketContext {
-  return {
-    url: null,
-    status: "disconnected",
-    socket: null,
-    error: null,
-    options,
-    metrics: createInitialMetrics(),
-    timing: createInitialTiming(),
-    rateLimit: createInitialRateLimit(),
-    messageFlags: createInitialMessageFlags(),
-    queue: createInitialQueue(),
-    reconnectAttempts: 0,
-    backoffDelay: options.reconnectInterval,
-    retryCount: 0,
-  };
-}
-
-/**
- * Enhanced context update with validation
- */
-export function updateContext(
-  context: WebSocketContext,
-  updates: Partial<WebSocketContext>,
-  event?: WebSocketEvent
-): {
-  context: WebSocketContext;
-  isValid: boolean;
-  reason?: string;
-} {
-  const newContext = { ...context, ...updates };
-
-  // Validate state if it's being updated
-  if (updates.status) {
-    const stateValidation = validateState(updates.status, newContext);
-    if (!stateValidation.isValid) {
-      return {
-        context,
-        isValid: false,
-        reason: `Invalid state: ${stateValidation.failures.join(", ")}`,
-      };
-    }
-  }
-
-  // Validate transition if event is provided
-  if (event && updates.status) {
-    const transitionValidation = validateTransition(
-      context.status,
-      event,
-      updates.status,
-      newContext
-    );
-    if (!transitionValidation.isValid) {
-      return {
-        context,
-        isValid: false,
-        reason: transitionValidation.reason,
-      };
-    }
-  }
-
-  // Update timing information
-  const timing = { ...newContext.timing };
-  if (updates.status !== context.status) {
-    timing.stateHistory = [
-      ...timing.stateHistory,
-      {
-        state: updates.status!,
-        timestamp: Date.now(),
-        duration: timing.lastEventTime
-          ? Date.now() - timing.lastEventTime
-          : undefined,
-      },
-    ];
-  }
-
-  return {
-    context: { ...newContext, timing },
-    isValid: true,
-  };
-}
-
-/**
- * Update metrics with new event
- */
-export function updateMetrics(
-  context: WebSocketContext,
-  event: WebSocketEvent,
-  error?: ErrorContext
-): WebSocketContext {
-  const metrics = { ...context.metrics };
-
-  // Update event history
-  metrics.eventHistory = [
-    ...metrics.eventHistory,
-    {
-      type: event.type,
-      timestamp: event.timestamp,
-      metadata: error ? { error } : undefined,
-    },
-  ];
-
-  // Update error tracking
-  if (error) {
-    metrics.errors = [...metrics.errors, error];
-  }
-
-  // Update message counts and bytes
-  if (event.type === "MESSAGE") {
-    metrics.messagesReceived++;
-    if ("size" in event) {
-      metrics.bytesReceived += event.size ?? 0;
-    }
-  } else if (event.type === "SEND") {
-    metrics.messagesSent++;
-    if ("size" in event) {
-      metrics.bytesSent += event.size ?? 0;
-    }
-  }
-
-  return {
-    ...context,
-    metrics,
-    timing: {
-      ...context.timing,
-      lastEventTime: event.timestamp,
-    },
-  };
-}
-
-/**
- * Update rate limiting context
- */
-export function updateRateLimit(
-  context: WebSocketContext,
-  event: WebSocketEvent
-): WebSocketContext {
-  const now = event.timestamp; // Use event timestamp instead of Date.now()
-  const windowEnd = context.rateLimit.lastReset + context.rateLimit.window;
-
-  // Check if we need to reset the window based on event timestamp
-  if (now > windowEnd) {
-    return {
-      ...context,
-      rateLimit: {
-        ...context.rateLimit,
-        count: 1,
-        lastReset: now,
-        history: [
-          {
-            timestamp: now,
-            count: 1,
-          },
-        ],
-      },
-    };
-  }
-
-  // For message events, increment the count
-  if (event.type === "MESSAGE" || event.type === "SEND") {
-    return {
-      ...context,
-      rateLimit: {
-        ...context.rateLimit,
-        count: context.rateLimit.count + 1,
-        history: [
-          ...context.rateLimit.history,
-          {
-            timestamp: now,
-            count: context.rateLimit.count + 1,
-          },
-        ],
-      },
-    };
-  }
-
-  // For non-message events, return context unchanged
-  return context;
-}
-/**
- * Calculate exponential backoff
+ * Calculate exponential backoff delay
  */
 export function calculateBackoff(
   retryCount: number,
@@ -1292,6 +1451,27 @@ export function calculateBackoff(
 }
 
 /**
+ * Validate state invariants
+ */
+export function validateStateInvariants(
+  state: StateDefinition,
+  context: WebSocketContext
+): StateValidationResult {
+  const failures: string[] = [];
+
+  state.invariants.forEach((invariant) => {
+    if (!invariant.check(context)) {
+      failures.push(invariant.description);
+    }
+  });
+
+  return {
+    isValid: failures.length === 0,
+    failures: failures,
+  };
+}
+
+/**
  * Format bytes for logging
  */
 export function formatBytes(bytes: number): string {
@@ -1300,78 +1480,6 @@ export function formatBytes(bytes: number): string {
   const sizes = ["Bytes", "KB", "MB", "GB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
-}
-
-/**
- * Create error context
- */
-export function createErrorContext(
-  code: ErrorCode,
-  message: string,
-  metadata?: Record<string, unknown>
-): ErrorContext {
-  return {
-    code,
-    timestamp: Date.now(),
-    message,
-    metadata,
-  };
-}
-
-/**
- * Update message processing state
- */
-export function updateMessageProcessing(
-  context: WebSocketContext,
-  messageId: string,
-  status: "success" | "error" | "timeout"
-): WebSocketContext {
-  const now = Date.now();
-
-  return {
-    ...context,
-    messageFlags: {
-      ...context.messageFlags,
-      isProcessing: false,
-      lastProcessedMessageId: messageId,
-      processingHistory: [
-        ...context.messageFlags.processingHistory,
-        {
-          messageId,
-          startTime: now,
-          endTime: now,
-          status,
-        },
-      ],
-    },
-  };
-}
-
-/**
- * Check if rate limit is exceeded
- */
-export function isRateLimited(context: WebSocketContext): boolean {
-  return context.rateLimit.count >= context.rateLimit.maxBurst;
-}
-
-/**
- * Get current connection state duration
- */
-export function getCurrentStateDuration(context: WebSocketContext): number {
-  const lastStateChange =
-    context.timing.stateHistory[context.timing.stateHistory.length - 1];
-  return lastStateChange ? Date.now() - lastStateChange.timestamp : 0;
-}
-
-/**
- * Check if reconnection is allowed
- */
-export function canReconnect(context: WebSocketContext): boolean {
-  return (
-    context.options.reconnect &&
-    context.retryCount < context.options.maxReconnectAttempts &&
-    !isRateLimited(context)
-  );
 }
 
 ```

@@ -1,137 +1,152 @@
 /**
- * @fileoverview WebSocket type definitions
+ * @fileoverview Core WebSocket types with enhanced state tracking
  * @module @qi/core/network/websocket/types
+ *
+ * @author zhifengzhang-sz
+ * @created 2024-12-14
+ * @modified 2024-12-25
  */
 
-import { NetworkErrorContext } from "../../errors.js";
-import { CONNECTION_STATES, DEFAULT_CONFIG } from "./constants.js";
-import type { EventObject } from "xstate";
+import { State, EventType, BaseConfig, CloseCode } from "./constants.js";
+import { ErrorContext } from "./errors.js";
 
-export type ConnectionState =
-  (typeof CONNECTION_STATES)[keyof typeof CONNECTION_STATES];
-
-export interface ConnectionOptions {
-  reconnect: boolean;
-  maxReconnectAttempts: number;
-  reconnectInterval: number;
-  reconnectBackoffRate: number;
-  connectionTimeout: number;
-  pingInterval: number;
-  pongTimeout: number;
-  messageQueueSize: number;
-  messageTimeout: number;
-  rateLimit: {
-    messages: number;
-    window: number;
-  };
+/**
+ * Base event with timing
+ */
+export interface BaseEvent {
+  readonly timestamp: number;
+  readonly id?: string;
 }
 
-export interface QueuedMessage {
-  id: string;
-  data: unknown;
-  timestamp: number;
-  attempts: number;
-  timeout?: number;
-  priority: "high" | "normal";
-}
-
-export interface ErrorRecord {
-  timestamp: number;
-  error: Error;
-  attempt?: number;
-  context?: string;
-}
-
-export interface WebSocketMetrics {
-  messagesSent: number;
-  messagesReceived: number;
-  bytesReceived: number;
-  bytesSent: number;
-  messageTimestamps: number[];
-  totalErrors: number;
-  consecutiveErrors: number;
-  lastSuccessfulConnection?: number;
-  errors: ErrorRecord[];
-}
-
-export interface WebSocketContext {
-  url: string;
-  protocols: string[];
-  socket: WebSocket | null;
-  status: ConnectionState;
-  readyState: number;
-  options: Required<ConnectionOptions>;
-  state: {
-    connectionAttempts: number;
-    lastConnectTime: number;
-    lastDisconnectTime: number;
-    lastError: Error | null;
-    lastMessageTime: number;
-    lastErrorTime: number;  // Add this property
-  };
-  metrics: WebSocketMetrics;
-  queue: {
-    messages: QueuedMessage[];
-    pending: boolean;
-    lastProcessed: number;
-  };
-}
-
-export interface WebSocketErrorContext extends NetworkErrorContext {
-  socket?: WebSocket | null;  // Add this line
-  connectionAttempts: number;
-  lastError?: Error;
-  closeCode?: number;
-  closeReason?: string;
-  lastSuccessfulConnection?: number;
-  totalErrors: number;
-  consecutiveErrors: number;
-  retryDelay?: number;
-}
-
-export interface WebSocketError extends Error {
-  statusCode: number;
-  context?: WebSocketErrorContext;
-}
-
-export interface WebSocketLogic extends EventObject {
-  type: "webSocketLogic"; // Required by EventObject
-  input: WebSocketContext;
-  events: WebSocketEvents;
-}
-
-export type WebSocketEvents =
-  | {
-      type: "CONNECT";
-      url: string;
-      protocols?: string[];
-      options?: Partial<ConnectionOptions>;
-    }
-  | { type: "DISCONNECT"; code?: number; reason?: string }
-  | { type: "OPEN"; timestamp: number }
-  | {
+/**
+ * WebSocket events
+ */
+export type WebSocketEvent =
+  | ({ type: "CONNECT"; url: string } & BaseEvent)
+  | ({ type: "DISCONNECT"; code?: CloseCode; reason?: string } & BaseEvent)
+  | ({ type: "OPEN" } & BaseEvent)
+  | ({
       type: "CLOSE";
-      code: number;
+      code: CloseCode;
       reason: string;
       wasClean: boolean;
-      error?: Error;
-    }
-  | { type: "ERROR"; error: Error; timestamp: number; attempt?: number }
-  | { type: "MESSAGE"; data: unknown; timestamp: number; id?: string }
-  | {
-      type: "SEND";
-      data: unknown;
-      id?: string;
-      options?: { priority: "high" | "normal" };
-    }
-  | { type: "PING"; timestamp: number }
-  | { type: "PONG"; latency: number; timestamp: number }
-  | { type: "RETRY"; attempt: number; delay: number };
+    } & BaseEvent)
+  | ({ type: "ERROR"; error: ErrorContext } & BaseEvent)
+  | ({ type: "MESSAGE"; data: unknown; size?: number } & BaseEvent)
+  | ({ type: "SEND"; data: unknown; size?: number } & BaseEvent)
+  | ({ type: "RETRY"; attempt: number; delay: number } & BaseEvent)
+  | ({ type: "MAX_RETRIES"; attempts: number } & BaseEvent)
+  | ({ type: "TERMINATE"; code?: CloseCode; reason?: string } & BaseEvent);
 
-export type WebSocketServices = {
-  webSocketService: (context: WebSocketContext) => (send: Sender) => Cleanup;
-  pingService: (context: WebSocketContext) => (send: Sender) => Cleanup;
-};
+/**
+ * Timing metrics
+ */
+export interface Timing {
+  readonly connectStart: number | null;
+  readonly connectEnd: number | null;
+  readonly lastMessageTime: number | null;
+  readonly lastEventTime: number | null;
+  readonly stateHistory: ReadonlyArray<{
+    readonly state: State;
+    readonly timestamp: number;
+    readonly duration?: number;
+  }>;
+}
 
-export type Cleanup = void | (() => void);
-export type Sender = <E extends WebSocketEvents>(event: E) => void;
+/**
+ * Rate limiting configuration
+ */
+export interface RateLimit {
+  readonly count: number;
+  readonly window: number;
+  readonly lastReset: number;
+  readonly maxBurst: number;
+  readonly history: ReadonlyArray<{
+    readonly timestamp: number;
+    readonly count: number;
+  }>;
+}
+
+/**
+ * Connection metrics
+ */
+export interface Metrics {
+  readonly messagesSent: number;
+  readonly messagesReceived: number;
+  readonly errors: ReadonlyArray<ErrorContext>;
+  readonly bytesSent: number;
+  readonly bytesReceived: number;
+  readonly latency: ReadonlyArray<number>;
+  readonly eventHistory: ReadonlyArray<{
+    readonly type: EventType;
+    readonly timestamp: number;
+    readonly metadata?: Record<string, unknown>;
+  }>;
+}
+
+/**
+ * WebSocket configuration options
+ */
+export interface Options extends BaseConfig {
+  readonly protocols?: ReadonlyArray<string>;
+  readonly headers?: ReadonlyMap<string, string>;
+  readonly connectionTimeout?: number;
+  readonly heartbeatInterval?: number;
+  readonly healthCheckInterval?: number;
+}
+
+/**
+ * Message processing state
+ */
+export interface MessageProcessingFlags {
+  readonly isProcessing: boolean;
+  readonly lastProcessedMessageId: string | null;
+  readonly processingHistory: ReadonlyArray<{
+    readonly messageId: string;
+    readonly startTime: number;
+    readonly endTime?: number;
+    readonly status: "success" | "error" | "timeout";
+  }>;
+}
+
+/**
+ * Message queue state
+ */
+export interface QueueState {
+  readonly messages: ReadonlyArray<string>;
+  readonly pending: boolean;
+  readonly droppedMessages: number;
+}
+
+/**
+ * WebSocket context
+ */
+export interface WebSocketContext {
+  readonly url: string | null;
+  readonly status: State;
+  readonly socket: WebSocket | null;
+  readonly error: ErrorContext | null;
+  readonly options: Options;
+  readonly metrics: Metrics;
+  readonly timing: Timing;
+  readonly rateLimit: RateLimit;
+  readonly messageFlags: MessageProcessingFlags;
+  readonly queue: QueueState;
+  readonly reconnectAttempts: number;
+  readonly backoffDelay: number;
+  readonly retryCount: number;
+}
+
+/**
+ * Validation result types
+ */
+export interface ValidationResult {
+  readonly isValid: boolean;
+  readonly reason?: string;
+}
+
+export interface StateValidationResult extends ValidationResult {
+  readonly failures: ReadonlyArray<string>;
+}
+
+export type TransitionValidationResult = ValidationResult;

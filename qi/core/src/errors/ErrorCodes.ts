@@ -21,7 +21,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-12-18
+ * @modified 2024-12-25
  */
 
 export enum ErrorCode {
@@ -37,11 +37,26 @@ export enum ErrorCode {
   PARSE_ERROR = 1102,
   WATCH_ERROR = 1103,
 
-  // Connection errors
+  // Connection errors (1200-1299)
   CONNECTION_ERROR = 1200,
   TIMEOUT_ERROR = 1201,
   PING_ERROR = 1202,
-  WEBSOCKET_ERROR = 1203,
+
+  // WebSocket specific errors (1210-1219)
+  WEBSOCKET_ERROR = 1210,
+  WEBSOCKET_CLOSED = 1211, // Normal closure
+  WEBSOCKET_ABNORMAL = 1212, // Abnormal closure
+  WEBSOCKET_PROTOCOL = 1213, // Protocol error
+  WEBSOCKET_INVALID_DATA = 1214, // Invalid frame/data
+  WEBSOCKET_POLICY = 1215, // Policy violation
+  WEBSOCKET_MESSAGE_SIZE = 1216, // **Updated from WEBSOCKET_SIZE**
+  WEBSOCKET_DISCONNECT = 1217, // Going away
+  WEBSOCKET_EXTENSION = 1218, // Extension negotiation failed
+  WEBSOCKET_INTERNAL = 1219, // Internal error
+  WEBSOCKET_INVALID_URL = 1220, // Invalid WebSocket URL
+  WEBSOCKET_TIMEOUT = 1221, // Connection timeout
+  WEBSOCKET_NOT_CONNECTED = 1222, // Not connected
+  WEBSOCKET_SEND_FAILED = 1223, // Failed to send message
 
   // Operation errors
   OPERATION_ERROR = 1300,

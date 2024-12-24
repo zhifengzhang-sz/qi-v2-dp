@@ -9,7 +9,7 @@
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-25
+ * @modified 2024-12-25
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -96,27 +96,30 @@ export class EnvLoader<
 
   async load(): Promise<T> {
     try {
+      // Load new state
       const vars = await this.loadFromEnvFiles();
       this.schema.validate(vars, this.schemaId);
+      const newConfig = vars as T;
 
-      const config = vars as T;
-      if (this.currentConfig) {
+      // Track state change
+      const prevConfig = this.currentConfig;
+      this.currentConfig = newConfig;
+
+      // Notify watchers if state changed
+      if (prevConfig) {
         this.notifyChange(
-          this.currentConfig,
-          config,
+          prevConfig, // previous state
+          this.currentConfig, // new state
           this.options.path || "process.env"
         );
       }
-      this.currentConfig = config;
 
-      return config;
+      return this.currentConfig;
     } catch (error) {
       throw ConfigLoaderError.fromError(
         error,
         CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
-        {
-          source: this.options.path || "process.env",
-        }
+        { source: this.options.path || "process.env" }
       );
     }
   }
@@ -127,6 +130,7 @@ export class EnvLoader<
     if (!this.options?.path) return process.env;
 
     try {
+      // Load main env file
       const mainEnvVars = await loadEnv(this.options.path, {
         override: this.options?.override ?? false,
       });
@@ -139,6 +143,10 @@ export class EnvLoader<
         );
       }
 
+      // Start with main env vars
+      let envVars = { ...process.env, ...mainEnvVars };
+
+      // Load and merge extra files
       for (const file of this.options?.extraFiles ?? []) {
         const extraVars = await loadEnv(file, {
           override: this.options?.override ?? false,
@@ -151,16 +159,16 @@ export class EnvLoader<
             file
           );
         }
+
+        envVars = { ...envVars, ...extraVars };
       }
 
-      return process.env;
+      return envVars;
     } catch (error) {
       throw ConfigLoaderError.fromError(
         error,
         CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
-        {
-          source: this.options?.path,
-        }
+        { source: this.options?.path }
       );
     }
   }

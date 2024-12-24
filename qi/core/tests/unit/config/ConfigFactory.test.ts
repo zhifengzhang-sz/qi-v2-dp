@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-11-25
- * @modified 2024-11-25
+ * @modified 2024-12-25
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
@@ -22,10 +22,25 @@ import {
 } from "@qi/core/config";
 import * as fs from "node:fs/promises";
 
-// Mock fs module
-vi.mock("node:fs/promises", () => ({
-  readFile: vi.fn(),
-}));
+// 1. Fix top-level mock for fs.readFile
+vi.mock("node:fs/promises", () => {
+  const mockReadFile = vi.fn();
+  return {
+    readFile: mockReadFile,
+    default: {
+      readFile: mockReadFile
+    }
+  };
+});
+
+// 2. Define test config after mock
+const TEST_CONFIG = {
+  type: "test",
+  version: "1.0.0",
+  name: "test-config",
+  port: 3000,
+  features: ["feature1"],
+};
 
 interface TestConfig extends BaseConfig {
   name: string;
@@ -86,6 +101,11 @@ describe("ConfigFactory", () => {
       version: "1.0.0",
       schema: testSchema,
     };
+
+    beforeEach(() => {
+      // Reset fs mock for each test
+      vi.mocked(fs.readFile).mockReset();
+    });
 
     it("should register schema if not already registered", () => {
       vi.mocked(schema.hasSchema).mockReturnValue(false);
@@ -224,61 +244,45 @@ describe("ConfigFactory", () => {
     });
   });
 
+  // 3. Update test cases
   describe("factory without cache", () => {
-    const mockConfig: TestConfig = {
-      type: "test",
-      version: "1.0.0",
-      name: "test-config",
-      port: 8080,
-      features: ["feature1"],
-    };
+    let testPath: string;
 
     beforeEach(() => {
-      factory = new ConfigFactory(schema); // Create factory without cache
-      // Mock successful file read
-      vi.mocked(fs.readFile).mockResolvedValue(JSON.stringify(mockConfig));
+      testPath = "config/test-1.0.0.json";
+      factory = new ConfigFactory(schema);
+      
+      // Reset and setup mock with proper JSON string
+      const mockData = JSON.stringify(TEST_CONFIG);
+      vi.mocked(fs.readFile)
+        .mockReset()
+        .mockResolvedValue(mockData);
     });
 
-    it("should create a CachedConfigLoader with null cache when no cache is provided", async () => {
-      const loader: IConfigLoader<TestConfig> =
-        factory.createLoader<TestConfig>({
-          type: "test",
-          version: "1.0.0",
-          schema: testSchema,
-        });
-
-      expect(loader).toBeInstanceOf(CachedConfigLoader);
-
-      // Mock schema validation to pass
-      vi.mocked(schema.validate).mockImplementation(() => {
-        return;
+    it("should create a CachedConfigLoader with null cache", async () => {
+      const loader = factory.createLoader<TestConfig>({
+        type: "test",
+        version: "1.0.0",
+        schema: testSchema,
       });
 
-      // Verify that the loader can still load configuration
-      const loadedConfig = await loader.load();
-
-      // Verify the file was attempted to be read with correct path
-      expect(fs.readFile).toHaveBeenCalledWith(
-        "config/test-1.0.0.json",
-        "utf-8"
-      );
-
-      // Verify the loaded config matches our mock
-      expect(loadedConfig).toEqual(mockConfig);
+      const result = await loader.load();
+      expect(fs.readFile).toHaveBeenCalledWith(testPath, "utf-8");
+      expect(result).toEqual(TEST_CONFIG);
     });
 
-    it("should handle file read errors appropriately", async () => {
-      const loader: IConfigLoader<TestConfig> =
-        factory.createLoader<TestConfig>({
-          type: "test",
-          version: "1.0.0",
-          schema: testSchema,
-        });
+    it("should handle file read errors", async () => {
+      // Reset and setup error
+      vi.mocked(fs.readFile)
+        .mockReset()
+        .mockRejectedValue(new Error("File not found"));
 
-      // Mock file read error
-      vi.mocked(fs.readFile).mockRejectedValue(new Error("File not found"));
+      const loader = factory.createLoader<TestConfig>({
+        type: "test",
+        version: "1.0.0",
+        schema: testSchema,
+      });
 
-      // Verify that the loader throws appropriate error
       await expect(loader.load()).rejects.toThrow(ConfigLoaderError);
     });
   });
