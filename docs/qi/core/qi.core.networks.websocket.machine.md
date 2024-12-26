@@ -11,7 +11,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { ApplicationError, ErrorCode, StatusCode } from "@qi/core/errors";
@@ -299,7 +299,7 @@ export const actions = {
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 /**
@@ -376,7 +376,7 @@ export type CloseCode = (typeof CLOSE_CODES)[keyof typeof CLOSE_CODES];
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 /**
@@ -440,7 +440,7 @@ export type ErrorRecovery =
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { WebSocketContext, WebSocketEvent } from "./types.js";
@@ -510,7 +510,7 @@ export const guards = {
  *
  * @author zhifengzhang-sz
  * @created 2024-12-24
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { AnyActorRef } from "xstate";
@@ -800,7 +800,7 @@ export const services = {
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { State, EventType } from "./constants.js";
@@ -883,7 +883,7 @@ export interface StateHistoryEntry {
  *
  * @author zhifengzhang-sz
  * @created 2024-12-22
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { State, EventType, CLOSE_CODES } from "./constants.js";
@@ -1194,7 +1194,7 @@ export function getAvailableTransitions(state: State): ReadonlyArray<{
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import { State, EventType, BaseConfig, CloseCode } from "./constants.js";
@@ -1352,7 +1352,7 @@ export type TransitionValidationResult = ValidationResult;
  *
  * @author zhifengzhang-sz
  * @created 2024-12-14
- * @modified 2024-12-24
+ * @modified 2024-12-25
  */
 
 import {
