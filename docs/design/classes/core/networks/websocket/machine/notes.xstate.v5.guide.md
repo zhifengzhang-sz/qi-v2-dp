@@ -1,521 +1,706 @@
-# XState v5 Comprehensive Implementation and Migration Guide
-
-This guide provides an in-depth look at implementing state machines using XState version 5. It covers the core concepts, highlights the differences from version 4, and offers best practices for effective usage, including migration steps for existing projects.
-
----
+# XState v5 Complete Guide
 
 ## Table of Contents
+1. [Overview](#overview)
+   - Core Changes from v4
+   - Key Benefits
+2. [Implementation Guide](#implementation-guide)
+   - Machine Creation
+   - Type Definitions
+   - Actions
+   - Guards
+   - Actor Pattern
+3. [Best Practices](#best-practices)
+   - Type Safety
+   - Context Updates
+   - Guard Implementation
+   - Actor Implementation
+4. [Testing](#testing)
+   - Action Testing
+   - Guard Testing
+   - Actor Testing
+   - Machine Testing
+5. [WebSocket Example](#websocket-machine-example)
+6. [Migration Notes](#migration-notes)
+7. [Resources](#resources)
 
-1. Core Concepts
-   - 1. Pure Functions Over Special Types
-     - Actions
-     - Guards
-   - 2. TypeScript Integration
-     - Machine Type Definition
-     - Type Inference Examples
-   - 3. Testing Practices
-     - Action Testing
-     - Guard Testing
-   - 4. Common Patterns and Best Practices
-     - Context Updates
-     - Guard Composition
-   - 5. Migration Considerations
-     - Deprecated Features
-     - Common Migration Pitfalls
-2. Practical Example: WebSocket Machine
-3. Additional Resources
-4. What's Next
+## Overview
 
----
+### Core Changes from v4
 
-## Core Concepts
+- **TypeScript-first Approach:** Enhanced TypeScript support encourages strong type safety and better developer experience.
+- **Simplified Type System:** Streamlined type definitions reduce complexity and improve maintainability.
+- **Direct Context Updates:** Actions now return updated context directly, eliminating the need for the `assign` helper.
+- **Pure Function Patterns:** Emphasis on pure functions promotes predictable and testable state transitions.
+- **Better Type Inference:** Improved type inference reduces boilerplate and enhances developer productivity.
 
-### 1. Pure Functions Over Special Types
+### Key Benefits
 
-In XState v5, the emphasis is on simplicity and leveraging pure functions instead of special types or helper functions from the library.
+- **Reduced Boilerplate:** Less code required to achieve the same functionality, making state machines easier to write and maintain.
+- **Clearer Type Definitions:** Enhanced type safety prevents runtime errors and improves code reliability.
+- **Simpler Testing:** Pure functions and direct context updates simplify the testing process.
+- **Better Error Handling:** More intuitive patterns for handling errors enhance robustness.
+- **Improved Performance:** Optimizations in the core library lead to faster state transitions and better overall performance.
 
-#### Actions
+## Implementation Guide
 
-**V4 Style (Deprecated):**
+### 1. Machine Creation Pattern
+
+XState v5 introduces a `setup()` function to configure and type your state machine before creating it with `.createMachine()`. This promotes a TypeScript-first approach and better type safety.
 
 ```typescript
-// ❌ Don't use in v5
-import { assign } from 'xstate';
+import { setup } from "xstate";
 
-const increment = assign({
-  count: (context) => context.count + 1,
+// Define your types
+interface Context {
+  count: number;
+  data: string[];
+}
+
+type Events =
+  | { type: "INCREMENT" }
+  | { type: "RESET" }
+  | { type: "UPDATE"; data: string };
+
+type Input = {
+  initialCount: number;
+};
+
+// Setup the machine with types, guards, actions, and actors
+const machine = setup({
+  types: {
+    context: {} as Context,
+    events: {} as Events,
+    input: {} as Input,
+  },
+  guards: {
+    isMaxCount: ({ context }) => context.count >= 10,
+    hasData: ({ context }) => context.data.length > 0,
+    canUpdate: ({ context, event }) =>
+      context.count < 10 && event.type === "UPDATE",
+  },
+  actions: {
+    increment: ({ context }) => ({
+      ...context,
+      count: context.count + 1,
+    }),
+    updateData: ({ context, event }) => ({
+      ...context,
+      data: [...context.data, event.data],
+    }),
+  },
+  actors: {
+    // Define actors if needed
+  },
+}).createMachine({
+  id: "myMachine",
+  initial: "idle",
+  context: ({ input }) => ({
+    count: input.initialCount,
+    data: [],
+  }),
+  states: {
+    idle: {
+      on: {
+        INCREMENT: {
+          target: "active",
+          actions: "increment",
+          guard: "isMaxCount",
+        },
+        UPDATE: {
+          actions: "updateData",
+          guard: "canUpdate",
+        },
+      },
+    },
+    active: {
+      on: {
+        RESET: {
+          target: "idle",
+          actions: () => ({
+            count: 0,
+            data: [],
+          }),
+        },
+      },
+    },
+  },
 });
 ```
 
-**V5 Style:**
+### 2. Type Definitions
+
+Define your `Context`, `Events`, and `Input` using TypeScript interfaces and types to ensure type safety throughout your state machine.
 
 ```typescript
-// ✅ Use pure functions
-function increment(context: Context) {
+interface Context {
+  count: number;
+  data: string[];
+}
+
+type Events =
+  | { type: "INCREMENT" }
+  | { type: "RESET" }
+  | { type: "UPDATE"; data: string };
+
+type Input = {
+  initialCount: number;
+};
+```
+
+### 3. Actions
+
+Actions in XState v5 are pure functions that return the updated context. This removes the need for the `assign` helper and promotes immutability.
+
+```typescript
+// ✅ V5 Style - Pure function
+function increment({ context }) {
   return {
     ...context,
     count: context.count + 1,
   };
 }
-```
 
-- **Explanation:** Actions are now plain functions that receive `context` and optionally `event`, returning a new or updated context. There's no need to import or use `assign`.
-
-#### Guards
-
-**V4 Style (Deprecated):**
-
-```typescript
-// ❌ Don't use in v5
-import { createGuard } from 'xstate';
-
-const isAuthenticated = createGuard((context) => !!context.user);
-```
-
-**V5 Style:**
-
-```typescript
-// ✅ Use predicate functions
-function isAuthenticated(context: Context) {
-  return Boolean(context.user);
-}
-```
-
-- **Explanation:** Guards are simple predicate functions that determine whether a transition should occur based on the `context` and `event`.
-
-### 2. TypeScript Integration
-
-TypeScript plays a significant role in XState v5, providing strong typing and improved type inference.
-
-#### Machine Type Definition
-
-Define your machine's context and events explicitly using TypeScript interfaces and types:
-
-```typescript
-interface MachineContext {
-  count: number;
-  user: User | null;
+function updateData({ context, event }) {
+  return {
+    ...context,
+    data: [...context.data, event.data],
+  };
 }
 
-type MachineEvents =
-  | { type: 'INCREMENT' }
-  | { type: 'LOGIN'; user: User }
-  | { type: 'LOGOUT' };
-
-const machine = createMachine({
-  types: {} as {
-    context: MachineContext;
-    events: MachineEvents;
-  },
-  // ... rest of machine config
+// ❌ V4 Style - Don't use
+import { assign } from "xstate";
+const increment = assign({
+  count: (context) => context.count + 1,
 });
 ```
 
-- **Explanation:** The `types` property in the machine configuration is used to explicitly define the types for context and events.
+### 4. Guards
 
-#### Type Inference Examples
-
-Leverage TypeScript's type inference for actions and guards:
+Guards are predicate functions that determine whether a transition should occur. They receive the current context and event and return a boolean value.
 
 ```typescript
-// Action with inferred event type
-function handleLogin(context: MachineContext, event: Extract<MachineEvents, { type: 'LOGIN' }>) {
-  return {
-    ...context,
-    user: event.user,
-  };
+// ✅ V5 Style - Predicate function
+function canProceed({ context, event }) {
+  return context.isReady && event.type === "PROCEED";
 }
 
-// Guard with explicit typing for complex events
-function handleComplexEvent<T extends { type: 'COMPLEX'; data: unknown }>(
-  context: MachineContext,
-  event: T
-): MachineContext {
-  return {
-    ...context,
-    data: validateAndTransform(event.data),
-  };
-}
+// ❌ V4 Style - Don't use
+import { createGuard } from "xstate";
+const canProceed = createGuard((context) => context.isReady);
 ```
 
-- **Explanation:** Using `Extract` helps narrow down the event type for better type safety within actions and guards.
-
-### 3. Testing Practices
-
-Testing is crucial to ensure the reliability of your state machines.
-
-#### Action Testing
-
-Test actions as pure functions:
+### 5. Actor Pattern and Error Handling
 
 ```typescript
-describe('Authentication Actions', () => {
-  const initialContext = {
-    user: null,
-    error: null,
+import { fromPromise } from "xstate";
+
+// Basic Actor
+const fetchActor = fromPromise(async ({ input, emit }) => {
+  try {
+    const response = await fetch(input.url);
+    const data = await response.json();
+    emit({ type: "SUCCESS", data });
+  } catch (error) {
+    emit({ type: "ERROR", error });
+  }
+  
+  return () => {
+    // Cleanup
   };
-
-  test('handleLogin updates user in context', () => {
-    const user = { id: 1, name: 'Test' };
-    const event = { type: 'LOGIN' as const, user };
-
-    const result = handleLogin(initialContext, event);
-
-    expect(result).toEqual({
-      ...initialContext,
-      user,
-    });
-  });
-
-  test('handleError preserves existing context', () => {
-    const error = new Error('Test error');
-    const event = { type: 'ERROR' as const, error };
-
-    const result = handleError(initialContext, event);
-
-    expect(result).toEqual({
-      ...initialContext,
-      error,
-    });
-    expect(result.user).toBe(initialContext.user); // Verify unchanged properties
-  });
 });
-```
 
-- **Explanation:** Since actions are pure functions, they can be tested independently by passing in mock context and event objects.
+// WebSocket Actor with Error Boundaries
+const webSocketActor = fromPromise(async ({ input, emit }) => {
+  const socket = new WebSocket(input.url);
+  let pingInterval: NodeJS.Timer;
 
-#### Guard Testing
-
-Test guards to ensure they return correct boolean values:
-
-```typescript
-describe('Authentication Guards', () => {
-  const authenticatedContext = {
-    user: { id: 1, permissions: ['read', 'write'] },
-  };
-
-  const unauthenticatedContext = {
-    user: null,
-  };
-
-  test('isAuthenticated returns true for authenticated user', () => {
-    expect(isAuthenticated(authenticatedContext)).toBe(true);
-  });
-
-  test('hasPermission checks specific permission', () => {
-    const event = { type: 'ACCESS' as const, action: 'write' };
-
-    expect(hasPermission(authenticatedContext, event)).toBe(true);
-    expect(hasPermission(authenticatedContext, { ...event, action: 'admin' })).toBe(false);
-  });
-});
-```
-
-- **Explanation:** Guards are tested by checking their return values against different contexts and events.
-
-### 4. Common Patterns and Best Practices
-
-#### Context Updates
-
-Handle various context update scenarios:
-
-- **Nested Updates:**
-
-  ```typescript
-  function updateNestedData(context: Context, event: DataEvent) {
-    return {
-      ...context,
-      data: {
-        ...context.data,
-        [event.key]: {
-          ...context.data[event.key],
-          value: event.value,
-        },
-      },
-    };
-  }
-  ```
-
-- **Array Updates:**
-
-  ```typescript
-  function addItem(context: Context, event: AddEvent) {
-    return {
-      ...context,
-      items: [...context.items, event.item],
-    };
-  }
-  ```
-
-- **Conditional Updates:**
-
-  ```typescript
-  function conditionalUpdate(context: Context, event: UpdateEvent) {
-    if (!event.shouldUpdate) return context;
-
-    return {
-      ...context,
-      lastUpdate: Date.now(),
-    };
-  }
-  ```
-
-- **Explanation:** Always return a new context object to maintain immutability and ensure predictable state transitions.
-
-#### Guard Composition
-
-- **Combining Multiple Conditions:**
-
-  ```typescript
-  function canPerformAction(context: Context, event: ActionEvent) {
-    return (
-      isAuthenticated(context) &&
-      hasPermission(context, event) &&
-      isWithinRateLimit(context)
-    );
-  }
-  ```
-
-- **Parameterized Guards:**
-
-  ```typescript
-  function createMinimumValueGuard(minimum: number) {
-    return (context: Context) => context.value >= minimum;
-  }
-  ```
-
-- **Explanation:** Guards can be composed or parameterized for reuse and to handle complex conditional logic.
-
-### 5. Migration Considerations
-
-#### Deprecated Features
-
-Remove or replace deprecated features from v4:
-
-```typescript
-// ❌ Deprecated v4 features
-import { assign, send, raise } from 'xstate';
-import { createModel } from '@xstate/model';
-
-// ✅ V5 replacements
-function updateContext(context: Context) {
-  return { ...context, updated: true };
-}
-
-const machine = createMachine({
-  // ...machine config
-}, {
-  actions: {
-    // Actions as pure functions
-  },
-});
-```
-
-- **Explanation:** Deprecated functions like `assign`, `send`, and `raise` should be replaced with the newer v5 patterns.
-
-#### Common Migration Pitfalls
-
-1. **Forgetting to Remove v4 Imports:**
-   - Ensure all imports from `xstate` that are specific to v4 are removed or updated.
-2. **Using `assign` Instead of Direct Context Updates:**
-   - Replace `assign` actions with functions that return updated context.
-3. **Not Updating Guard Implementations:**
-   - Rewrite guards as plain predicate functions.
-4. **Missing Type Definitions in Complex Machines:**
-   - Explicitly define types for context and events, especially in complex state machines.
-
----
-
-## Practical Example: WebSocket Machine
-
-Below is an example of implementing a WebSocket manager using XState v5, demonstrating the concepts discussed.
-
-### Type Definitions
-
-```typescript
-type WebSocketEvent =
-  | { type: 'CONNECT'; url: string }
-  | { type: 'DISCONNECT' }
-  | { type: 'MESSAGE'; data: unknown }
-  | { type: 'ERROR'; error: Error };
-
-interface WebSocketContext {
-  connected: boolean;
-  messages: unknown[];
-  error: Error | null;
-}
-```
-
-### Actions
-
-```typescript
-function handleConnect(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvent, { type: 'CONNECT' }>
-) {
-  // Logic to initiate WebSocket connection
-  return {
-    ...context,
-    connected: true,
-  };
-}
-
-function handleMessage(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvent, { type: 'MESSAGE' }>
-) {
-  return {
-    ...context,
-    messages: [...context.messages, event.data],
-  };
-}
-
-function handleError(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvent, { type: 'ERROR' }>
-) {
-  return {
-    ...context,
-    error: event.error,
-  };
-}
-```
-
-### Guards
-
-```typescript
-function canConnect(
-  context: WebSocketContext,
-  event: Extract<WebSocketEvent, { type: 'CONNECT' }>
-) {
-  return !context.connected && isValidUrl(event.url);
-}
-
-function isConnected(context: WebSocketContext) {
-  return context.connected;
-}
-```
-
-- **Helper Function:**
-
-  ```typescript
-  function isValidUrl(url: string): boolean {
+  // Error boundary
+  const errorBoundary = (fn: Function) => {
     try {
-      new URL(url);
-      return true;
-    } catch {
-      return false;
+      fn();
+    } catch (error) {
+      emit({ type: "ERROR", error });
     }
+  };
+
+  // Event handlers with error boundaries
+  socket.onopen = () => errorBoundary(() => {
+    emit({ type: "CONNECTED", socket });
+    pingInterval = setInterval(() => {
+      socket.send("ping");
+    }, 30000);
+  });
+
+  socket.onclose = () => errorBoundary(() => {
+    emit({ type: "DISCONNECTED" });
+  });
+
+  socket.onerror = (error) => errorBoundary(() => {
+    emit({ type: "ERROR", error });
+  });
+
+  // Cleanup function
+  return () => {
+    clearInterval(pingInterval);
+    socket.close();
+  };
+});
+```
+
+## Best Practices
+
+### 1. Type Safety
+
+- **Define Explicit Types:** Always define types in the `setup()` function to leverage TypeScript's full potential.
+  
+  ```typescript
+  interface WebSocketContext {
+    url: string;
+    socket: WebSocket | null;
+    error: Error | null;
+    retryCount: number;
+  }
+
+  type WebSocketEvent =
+    | { type: "CONNECT"; url: string }
+    | { type: "CONNECTED"; socket: WebSocket }
+    | { type: "DISCONNECT" }
+    | { type: "ERROR"; error: Error };
+  ```
+
+- **Use Type Inference:** Let TypeScript infer types where possible to reduce boilerplate.
+
+  ```typescript
+  const updateSocket = ({ context, event }) => ({
+    ...context,
+    socket: event.socket,
+  });
+  ```
+
+### 2. Context Updates
+
+- **Immutable Updates:** Always return new context objects to maintain immutability.
+
+  ```typescript
+  const updateData = ({ context, event }) => ({
+    ...context,
+    data: {
+      ...context.data,
+      [event.key]: event.value,
+    },
+  });
+
+  const addItem = ({ context, event }) => ({
+    ...context,
+    items: [...context.items, event.item],
+  });
+  ```
+
+- **Explain Why:** Immutable updates prevent unintended side effects and make state changes predictable.
+
+### 3. Guard Implementation
+
+- **Simple Conditions:** Keep guards simple and focused on a single condition.
+
+  ```typescript
+  const isConnected = ({ context }) => context.socket !== null;
+  ```
+
+- **Complex Guards:** Combine multiple conditions within a guard as needed.
+
+  ```typescript
+  const canReconnect = ({ context }) =>
+    !context.socket && context.retryCount < 3;
+  ```
+
+- **Usage Context:** Use guards within machine configurations to control transitions.
+
+  ```typescript
+  states: {
+    disconnected: {
+      on: {
+        CONNECT: {
+          target: "connecting",
+          guard: "canConnect",
+        },
+      },
+    },
+    // ...
   }
   ```
 
-### Machine Definition
+### 4. Actor Pattern
+
+- **WebSocket Actor Example:** Demonstrates how to handle WebSocket connections with actors.
+
+  ```typescript
+  const webSocketActor = fromPromise(async ({ input, emit }) => {
+    const socket = new WebSocket(input.url);
+
+    socket.onopen = () => emit({ type: "CONNECTED", socket });
+    socket.onclose = () => emit({ type: "DISCONNECTED" });
+    socket.onerror = (error) => emit({ type: "ERROR", error });
+
+    // Cleanup function
+    return () => socket.close();
+  });
+  ```
+
+- **Error Handling in Actors:** Ensure actors emit appropriate error events and handle cleanup gracefully.
+
+  ```typescript
+  socket.onerror = (error) => {
+    emit({ type: "ERROR", error });
+    socket.close();
+  };
+  ```
+
+## Testing
+
+### 1. Action Testing
+
+Ensure your actions correctly update the context.
 
 ```typescript
-import { createMachine } from 'xstate';
+describe("Actions", () => {
+  test("increment updates count", () => {
+    const context = { count: 0, data: [] };
+    const result = increment({ context });
+    expect(result.count).toBe(1);
+  });
 
-const webSocketMachine = createMachine(
-  {
-    types: {} as {
-      context: WebSocketContext;
-      events: WebSocketEvent;
-    },
-    id: 'webSocket',
-    initial: 'disconnected',
-    context: {
-      connected: false,
-      messages: [],
+  test("updateData updates data array", () => {
+    const context = { count: 1, data: ["initial"] };
+    const event = { type: "UPDATE", data: "new" };
+    const result = updateData({ context, event });
+    expect(result.data).toContain("new");
+  });
+});
+```
+
+### 2. Guard Testing
+
+Verify that guards correctly determine transition eligibility.
+
+```typescript
+describe("Guards", () => {
+  test("canProceed validates correctly", () => {
+    const context = { isReady: true };
+    const event = { type: "PROCEED" };
+    expect(canProceed({ context, event })).toBe(true);
+  });
+
+  test("canProceed returns false when conditions not met", () => {
+    const context = { isReady: false };
+    const event = { type: "PROCEED" };
+    expect(canProceed({ context, event })).toBe(false);
+  });
+});
+```
+
+### 3. Actor Testing
+
+Ensure your actors handle events and cleanup correctly.
+
+```typescript
+describe("WebSocket Actor", () => {
+  test("should handle connection success", async () => {
+    const mockSocket = {
+      onopen: null,
+      onclose: null,
+      onerror: null,
+      close: jest.fn(),
+    };
+
+    global.WebSocket = jest.fn().mockImplementation(() => mockSocket);
+
+    const events: any[] = [];
+    const actor = webSocketActor.create({
+      input: { url: "ws://test" },
+      emit: (event) => events.push(event),
+    });
+
+    // Trigger onopen
+    mockSocket.onopen();
+
+    expect(events).toContainEqual({
+      type: "CONNECTED",
+      socket: mockSocket,
+    });
+  });
+
+  test("should clean up resources", async () => {
+    const mockSocket = {
+      close: jest.fn(),
+    };
+
+    const cleanup = await webSocketActor.create({
+      input: { url: "ws://test" },
+      emit: () => {},
+    });
+
+    cleanup();
+    expect(mockSocket.close).toHaveBeenCalled();
+  });
+});
+```
+
+## WebSocket Machine Example
+
+### Complete Implementation
+
+This example demonstrates a complete WebSocket state machine using XState v5, incorporating type safety, actions, guards, and actors.
+
+```typescript
+// Types
+interface WebSocketContext {
+  url: string;
+  socket: WebSocket | null;
+  error: Error | null;
+  retryCount: number;
+}
+
+type WebSocketEvent =
+  | { type: "CONNECT"; url: string }
+  | { type: "CONNECTED"; socket: WebSocket }
+  | { type: "DISCONNECT" }
+  | { type: "ERROR"; error: Error }
+  | { type: "RETRY" };
+
+// Machine
+const webSocketMachine = setup({
+  types: {
+    context: {} as WebSocketContext,
+    events: {} as WebSocketEvent,
+  },
+  guards: {
+    canConnect: ({ context }) => context.socket === null,
+    canRetry: ({ context }) => context.retryCount < 3,
+  },
+  actions: {
+    assignSocket: ({ context, event }) => ({
+      ...context,
+      socket: "socket" in event ? event.socket : null,
       error: null,
+    }),
+    assignError: ({ context, event }) => ({
+      ...context,
+      error: "error" in event ? event.error : null,
+    }),
+    incrementRetry: ({ context }) => ({
+      ...context,
+      retryCount: context.retryCount + 1,
+    }),
+    resetRetry: () => ({
+      retryCount: 0,
+    }),
+  },
+  actors: {
+    webSocket: fromPromise(async ({ input, emit }) => {
+      const socket = new WebSocket(input.url);
+
+      socket.onopen = () => emit({ type: "CONNECTED", socket });
+      socket.onclose = () => emit({ type: "DISCONNECTED" });
+      socket.onerror = (error) => emit({ type: "ERROR", error });
+
+      // Cleanup function
+      return () => socket.close();
+    }),
+  },
+}).createMachine({
+  id: "webSocket",
+  initial: "disconnected",
+  context: ({ input }) => ({
+    url: input.url,
+    socket: null,
+    error: null,
+    retryCount: 0,
+  }),
+  states: {
+    disconnected: {
+      on: {
+        CONNECT: {
+          target: "connecting",
+          guard: "canConnect",
+        },
+      },
     },
-    states: {
-      disconnected: {
-        on: {
-          CONNECT: {
-            target: 'connecting',
-            guard: 'canConnect',
-            actions: 'handleConnect',
-          },
+    connecting: {
+      invoke: {
+        src: "webSocket",
+        onDone: {
+          target: "connected",
+          actions: "assignSocket",
+        },
+        onError: {
+          target: "disconnected",
+          actions: ["assignError", "incrementRetry"],
         },
       },
-      connecting: {
-        // Implementation for connecting state
-        on: {
-          '': [
-            { target: 'connected', guard: 'isConnected' },
-            { target: 'disconnected' },
-          ],
+      after: {
+        5000: {
+          target: "disconnected",
+          actions: "assignError",
         },
       },
-      connected: {
-        on: {
-          MESSAGE: {
-            actions: 'handleMessage',
-          },
-          DISCONNECT: {
-            target: 'disconnected',
-            actions: 'handleDisconnect',
-          },
-          ERROR: {
-            actions: 'handleError',
-          },
+    },
+    connected: {
+      on: {
+        DISCONNECT: {
+          target: "disconnected",
+          actions: "resetRetry",
+        },
+        ERROR: {
+          target: "reconnecting",
+          actions: ["assignError", "incrementRetry"],
+        },
+      },
+    },
+    reconnecting: {
+      on: {
+        RETRY: {
+          target: "connecting",
+          guard: "canRetry",
+        },
+        ERROR: {
+          target: "disconnected",
+          actions: "assignError",
+        },
+      },
+      after: {
+        10000: {
+          target: "disconnected",
+          actions: "assignError",
         },
       },
     },
   },
-  {
-    actions: {
-      handleConnect,
-      handleMessage,
-      handleError,
-      // Add other action implementations
-    },
-    guards: {
-      canConnect,
-      isConnected,
-      // Add other guard implementations
-    },
-  }
-);
+});
 ```
 
-- **Explanation:** This machine manages a WebSocket connection, handling events like `CONNECT`, `DISCONNECT`, and `MESSAGE`, and uses guards to control state transitions.
+## Migration Notes
 
----
+### From v4 to v5
 
-## Additional Resources
+1. **Remove v4-specific Imports:**
+   - Eliminate imports like `assign`, `send`, etc.
+   
+   ```typescript
+   // ❌ V4 Style
+   import { assign } from "xstate";
+   
+   // ✅ V5 Style
+   // No need to import assign
+   ```
 
-- [Official XState v5 Documentation](https://xstate.js.org/docs/)
-- [Migration Guide from v4 to v5](https://xstate.js.org/docs/guides/migrating-from-v4/)
-- [TypeScript Integration with XState](https://xstate.js.org/docs/guides/typescript.html)
+2. **Convert Actions to Pure Functions:**
+   - Replace `assign` actions with pure functions that return updated context.
+   
+   ```typescript
+   // ❌ V4 Style
+   const increment = assign({
+     count: (context) => context.count + 1,
+   });
+   
+   // ✅ V5 Style
+   function increment({ context }) {
+     return {
+       ...context,
+       count: context.count + 1,
+     };
+   }
+   ```
+
+3. **Update Guard Implementations:**
+   - Ensure guards are pure predicate functions without side effects.
+   
+   ```typescript
+   // ❌ V4 Style
+   const canProceed = createGuard((context) => context.isReady);
+   
+   // ✅ V5 Style
+   function canProceed({ context }) {
+     return context.isReady;
+   }
+   ```
+
+4. **Use New Actor Patterns:**
+   - Utilize `fromPromise` for defining actors and handle event emissions appropriately.
+   
+   ```typescript
+   // ❌ V4 Style
+   invoke: {
+     src: (context) => createWebSocket(context),
+     onDone: 'connected',
+     onError: 'error'
+   }
+   
+   // ✅ V5 Style
+   invoke: {
+     src: "webSocket",
+     onDone: {
+       target: "connected",
+       actions: "assignSocket",
+     },
+     onError: {
+       target: "disconnected",
+       actions: ["assignError", "incrementRetry"],
+     },
+   }
+   ```
+
+5. **Add Explicit Types in Setup:**
+   - Define `context`, `events`, and `input` types within the `setup()` function for better type safety.
+   
+   ```typescript
+   const machine = setup({
+     types: {
+       context: {} as Context,
+       events: {} as Events,
+       input: {} as Input,
+     },
+     // ...
+   }).createMachine({
+     // ...
+   });
+   ```
+
+### Common Pitfalls
+
+1. **Using Old `assign` Pattern:**
+   - Forgetting to replace `assign` with pure function actions leads to type inconsistencies.
+   
+2. **Missing Context Spreads:**
+   - Not spreading the existing context object can result in incomplete context updates.
+   
+3. **Incorrect Event Type Checking:**
+   - Failing to correctly narrow event types in actions and guards causes type errors.
+   
+4. **Complex Nested Updates:**
+   - Overcomplicating context updates within actions can make the state machine harder to maintain.
+   
+5. **Side Effects in Actions:**
+   - Introducing side effects within actions violates the pure function pattern and can lead to unpredictable behavior.
+
+**Solutions:**
+
+- **Replace `assign` with Pure Functions:** Ensure all actions return new context objects.
+- **Spread Existing Context:** Always spread the current context when returning updates.
+- **Type Narrowing:** Use TypeScript's type guards to correctly handle different event types.
+- **Simplify Context Updates:** Break down complex updates into smaller, manageable functions.
+- **Maintain Pure Functions:** Avoid side effects within actions; handle them within actors or services.
+
+## Resources
+
+- [Official XState v5 Docs](https://stately.ai/docs)
+- [TypeScript Integration](https://stately.ai/docs/typescript)
+- [Migration Guide](https://stately.ai/docs/migration)
 - [XState GitHub Repository](https://github.com/statelyai/xstate)
-- [XState Community Discussions](https://github.com/statelyai/xstate/discussions)
+- [Community Discussions](https://github.com/statelyai/xstate/discussions)
+- [XState Examples](https://github.com/statelyai/xstate/tree/main/examples)
 
----
+## Conclusion
 
-## What's Next
+XState v5 brings significant enhancements to state management with a focus on type safety, simplicity, and performance. By adopting the new patterns and best practices outlined in this guide, developers can build robust and maintainable state machines tailored to their application's needs. Embrace the changes to leverage the full potential of XState v5 and streamline your state management workflows.
 
-To further enhance your implementation and understanding of XState v5:
-
-1. **Review Your Current Implementation Files:**
-   - `machine.ts`
-   - `actions.ts`
-   - `guards.ts`
-   - `types.ts`
-   - `states.ts`
-
-2. **Focus on Specific Areas:**
-   - **Complex Type Scenarios:** Investigate areas where TypeScript inference may not be sufficient and add explicit type annotations.
-   - **Testing Requirements:** Develop a comprehensive test suite for your machines, actions, and guards.
-   - **Performance Considerations:** Optimize context updates and action executions for better performance.
-   - **Error Handling Patterns:** Implement robust error handling within your state machines.
-
-3. **Explore Advanced Features:**
-   - **Interpretation and Service Integration:** Learn how to interpret machines and integrate them with React or other frameworks.
-   - **Statecharts and Hierarchical States:** Utilize hierarchical states and parallel regions for complex workflows.
-   - **Persistence and Hydration:** Implement state persistence across sessions if required.
-
----
-
-By following this guide and leveraging the best practices outlined, you can effectively implement complex state machines using XState v5, ensuring robust, maintainable, and scalable applications.
-
-If you have any specific questions or need further assistance with your project, feel free to reach out!
