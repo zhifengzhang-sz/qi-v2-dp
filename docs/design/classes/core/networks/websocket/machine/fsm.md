@@ -1,14 +1,10 @@
+# WebSocket State Machine Specification
+
 ## 1. State machine specification of the `WebSocketClient`
-
-To design an effective and maintainable state machine for the `WebSocketClient`, we'll outline its **states**, **events**, **transitions**, and **actions**. This formal definition serves as a blueprint before delving into the actual implementation.
-
----
 
 ### 1.1. Overview
 
-The `WebSocketClient` manages a WebSocket connection's lifecycle, handling various states such as connecting, connected, disconnected, and handling errors. Additionally, it incorporates reconnection logic to ensure robustness against transient network issues.
-
----
+The `WebSocketClient` manages a WebSocket connection's lifecycle, handling various states such as connecting, connected, disconnected, and handling errors. It incorporates reconnection logic, health checks, message queueing, and rate limiting to ensure robust and efficient operation.
 
 ### 1.2. States
 
@@ -19,49 +15,89 @@ The `WebSocketClient` manages a WebSocket connection's lifecycle, handling vario
 | `connected`     | The client has successfully established a connection and is actively communicating with the server. |
 | `reconnecting`  | The client is attempting to re-establish a connection after a disconnection or error.               |
 | `disconnecting` | The client is in the process of gracefully closing the connection.                                  |
-
----
+| `terminated`    | The client has been permanently terminated and cannot be reused.                                    |
 
 ### 1.3. Events
 
-| **Event**     | **Payload**                        | **Description**                                                                  |
-| ------------- | ---------------------------------- | -------------------------------------------------------------------------------- |
-| `CONNECT`     | `{ url: string }`                  | Initiates a connection to the specified WebSocket server URL.                    |
-| `DISCONNECT`  | _None_                             | Initiates a graceful disconnection from the WebSocket server.                    |
-| `OPEN`        | _None_                             | Indicates that the WebSocket connection has been successfully established.       |
-| `CLOSE`       | `{ code: number; reason: string }` | Indicates that the WebSocket connection has been closed.                         |
-| `ERROR`       | `{ error: Error }`                 | Indicates that an error has occurred with the WebSocket connection.              |
-| `RETRY`       | _None_                             | Triggers a reconnection attempt after a disconnection or error.                  |
-| `MAX_RETRIES` | _None_                             | Indicates that the maximum number of reconnection attempts has been reached.     |
-| `TERMINATE`   | _None_                             | Forcefully terminates the WebSocket connection without attempting reconnections. |
-
----
+| **Event**     | **Payload**                                | **Description**                                                                  |
+| ------------- | ------------------------------------------ | -------------------------------------------------------------------------------- |
+| `CONNECT`     | `{ url: string, protocols?: string[] }`    | Initiates a connection to the specified WebSocket server URL.                    |
+| `DISCONNECT`  | `{ code?: number, reason?: string }`       | Initiates a graceful disconnection from the WebSocket server.                    |
+| `OPEN`        | `{ event: Event, timestamp: number }`      | Indicates that the WebSocket connection has been successfully established.       |
+| `CLOSE`       | `{ code: number, reason: string }`         | Indicates that the WebSocket connection has been closed.                         |
+| `ERROR`       | `{ error: Error, timestamp: number }`      | Indicates that an error has occurred with the WebSocket connection.              |
+| `RETRY`       | `{ attempt: number, delay: number }`       | Triggers a reconnection attempt after a disconnection or error.                  |
+| `MAX_RETRIES` | `{ attempts: number, lastError?: Error }`  | Indicates that the maximum number of reconnection attempts has been reached.     |
+| `TERMINATE`   | `{ code?: number, reason?: string }`       | Forcefully terminates the WebSocket connection without attempting reconnections. |
+| `MESSAGE`     | `{ data: any, timestamp: number }`         | Indicates a message has been received from the server.                           |
+| `SEND`        | `{ data: any, id?: string }`              | Request to send a message to the server.                                         |
+| `PING`        | `{ timestamp: number }`                    | Health check ping sent to server.                                                |
+| `PONG`        | `{ latency: number, timestamp: number }`   | Health check response received from server.                                      |
 
 ### 1.4. Transitions
 
-| **From State**  | **Event**     | **To State**    | **Actions**                                                                                          |
-| --------------- | ------------- | --------------- | ---------------------------------------------------------------------------------------------------- |
-| `disconnected`  | `CONNECT`     | `connecting`    | - Store the `url` from the event payload.                                                            |
-| `connecting`    | `OPEN`        | `connected`     | - Reset reconnection attempts.<br>- Log successful connection.                                       |
-| `connecting`    | `ERROR`       | `reconnecting`  | - Store the error.<br>- Log the error.<br>- Increment reconnection attempts.                         |
-| `connecting`    | `CLOSE`       | `disconnected`  | - Log the closure reason.                                                                            |
-| `connected`     | `DISCONNECT`  | `disconnecting` | - Initiate graceful shutdown.<br>- Log disconnection initiation.                                     |
-| `connected`     | `ERROR`       | `reconnecting`  | - Store the error.<br>- Log the error.<br>- Increment reconnection attempts.                         |
-| `connected`     | `CLOSE`       | `reconnecting`  | - Log the closure.<br>- Increment reconnection attempts.                                             |
-| `reconnecting`  | `RETRY`       | `connecting`    | - Attempt to reconnect using the stored `url`.                                                       |
-| `reconnecting`  | `MAX_RETRIES` | `disconnected`  | - Log that maximum reconnection attempts have been reached.<br>- Stop further reconnection attempts. |
-| `disconnecting` | `CLOSE`       | `disconnected`  | - Log successful disconnection.<br>- Clean up resources.                                             |
-| Any State       | `TERMINATE`   | `disconnected`  | - Forcefully close the WebSocket.<br>- Log termination.<br>- Reset reconnection attempts.            |
+| **From State**  | **Event**     | **To State** | **Actions**                                                                                          |
+| --------------- | ------------- | ------------ | ---------------------------------------------------------------------------------------------------- |
+| `disconnected`  | `CONNECT`     | `connecting` | - Store the `url` from the event payload.<br>- Initialize connection metrics.                         |
+| `connecting`    | `OPEN`        | `connected`  | - Reset reconnection attempts.<br>- Log successful connection.<br>- Start health checks.             |
+| `connecting`    | `ERROR`       | `reconnecting`| - Store the error.<br>- Log the error.<br>- Increment reconnection attempts.                        |
+| `connecting`    | `CLOSE`       | `disconnected`| - Log the closure reason.<br>- Clean up resources.                                                  |
+| `connected`     | `DISCONNECT`  | `disconnecting`| - Initiate graceful shutdown.<br>- Log disconnection initiation.                                   |
+| `connected`     | `ERROR`       | `reconnecting`| - Store the error.<br>- Log the error.<br>- Increment reconnection attempts.                        |
+| `connected`     | `CLOSE`       | `reconnecting`| - Log the closure.<br>- Increment reconnection attempts.                                            |
+| `connected`     | `MESSAGE`     | `connected`  | - Process received message.<br>- Update metrics.                                                     |
+| `connected`     | `SEND`        | `connected`  | - Send message to server.<br>- Update metrics.                                                       |
+| `connected`     | `PING`        | `connected`  | - Send health check ping.<br>- Update timing metrics.                                                |
+| `connected`     | `PONG`        | `connected`  | - Update latency metrics.<br>- Reset health check timer.                                             |
+| `reconnecting`  | `RETRY`       | `connecting` | - Attempt to reconnect using the stored `url`.<br>- Apply backoff delay.                            |
+| `reconnecting`  | `MAX_RETRIES` | `disconnected`| - Log that maximum reconnection attempts have been reached.<br>- Stop further reconnection attempts.|
+| `disconnecting` | `CLOSE`       | `disconnected`| - Log successful disconnection.<br>- Clean up resources.                                            |
+| Any State       | `TERMINATE`   | `terminated` | - Forcefully close the WebSocket.<br>- Log termination.<br>- Clean up all resources.                |
 
----
+### 1.5. Context
 
-### 1.5. Actions
+The state machine's context is structured into three main categories:
 
-| **Action Name**       | **Description**                                                                                              |
+#### Primary Connection Properties (P)
+| **Property**        | **Type**             | **Description**                                                |
+| ------------------- | -------------------- | ------------------------------------------------------------- |
+| `url`               | `string`             | The WebSocket server URL to connect to.                        |
+| `protocols`         | `string[]`           | WebSocket subprotocols to use.                                |
+| `socket`            | `WebSocket | null`   | Active socket instance.                                       |
+| `status`            | `ConnectionStatus`   | Current connection status.                                     |
+| `readyState`        | `number`            | WebSocket ready state.                                         |
+
+#### Metric Values (V)
+| **Property**        | **Type**             | **Description**                                                |
+| ------------------- | -------------------- | ------------------------------------------------------------- |
+| `messagesSent`      | `number`            | Total count of messages sent.                                  |
+| `messagesReceived`  | `number`            | Total count of messages received.                              |
+| `reconnectAttempts` | `number`            | Current number of reconnection attempts.                       |
+| `bytesSent`         | `number`            | Total bytes sent.                                              |
+| `bytesReceived`     | `number`            | Total bytes received.                                          |
+
+#### Timing Properties (T)
+| **Property**        | **Type**             | **Description**                                                |
+| ------------------- | -------------------- | ------------------------------------------------------------- |
+| `connectTime`       | `number`            | Timestamp of last successful connection.                        |
+| `disconnectTime`    | `number`            | Timestamp of last disconnection.                               |
+| `lastPingTime`      | `number`            | Timestamp of last health check ping sent.                      |
+| `lastPongTime`      | `number`            | Timestamp of last health check pong received.                  |
+| `windowStart`       | `number`            | Start timestamp of current rate limiting window.               |
+
+### 1.6. Actions
+
+Each action in the state machine is defined as a function that transforms the context:
+
+\[
+\gamma: C \times E \rightarrow C
+\]
+
+| **Action Name**         | **Description**                                                                                              |
 | --------------------- | ------------------------------------------------------------------------------------------------------------ |
 | `storeUrl`            | Saves the WebSocket server URL from the `CONNECT` event into the machine's context for future reconnections. |
 | `resetRetries`        | Resets the reconnection attempts counter to zero upon a successful connection.                               |
-| `logConnection`       | Logs successful connection establishment.                                                                    |
+| `logConnection`       | Logs successful connection establishment and updates metrics.                                                |
 | `handleError`         | Logs the error and updates the context with the error details.                                               |
 | `incrementRetries`    | Increments the reconnection attempts counter each time a reconnection is attempted.                          |
 | `logClosure`          | Logs the reason for the WebSocket connection closure.                                                        |
@@ -69,53 +105,14 @@ The `WebSocketClient` manages a WebSocket connection's lifecycle, handling vario
 | `logDisconnection`    | Logs that a disconnection has been initiated.                                                                |
 | `attemptReconnection` | Attempts to reconnect by sending the `RETRY` event after a specified delay.                                  |
 | `logMaxRetries`       | Logs that the maximum number of reconnection attempts has been reached.                                      |
-| `forceTerminate`      | Forcefully terminates the WebSocket connection without attempting to reconnect.                              |
+| `forceTerminate`      | Forcefully terminates the WebSocket connection and cleans up all resources.                                  |
+| `processMessage`      | Processes received messages and updates relevant metrics.                                                    |
+| `sendMessage`         | Sends messages to the server and handles queueing if necessary.                                             |
+| `handlePing`          | Manages health check ping operations and timing.                                                            |
+| `handlePong`          | Processes health check responses and updates latency metrics.                                               |
+| `enforceRateLimit`    | Ensures message sending adheres to rate limiting rules.                                                     |
 
----
-
-### 1.6. Context
-
-The state machine maintains a **context** object to store dynamic data required across different states and transitions.
-
-| **Property**        | **Type**             | **Description**                                                |
-| ------------------- | -------------------- | -------------------------------------------------------------- |
-| `url`               | `string`             | The WebSocket server URL to connect to.                        |
-| `reconnectAttempts` | `number`             | The current number of reconnection attempts made.              |
-| `error`             | `Error` _(optional)_ | The last error encountered during connection or communication. |
-
----
-
-### 1.7. Reconnection Strategy
-
-To ensure the `WebSocketClient` is resilient, a reconnection strategy is defined with the following parameters:
-
-- **Maximum Reconnection Attempts (`maxReconnectAttempts`):** Defines how many times the client should attempt to reconnect before giving up.
-
-- **Reconnection Interval (`reconnectInterval`):** The delay between consecutive reconnection attempts.
-
-These parameters can be externalized as configuration options when initializing the state machine or the `WebSocketClient`.
-
----
-
-### 1.8. Visual Representation
-
-While not mandatory, visualizing the state machine can aid in understanding and communicating its behavior. Here's a simplified diagram representing the state transitions:
-
-```
-[disconnected] -- CONNECT --> [connecting]
-[connecting] -- OPEN --> [connected]
-[connecting] -- ERROR --> [reconnecting]
-[connecting] -- CLOSE --> [disconnected]
-[connected] -- DISCONNECT --> [disconnecting]
-[connected] -- ERROR --> [reconnecting]
-[connected] -- CLOSE --> [reconnecting]
-[reconnecting] -- RETRY --> [connecting]
-[reconnecting] -- MAX_RETRIES --> [disconnected]
-[disconnecting] -- CLOSE --> [disconnected]
-```
-
-_Arrows indicate transitions triggered by events._
-
+[Continue with formal definitions section...]
 ---
 
 ## 2. Formal definition
