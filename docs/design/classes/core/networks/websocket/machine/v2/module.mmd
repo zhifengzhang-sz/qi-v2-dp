@@ -1,0 +1,33 @@
+C4Context
+title WebSocket Machine Module Organization
+
+Container_Boundary(core, "Core Modules") {
+    Component(states, "States", "states.ts", "S: State definitions")
+    Component(events, "Events", "events.ts", "E: Event definitions")
+    Component(trans, "Transitions", "transitions.ts", "δ: Transition functions")
+    Component(context, "Context", "context.ts", "C: State context")
+    Component(actions, "Actions", "actions.ts", "γ: Action implementations")
+}
+
+Container_Boundary(support, "Support Modules") {
+    Component(types, "Types", "types.ts", "Type definitions")
+    Component(guards, "Guards", "guards.ts", "Transition guards")
+    Component(errors, "Errors", "errors.ts", "Error handling")
+    Component(constants, "Constants", "constants.ts", "Constants")
+}
+
+Container_Boundary(machine, "Machine Module") {
+    Component(wsm, "WebSocketMachine", "machine.ts", "Main machine")
+}
+
+Rel(wsm, states, "Uses")
+Rel(wsm, events, "Uses")
+Rel(wsm, trans, "Uses")
+Rel(wsm, context, "Uses")
+Rel(wsm, actions, "Uses")
+
+Rel(states, types, "Uses")
+Rel(events, types, "Uses")
+Rel(trans, types, "Uses")
+Rel(context, types, "Uses")
+Rel(actions, types, "Uses")
