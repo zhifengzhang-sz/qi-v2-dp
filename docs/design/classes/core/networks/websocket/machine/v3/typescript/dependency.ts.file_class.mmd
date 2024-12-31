@@ -1,0 +1,136 @@
+classDiagram
+    %% Core Directory Structure
+    class src {
+        +core/
+        +support/
+    }
+
+    class core {
+        +machine/
+        +states/
+        +events/
+        +context/
+        +actions/
+    }
+
+    class machine {
+        +index.ts
+        +machine.types.ts
+        +machine.test.ts
+    }
+
+    class states {
+        +index.ts
+        +state.types.ts
+        +state.test.ts
+    }
+
+    class events {
+        +index.ts
+        +event.types.ts
+        +event.test.ts
+    }
+
+    class context {
+        +index.ts
+        +context.types.ts
+        +context.test.ts
+    }
+
+    class actions {
+        +index.ts
+        +action.types.ts
+        +action.test.ts
+    }
+
+    %% Support Directory Structure
+    class support {
+        +types/
+        +guards/
+        +errors/
+        +resources/
+        +health/
+        +rate/
+        +metrics/
+    }
+
+    class types {
+        +index.ts
+        +base.types.ts
+        +composite.types.ts
+    }
+
+    class guards {
+        +index.ts
+        +guard.types.ts
+        +predicates.ts
+    }
+
+    class errors {
+        +index.ts
+        +error.types.ts
+        +strategies.ts
+    }
+
+    class resources {
+        +index.ts
+        +resource.types.ts
+        +lifecycle.ts
+    }
+
+    class health {
+        +index.ts
+        +health.types.ts
+        +probes.ts
+    }
+
+    class rate {
+        +index.ts
+        +rate.types.ts
+        +window.ts
+    }
+
+    class metrics {
+        +index.ts
+        +metric.types.ts
+        +collectors.ts
+    }
+
+    %% Directory Relationships
+    src --> core
+    src --> support
+    
+    core --> machine
+    core --> states
+    core --> events
+    core --> context
+    core --> actions
+    
+    support --> types
+    support --> guards
+    support --> errors
+    support --> resources
+    support --> health
+    support --> rate
+    support --> metrics
+
+    %% File Content Relationships
+    machine ..> states : imports
+    machine ..> events : imports
+    machine ..> context : imports
+    machine ..> actions : imports
+    
+    actions ..> context : imports
+    actions ..> events : imports
+    
+    guards ..> context : imports
+    health ..> metrics : imports
+    resources ..> errors : imports
+    metrics ..> context : imports
+
+    %% Type Dependencies
+    types ..> machine : types
+    types ..> states : types
+    types ..> events : types
+    types ..> context : types
+    types ..> actions : types

@@ -1,0 +1,10 @@
+C4Context
+    title System Context diagram for WebSocket Machine
+
+    Person(client, "Client Application", "Software system using WebSocket connection")
+    System(wsm, "WebSocket Machine", "Manages WebSocket connections with automatic reconnection and state management")
+    System_Ext(server, "WebSocket Server", "Remote system providing WebSocket endpoint")
+
+    Rel(client, wsm, "Uses", "WebSocket events/messages")
+    Rel(wsm, server, "Connects to", "WebSocket protocol")
+    

@@ -1,0 +1,88 @@
+graph TB
+    subgraph Project["src/"]
+        subgraph Core["core/"]
+            Machine["machine/index.ts"]
+            States["states/index.ts"]
+            Events["events/index.ts"]
+            Context["context/index.ts"]
+            Actions["actions/index.ts"]
+            
+            subgraph CoreTypes["types/"]
+                MachineTypes["machine.types.ts"]
+                StateTypes["state.types.ts"]
+                EventTypes["event.types.ts"]
+                ContextTypes["context.types.ts"]
+                ActionTypes["action.types.ts"]
+            end
+        end
+
+        subgraph Support["support/"]
+            TypeSystem["types/index.ts"]
+            Guards["guards/index.ts"]
+            Errors["errors/index.ts"]
+            Resources["resources/index.ts"]
+            Health["health/index.ts"]
+            Rate["rate/index.ts"]
+            Metrics["metrics/index.ts"]
+            
+            subgraph SupportTypes["types/"]
+                GuardTypes["guard.types.ts"]
+                ErrorTypes["error.types.ts"]
+                ResourceTypes["resource.types.ts"]
+                HealthTypes["health.types.ts"]
+                RateTypes["rate.types.ts"]
+                MetricTypes["metric.types.ts"]
+            end
+        end
+
+        %% Core Dependencies
+        Machine --> States
+        Machine --> Events
+        Machine --> Context
+        Machine --> Actions
+        
+        States --> StateTypes
+        Events --> EventTypes
+        Context --> ContextTypes
+        Actions --> ActionTypes
+        Actions --> Context
+        Actions --> Events
+
+        %% Support System Dependencies
+        Guards --> Context
+        Guards --> GuardTypes
+        
+        Errors --> ErrorTypes
+        
+        Resources --> Errors
+        Resources --> ResourceTypes
+        
+        Health --> Metrics
+        Health --> HealthTypes
+        
+        Rate --> RateTypes
+        
+        Metrics --> Context
+        Metrics --> MetricTypes
+
+        %% Type System Dependencies
+        TypeSystem --> MachineTypes
+        TypeSystem --> StateTypes
+        TypeSystem --> EventTypes
+        TypeSystem --> ContextTypes
+        TypeSystem --> ActionTypes
+        TypeSystem --> GuardTypes
+        TypeSystem --> ErrorTypes
+        TypeSystem --> ResourceTypes
+        TypeSystem --> HealthTypes
+        TypeSystem --> RateTypes
+        TypeSystem --> MetricTypes
+    end
+
+    classDef core fill:#f9f,stroke:#333,stroke-width:2px
+    classDef support fill:#bbf,stroke:#333,stroke-width:2px
+    classDef types fill:#bfb,stroke:#333,stroke-width:2px
+    
+    class Machine,States,Events,Context,Actions core
+    class TypeSystem,Guards,Errors,Resources,Health,Rate,Metrics support
+    class CoreTypes,SupportTypes,MachineTypes,StateTypes,EventTypes,ContextTypes,ActionTypes,GuardTypes,ErrorTypes,ResourceTypes,HealthTypes,RateTypes,MetricTypes types

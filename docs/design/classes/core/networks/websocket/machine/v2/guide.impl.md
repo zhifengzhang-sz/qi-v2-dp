@@ -1343,7 +1343,7 @@ export type Action = (args: ActionArgs) => Partial<WebSocketContext>;
 ```
 
 
-### 2.5 Transitions Module ($\delta$)
+### 2.6 Transitions Module ($\delta$)
 
 Transition function.
 
@@ -1651,6 +1651,233 @@ const isValidAction = (action: string): boolean => {
 };
 ```
 
+### 2.7 Guards Module
+
+Transition predicates.
+
+WebSocket Guards following mathematical model:
+  - Each guard $g: C\times E\rightarrow \{\text{true}, \text{false}\}$ is a pure predicate function that determines if a transition $\delta(s,e)$ is allowed based on current context
+
+```typescript
+/**
+ * @fileoverview WebSocket Guards Module
+ * @module @qi/websocket/guards
+ * 
+ * @description
+ * Implements WebSocket guards following mathematical model:
+ * g: C × E → {true, false} is a pure predicate function
+ * that determines if a transition δ(s,e) is allowed based on current context
+ *
+ * @author zhifeng-sz
+ * @created 2024-12-29
+ */
+
+import { WebSocketContext } from "./context";
+import { WebSocketEvent } from "./events";
+import { isRecoverableError, isWebSocketError } from "../support/errors";
+
+type GuardArgs = {
+  context: WebSocketContext;
+  event: WebSocketEvent;
+};
+
+/**
+ * Guard type definition
+ * g: C × E → {true, false}
+ */
+export type Guard = (args: GuardArgs) => boolean;
+
+/**
+ * g₁: Can Connect Guard
+ * Predicate: url exists ∧ socket is null ∧ (no error ∨ error is recoverable)
+ */
+const canConnect: Guard = ({ context }) => {
+  const { connection } = context;
+  return (
+    typeof connection.url === "string" &&
+    connection.socket === null &&
+    (!connection.error || isRecoverableError(connection.error))
+  );
+};
+
+/**
+ * g₂: Can Retry Guard
+ * Predicate: reconnectAttempts < maxRetries ∧ error is recoverable
+ */
+const canRetry: Guard = ({ context }) => {
+  const { connection, metrics, maxRetries } = context;
+  
+  if (!connection.error || !isRecoverableError(connection.error)) {
+    return false;
+  }
+
+  return metrics.reconnectAttempts < maxRetries;
+};
+
+/**
+ * g₃: Is Connected Guard
+ * Predicate: socket exists ∧ socket.readyState === OPEN ∧ no error
+ */
+const isConnected: Guard = ({ context }) => {
+  const { connection } = context;
+  return (
+    connection.socket !== null &&
+    connection.socket.readyState === WebSocket.OPEN &&
+    !connection.error
+  );
+};
+
+/**
+ * g₅: Can Send Guard
+ * Predicate: isConnected ∧ not rate limited ∧ no send errors
+ */
+const canSend: Guard = ({ context, event }) => {
+  // First check connection status
+  const { connection, metrics, timing, rateLimit } = context;
+  if (
+    !connection.socket ||
+    connection.socket.readyState !== WebSocket.OPEN ||
+    connection.error
+  ) {
+    return false;
+  }
+
+  // Check rate limits if configured
+  if (rateLimit) {
+    const { messages, window } = rateLimit;
+    const now = Date.now();
+    const windowStart = timing.windowStart ?? now;
+
+    // Reset window if expired
+    if (now - windowStart >= window) {
+      // Window expired, allow send
+      return true;
+    }
+
+    // Check rate within current window
+    if (metrics.messagesSent >= messages) {
+      return false;
+    }
+  }
+
+  // No rate limit or within limits
+  return true;
+};
+
+/**
+ * g₆: Should Reconnect Guard
+ * Predicate: canRetry ∧ (connection lost ∨ error occurred)
+ */
+const shouldReconnect: Guard = ({ context, event }) => {
+  if (event.type !== "CLOSE" && event.type !== "ERROR") {
+    return false;
+  }
+
+  return canRetry({ context, event });
+};
+
+/**
+ * g₇: Is Clean Disconnect Guard
+ * Predicate: normal closure code ∧ was clean disconnect ∧ no errors
+ */
+const isCleanDisconnect: Guard = ({ context, event }) => {
+  if (event.type !== "CLOSE") return false;
+  
+  // Check for any errors
+  if (context.connection.error) return false;
+
+  return event.code === 1000 && event.wasClean;
+};
+
+/**
+ * g₈: Can Terminate Guard
+ * Predicate: true (termination always allowed)
+ */
+const canTerminate: Guard = () => true;
+
+/**
+ * g₉: Has Rate Limit Error Guard
+ * Predicate: error exists ∧ is rate limit error
+ */
+const hasRateLimitError: Guard = ({ context }) => {
+  const { error } = context.connection;
+  if (!error || !isWebSocketError(error)) return false;
+  
+  return error.code === ErrorCode.WEBSOCKET_RATE_LIMIT;
+};
+
+/**
+ * g₁₀: Should Reset Error Guard
+ * Predicate: has error ∧ conditions for reset met
+ */
+const shouldResetError: Guard = ({ context, event }) => {
+  const { error } = context.connection;
+  if (!error) return false;
+
+  // Reset error on successful operations
+  switch (event.type) {
+    case "OPEN":
+    case "PONG":
+      return true;
+    case "SEND":
+      return hasRateLimitError({ context, event });
+    default:
+      return false;
+  }
+};
+
+/**
+ * Guard Composition Implementation (Γ)
+ * Γ = {γ₁, γ₂, γ₃}
+ */
+
+/**
+ * γ₁: AND Composition
+ * γ₁(p₁, p₂)(c, e) = p₁(c, e) ∧ p₂(c, e)
+ */
+export const and = (guards: Guard[]): Guard =>
+  (args: GuardArgs) => guards.every(guard => guard(args));
+
+/**
+ * γ₂: OR Composition
+ * γ₂(p₁, p₂)(c, e) = p₁(c, e) ∨ p₂(c, e)
+ */
+export const or = (guards: Guard[]): Guard =>
+  (args: GuardArgs) => guards.some(guard => guard(args));
+
+/**
+ * γ₃: NOT Composition
+ * γ₃(p)(c, e) = ¬p(c, e)
+ */
+export const not = (guard: Guard): Guard =>
+  (args: GuardArgs) => !guard(args);
+
+/**
+ * Composite Guards
+ */
+export const compositeGuards = {
+  canReconnect: and([canRetry, shouldReconnect]),
+  canSendMessage: and([isConnected, not(hasError), canSend]),
+  shouldTerminate: or([
+    ({ context }) => context.metrics.reconnectAttempts >= context.maxRetries,
+    and([hasError, not(isRecoverableError)])
+  ])
+};
+
+// Export all guards
+export const guards = {
+  canConnect,
+  canRetry,
+  isConnected,
+  hasError,
+  canSend,
+  shouldReconnect,
+  isCleanDisconnect,
+  canTerminate,
+  hasRateLimitError,
+  shouldResetError
+} as const;
+```
 
 ## 3. Support Module Implementation
 

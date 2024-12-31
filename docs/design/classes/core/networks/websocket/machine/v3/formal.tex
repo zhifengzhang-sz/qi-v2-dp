@@ -1,0 +1,318 @@
+\documentclass[10pt]{article}
+\usepackage{formal}
+
+% Packages for ToC and formatting
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{geometry}
+\usepackage{unicode-math}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{tocbibind}
+
+% Document setup
+\title{WebSocket Machine Formal Specification}
+\author{Zhifeng Zhang}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+%%--------------------------------------------------------------------------------
+%% Core module
+%%--------------------------------------------------------------------------------
+\section{Core Machine Model}
+
+\subsection{Primary Definition}
+A WebSocket Machine is formally defined as a 7-tuple:
+\[
+\mathfrak{M} = (S, E, \delta, s_0, C, \gamma, F)
+\]
+Where
+\begin{itemize}[leftmargin=2em]
+\item $S$ is the finite set of states
+\item $E$ is the set of events
+\item $\delta: S \times E \rightarrow S \times \gamma$ is the transition function
+\item $s_0 \in S$ is the initial state
+\item $C$ is the context triple
+\item $\gamma$ is the set of actions 
+\item $F \subseteq S$ is the set of final states
+\end{itemize}
+
+%%-------- States ($S$) ---------------------------------------------------------
+\subsection{States}
+The state set is defined as:
+\[
+S = \{s_i \mid i=1,2,...,n;\ n=6\}
+\]
+where
+\begin{eqnarray*}
+s_1 &=& \text{Disconnected} \\
+s_2 &=& \text{Connecting} \\
+s_3 &=& \text{Connected} \\
+s_4 &=& \text{Reconnecting} \\
+s_5 &=& \text{Disconnecting} \\
+s_6 &=& \text{Terminated}
+\end{eqnarray*}
+
+Furthermore, the initial state $s_0$ is defined to be $s_1$ and the final state
+set $F=\{s_6\}$ or $F=\{\text{Terminated}\}$.
+
+%%-------- Events ($E$) ---------------------------------------------------------
+\subsection{Events}
+The event set is defined as:
+\[
+E = \{e_i \mid i=1,2,...,m;\ m=12\}
+\]
+where
+\begin{eqnarray*}
+e_1 &=& \text{CONNECT} \\
+e_2 &=& \text{DISCONNECT} \\
+e_3 &=& \text{OPEN} \\
+e_4 &=& \text{CLOSE} \\
+e_5 &=& \text{ERROR} \\
+e_6 &=& \text{MESSAGE} \\
+e_7 &=& \text{PING} \\
+e_8 &=& \text{PONG} \\
+e_9 &=& \text{TIMEOUT} \\
+e_{10} &=& \text{RETRY} \\
+e_{11} &=& \text{ABORT} \\
+e_{12} &=& \text{TERMINATE}
+\end{eqnarray*}
+
+%%-------- Context ($C$) ---------------------------------------------------------
+\subsection{Context}
+The context is defined as a triple:
+$$C = (P, V, T)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $P$ is the set of primary connection properties
+  $$P = \{\text{url}, \text{protocols}, \text{socket}, \text{status}, \text{readyState}\}$$
+\item $V$ is the set of metric values
+  $$V = \{\text{messagesSent}, \text{messagesReceived}, \text{reconnectAttempts},
+  \text{bytesSent}, \text{bytesReceived}\}$$
+\item $T$ is the set of timing properties
+  $$T = \{\text{connectTime}, \text{disconnectTime}, \text{lastPingTime},
+  \text{lastPongTime}, \text{windowStart}\}$$
+\end{itemize}
+
+%%-------- Actions ($\gamma$) -----------------------------------------------------
+\subsection{Actions}
+\addtocontents{toc}{\protect\setcounter{tocdepth}{2}}
+
+Actions are pure functions that transform context:
+$$\gamma: C \times E \rightarrow C$$
+
+Core action set:
+$$\Gamma = \{\gamma_i \mid i=1,2,...,p;\ p=11\}$$
+
+Key actions include:
+
+\begin{eqnarray*}
+\gamma_1(c, e_{\text{\tiny CONNECT}}) &=& c' \text{ where } c'.\text{url} = e.\text{url} \\
+\gamma_2(c) &=& c' \text{ where } c'.\text{reconnectAttempts} = 0 \\
+\gamma_3(c, e_{\text{\tiny ERROR}}) &=& c' \text{ where } c'.\text{error} = e.\text{error} \\
+\gamma_4(c, e_{\text{\tiny MESSAGE}}) &=& c' \text{ where } c'.\text{messagesReceived} += 1 \\
+\gamma_5(c, e_{\text{\tiny SEND}}) &=& c' \text{ where } c'.\text{messagesSent} += 1
+\end{eqnarray*}
+
+%%-------- Transition Function ($\delta$) -----------------------------------------
+\subsection{Transition Function}
+
+The transition function maps states and events to new states and actions:
+$$\delta: S \times E \rightarrow S \times \mathfrak{P}(\Gamma)$$
+
+Key transitions include:
+\begin{eqnarray*}
+\delta(s_{\text{\tiny Disconnected}}, e_{\text{\tiny CONNECT}}) &=& (s_{\text{\tiny Connecting}}, \{\gamma_1, \gamma_{10}\}) \\
+\delta(s_{\text{\tiny Connecting}}, e_{\text{\tiny OPEN}}) &=& (s_{\text{\tiny Connected}}, \{\gamma_2\}) \\
+\delta(s_{\text{\tiny Connected}}, e_{\text{\tiny ERROR}}) &=& (s_{\text{\tiny Reconnecting}}, \{\gamma_3, \gamma_9\})
+\end{eqnarray*}
+
+
+%%--------------------------------------------------------------------------------
+%% Support module
+%%--------------------------------------------------------------------------------
+\section{Support Systems}
+
+%%-------- Type System ($\mathfrak{T}$) -------------------------------------------
+\subsection{Type System ($\mathfrak{T}$)}
+
+A Type System is defined as:
+$$\mathfrak{T} = (B, C, V)$$
+
+where:
+- $B$: Base types $\{\text{String}, \text{Number}, \text{Boolean}, \text{Null}, \text{Undefined}\}$
+- $C$: Composite types (Record, Array, Union, Intersection)
+- $V$: Validation functions
+
+%%-------- Guards System ($\mathfrak{G}$) -----------------------------------------
+\subsection{Guards System ($\mathfrak{G}$)}
+
+A Guards System is defined as:
+\[
+\mathfrak{G} = (P, \Gamma, \Psi, \Omega)
+\]
+
+where:
+\begin{itemize}[leftmargin=2em]
+\item $P$: Predicate functions
+\item $\Gamma$: Guard compositions
+\item $\Psi$: Guard evaluation context
+\item $\Omega$: Guard operators
+\end{itemize}
+
+Guard composition laws:
+\begin{eqnarray}
+\gamma_{\text{\tiny AND}}(p_1, p_2)(c, e) &=& p_1(c, e) \wedge p_2(c, e) \\
+\gamma_{\text{\tiny OR}}(p_1, p_2)(c, e) &=& p_1(c, e) \vee p_2(c, e) \\
+\gamma_{\text{\tiny NOT}}(p)(c, e) &=& \neg p(c, e)
+\end{eqnarray}
+
+%%-------- Error System ($\varepsilon$) -----------------------------------------
+\subsection{Error System}
+
+An Error System is defined as:
+$$\varepsilon = (K, R, H)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $K$: Error categories
+\item $R$: Recovery strategies
+\item $H$: Error history
+\end{itemize}
+
+Recovery strategy function:
+$$R(k, n) = (m, b, t)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $m$: Maximum retry attempts
+\item $b$: Backoff factor
+\item $t$: Timeout duration
+\end{itemize}
+
+%%-------- Resource Management ($\mathfrak{R}$) -----------------------------------
+\subsection{Resource Management ($\mathfrak{R}$)}
+
+A Resource Management System $\mathfrak{R}$ is defined as:
+$$\mathfrak{R} = (L, A, M)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $L$: Lifecycle states $\{\text{free}, \text{acquired}, \text{failed}\}$
+\item $A$: Acquisition operations
+\item $M$: Monitoring functions
+\end{itemize}
+
+%%-------- Rate Limiting ($\rho$) -----------------------------------------------
+\subsection{Rate Limiting}
+
+A Rate Limiting System $\rho$ is defined as:
+$$\rho = (W, Q, \lambda)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $W$: Time window function
+\item $Q$: Message queue
+\item $\lambda$: Rate limiting function
+\end{itemize}
+
+Window function:
+$$W(t) = [t - w, t]$$
+
+Rate limiting function:
+$$
+\lambda(m, W) = \begin{cases}
+\text{accept} & \text{if } |M(W)| < n \\
+\text{queue} & \text{if } |Q| < q_{\text{\tiny max}} \\
+\text{reject} & \text{otherwise}
+\end{cases}
+$$
+
+%%-------- Health Monitoring ($\mathfrak{H}$) -------------------------------------
+\subsection{Health Monitoring ($\mathfrak{H}$)}
+
+A Health Monitoring System is defined as:
+$$\mathfrak{H} = (\Pi, \Delta, \Phi)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $\Pi$: Health probe system
+\item $\Delta$: Health metrics $(L, R, U)$
+\item $\Phi$: Health state function
+\end{itemize}
+
+Health state function:
+$$
+\Phi(\Delta) = \begin{cases}
+\text{healthy} & \text{if } R \geq r_{\text{\tiny threshold}} \wedge \bar{L} \leq l_{\text{\tiny threshold}} \\
+\text{degraded} & \text{if } R \geq r_{\text{\tiny critical}} \wedge \bar{L} \leq l_{\text{\tiny critical}} \\
+\text{unhealthy} & \text{otherwise}
+\end{cases}
+$$
+
+%%-------- Metrics Collection ($\mathfrak{M}$) -----------------------------------
+\subsection{Metrics Collection ($\mathfrak{M}$)}
+
+A Metrics Collection System is defined as:
+$$\mathfrak{M} = (D, \Sigma, \Theta, \Phi)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $D$: Metric data points
+\item $\Sigma$: Collection strategies
+\item $\Theta$: Temporal aggregation
+\item $\Phi$: Processing functions
+\end{itemize}
+
+%%-------- Testing Verification ($\mathfrak{V}$) ----------------------------------
+\subsection{Testing Verification ($\mathfrak{V}$)}
+
+A Testing Verification System is defined as:
+$$\mathfrak{V} = (P, I, T)$$
+where
+\begin{itemize}[leftmargin=2em]
+\item $P$: Property verification functions
+\item $I$: Invariant checks
+\item $T$: Transition tests
+\end{itemize}
+
+%%--------------------------------------------------------------------------------
+%% Support module
+%%--------------------------------------------------------------------------------
+\section{Integration Properties}
+
+%%-------- System Composition Function -----------------------------------------
+\subsection{System Composition Function}
+
+The complete system is composed as:
+$$\mathfrak{S} = (\mathfrak{T}, \varepsilon, \mathfrak{R}, \rho, \mathfrak{H}, \mathfrak{V})$$
+
+%%-------- System Invariants ---------------------------------------------------
+\subsection{System Invariants}
+
+\begin{enumerate}[leftmargin=2em]
+\item Type Safety:
+   $$\forall x, \forall a,b \in \mathfrak{S}: V_a(x) \wedge V_b(x)$$
+\item Error Commutativity:
+   $$\varepsilon_a \circ \varepsilon_b = \varepsilon_b \circ \varepsilon_a$$
+\item Resource Exclusivity:
+   $$\forall a,b \in \mathfrak{S}: \mathfrak{R}_a \cap \mathfrak{R}_b = \emptyset$$
+\item Rate Limit Monotonicity:
+   $$t_1 \leq t_2 \implies W(t_1) \subseteq W(t_2)$$
+\item Health Continuity:
+   $$\forall t_1,t_2: |t_1-t_2| < \epsilon \implies |\Phi(\Delta(t_1)) - \Phi(\Delta(t_2))| < \delta$$
+\end{enumerate}
+
+%%-------- System Properties ---------------------------------------------------
+\subsection{Global Properties}
+
+\begin{enumerate}[leftmargin=2em]
+\item Determinism:
+   $$\forall s \in S, e \in E: |\delta(s,e)| \leq 1$$
+\item Reachability:
+   $$\forall s \in S: \exists \text{ path } p: s_0 \xrightarrow{*} s$$
+\item Safety:
+   $$\forall s \in S - F: \exists e \in E: \delta(s,e) \neq \emptyset$$
+\item Liveness:
+   $$\forall s \in S: \exists \text{ path } p: s \xrightarrow{*} f \text{ where } f \in F$$
+\end{enumerate}
+\end{document}

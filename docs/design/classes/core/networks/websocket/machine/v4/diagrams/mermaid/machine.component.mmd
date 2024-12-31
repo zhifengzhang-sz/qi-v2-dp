@@ -1,0 +1,18 @@
+C4Component
+    title Component diagram for State Manager
+
+    Container_Boundary(state_manager, "State Manager") {
+        Component(transition_engine, "Transition Engine", "Implements state machine logic δ(S×E)")
+        Component(action_executor, "Action Executor", "Executes state transition actions Γ")
+        Component(invariant_checker, "Invariant Checker", "Validates state invariants")
+        Component(context_manager, "Context Manager", "Maintains machine context C")
+    }
+
+    Container_Ext(conn_mgr, "Connection Manager")
+    Container_Ext(msg_handler, "Message Handler")
+    
+    Rel(transition_engine, action_executor, "Triggers actions")
+    Rel(action_executor, context_manager, "Updates context")
+    Rel(invariant_checker, context_manager, "Validates")
+    Rel(transition_engine, conn_mgr, "Controls")
+    Rel(msg_handler, transition_engine, "Triggers events")

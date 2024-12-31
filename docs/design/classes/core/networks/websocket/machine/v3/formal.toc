@@ -1,0 +1,22 @@
+\contentsline {section}{Contents}{1}{Doc-Start}%
+\contentsline {section}{\numberline {1}Core Machine Model}{2}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Primary Definition}{2}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}States}{2}{subsection.1.2}%
+\contentsline {subsection}{\numberline {1.3}Events}{2}{subsection.1.3}%
+\contentsline {subsection}{\numberline {1.4}Context}{3}{subsection.1.4}%
+\contentsline {subsection}{\numberline {1.5}Actions}{3}{subsection.1.5}%
+\setcounter {tocdepth}{2}
+\contentsline {subsection}{\numberline {1.6}Transition Function}{3}{subsection.1.6}%
+\contentsline {section}{\numberline {2}Support Systems}{3}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Type System ($\symfrak {T}$)}{3}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Guards System ($\symfrak {G}$)}{4}{subsection.2.2}%
+\contentsline {subsection}{\numberline {2.3}Error System}{4}{subsection.2.3}%
+\contentsline {subsection}{\numberline {2.4}Resource Management ($\symfrak {R}$)}{4}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Rate Limiting}{5}{subsection.2.5}%
+\contentsline {subsection}{\numberline {2.6}Health Monitoring ($\symfrak {H}$)}{5}{subsection.2.6}%
+\contentsline {subsection}{\numberline {2.7}Metrics Collection ($\symfrak {M}$)}{5}{subsection.2.7}%
+\contentsline {subsection}{\numberline {2.8}Testing Verification ($\symfrak {V}$)}{5}{subsection.2.8}%
+\contentsline {section}{\numberline {3}Integration Properties}{6}{section.3}%
+\contentsline {subsection}{\numberline {3.1}System Composition Function}{6}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}System Invariants}{6}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}Global Properties}{6}{subsection.3.3}%

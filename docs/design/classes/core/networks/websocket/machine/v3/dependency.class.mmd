@@ -1,0 +1,115 @@
+classDiagram
+    %% Core Machine Classes
+    class WebSocketMachine {
+        -state: State
+        -context: Context
+        -config: MachineConfig
+        +send(event: WebSocketEvent)
+        +connect()
+        +disconnect()
+        +getState(): State
+        +getContext(): Context
+    }
+
+    class StatesModule {
+        -states: Set~State~
+        -validTransitions: Map
+        +isValidState(state: string): boolean
+        +isValidTransition(from: State, to: State): boolean
+        +getInitialState(): State
+    }
+
+    class EventsModule {
+        -events: Set~Event~
+        -eventCategories: Map
+        +isValidEvent(event: string): boolean
+        +getEventCategory(event: string): string
+    }
+
+    class ContextModule {
+        -primary: PrimaryProperties
+        -metrics: MetricValues
+        -timing: TimingProperties
+        +getContext(): Context
+        +updateContext(updater: Function)
+    }
+
+    class ActionsModule {
+        -context: ContextModule
+        +initializeConnection()
+        +handleOpen()
+        +handleMessage(payload: any)
+        +handleError(error: any)
+    }
+
+    %% Support System Classes
+    class TypeSystem {
+        -baseTypes: Set~Type~
+        -compositeTypes: Map
+        +validate(value: any, type: Type): boolean
+        +compose(types: Type[]): Type
+    }
+
+    class GuardsSystem {
+        -predicates: Map
+        -operators: Map
+        +evaluate(guard: Guard, context: Context): boolean
+        +compose(guards: Guard[]): Guard
+    }
+
+    class ErrorSystem {
+        -categories: Map
+        -strategies: Map
+        +handleError(error: Error): Recovery
+        +getStrategy(category: string): Strategy
+    }
+
+    class ResourceSystem {
+        -resources: Map
+        -states: Map
+        +acquire(resource: string): Resource
+        +release(resource: Resource)
+        +monitor(): ResourceState
+    }
+
+    class HealthMonitor {
+        -probes: Set~Probe~
+        -metrics: MetricsSystem
+        +check(): HealthState
+        +addProbe(probe: Probe)
+    }
+
+    class RateLimiter {
+        -window: TimeWindow
+        -queue: MessageQueue
+        +limit(message: Message): Decision
+        +processQueue()
+    }
+
+    class MetricsSystem {
+        -collectors: Map
+        -aggregators: Map
+        +collect(metric: Metric)
+        +aggregate(timeframe: TimeFrame): Stats
+    }
+
+    %% Relationships
+    WebSocketMachine --> StatesModule
+    WebSocketMachine --> EventsModule
+    WebSocketMachine --> ContextModule
+    WebSocketMachine --> ActionsModule
+    
+    ActionsModule --> ContextModule
+    ActionsModule --> EventsModule
+
+    GuardsSystem --> ContextModule
+    HealthMonitor --> MetricsSystem
+    ResourceSystem --> ErrorSystem
+    MetricsSystem --> ContextModule
+
+    %% Type System Relationships
+    TypeSystem --> "*" WebSocketMachine
+    TypeSystem --> "*" StatesModule
+    TypeSystem --> "*" EventsModule
+    TypeSystem --> "*" ContextModule
+    TypeSystem --> "*" ActionsModule

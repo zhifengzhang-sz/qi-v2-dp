@@ -1,0 +1,62 @@
+\ProvidesPackage{formal}
+
+% Required packages
+\RequirePackage{amsmath}
+\RequirePackage{amssymb}
+\RequirePackage{mathrsfs}
+\RequirePackage{geometry}
+\RequirePackage{xcolor}
+\RequirePackage{titlesec}
+\RequirePackage{fancyhdr}
+\RequirePackage{unicode-math}
+\RequirePackage{enumitem}  % Add enumitem package here
+
+% Page setup
+\geometry{a4paper, margin=0.5in, top=1in, bottom=0.75in}
+\pagestyle{fancy}
+
+% Colors
+\definecolor{heading}{RGB}{0,75,147}
+\definecolor{subheading}{RGB}{70,70,70}
+
+% Section formatting
+\titleformat{\section}
+  {\color{heading}\Large\bfseries}
+  {\thesection}{1em}{}
+
+\titleformat{\subsection}
+  {\color{subheading}\large\bfseries}
+  {\thesubsection}{1em}{}
+
+\titleformat{\subsubsection}
+  {\color{subheading}\normalsize\bfseries}
+  {\thesubsubsection}{1em}{}
+
+\titlespacing*{\section}{0pt}{3.5ex plus 1ex minus .2ex}{2.3ex plus .2ex}
+\titlespacing*{\subsection}{0pt}{3.25ex plus 1ex minus .2ex}{1.5ex plus .2ex}
+
+% Math settings
+\setmathfont{Latin Modern Math}
+\setlength{\jot}{0pt}  % Remove space between eqnarray rows
+\allowdisplaybreaks
+
+% Equation numbering
+\renewcommand{\theequation}{\thesection.\arabic{equation}}
+
+% Header/footer
+\fancyhead{}
+\fancyfoot{}
+\fancyhead[L]{\slshape\nouppercase{\leftmark}}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% Unicode math setup
+\setmathfont{Latin Modern Math}
+\unimathsetup{math-style=ISO,bold-style=ISO}
+
+% PDF bookmarks
+\makeatletter
+\newcommand{\mathsymbol}[1]{#1}  % For PDF bookmarks
+\newcommand{\texorpdfgreek}[1]{\texorpdfstring{$#1$}{#1}}
+\makeatother
+\newcommand{\greektext}[1]{\texorpdfstring{$#1$}{#1}}

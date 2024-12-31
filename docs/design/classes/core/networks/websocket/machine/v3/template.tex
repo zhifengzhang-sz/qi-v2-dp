@@ -1,0 +1,27 @@
+% Required packages
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{mathrsfs}
+\usepackage{geometry}
+\usepackage{unicode-math}
+\usepackage{xcolor}
+\usepackage{listings}
+
+% Geometry settings
+\geometry{a4paper, margin=1in}
+
+% Math settings
+\setmathfont{Latin Modern Math}
+
+% Fix equation alignments
+\makeatletter
+\newenvironment{eqarray}{%
+  \begin{align}
+}{%
+  \end{align}
+}
+\makeatother
+
+% Document settings
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{6pt plus 2pt minus 1pt}

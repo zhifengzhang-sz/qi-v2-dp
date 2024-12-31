@@ -1,0 +1,29 @@
+C4Container
+    title Container diagram for WebSocket Machine
+
+    Person(client, "Client Application", "Software system using WebSocket connection")
+    
+    Container_Boundary(ws_machine, "WebSocket Machine") {
+        Container(state_manager, "State Manager", "Manages state transitions and enforces invariants")
+        Container(connection_manager, "Connection Manager", "Handles WebSocket connections and reconnection logic") 
+        
+        %% Separate message handling flow
+        Container(message_handler, "Message Handler", "Processes incoming/outgoing messages and maintains order")
+        
+        %% Place metrics collector separately
+        Container(metrics_collector, "Metrics Collector", "Tracks performance metrics and connection statistics")
+    }
+    
+    System_Ext(server, "WebSocket Server", "Remote system providing WebSocket endpoint")
+
+    %% Control flow
+    Rel_D(client, state_manager, "Sends events to")
+    Rel_D(state_manager, connection_manager, "Controls")
+    Rel_D(connection_manager, server, "Connects to")
+    
+    %% Message handling
+    Rel_R(connection_manager, message_handler, "Routes messages")
+    
+    %% Metrics collection
+    Rel_L(message_handler, metrics_collector, "Updates")
+    Rel_L(connection_manager, metrics_collector, "Updates")
