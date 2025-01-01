@@ -1237,7 +1237,7 @@ export class ConfigFactory implements IConfigFactory {
  *
  * @author Zhifeng Zhang
  * @created 2024-11-16
- * @modified 2024-11-25
+ * @modified 2024-12-25
  *
  * @note
  * This file is automatically processed by a pre-commit script to ensure
@@ -1324,27 +1324,30 @@ export class EnvLoader<
 
   async load(): Promise<T> {
     try {
+      // Load new state
       const vars = await this.loadFromEnvFiles();
       this.schema.validate(vars, this.schemaId);
+      const newConfig = vars as T;
 
-      const config = vars as T;
-      if (this.currentConfig) {
+      // Track state change
+      const prevConfig = this.currentConfig;
+      this.currentConfig = newConfig;
+
+      // Notify watchers if state changed
+      if (prevConfig) {
         this.notifyChange(
-          this.currentConfig,
-          config,
+          prevConfig, // previous state
+          this.currentConfig, // new state
           this.options.path || "process.env"
         );
       }
-      this.currentConfig = config;
 
-      return config;
+      return this.currentConfig;
     } catch (error) {
       throw ConfigLoaderError.fromError(
         error,
         CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
-        {
-          source: this.options.path || "process.env",
-        }
+        { source: this.options.path || "process.env" }
       );
     }
   }
@@ -1355,6 +1358,7 @@ export class EnvLoader<
     if (!this.options?.path) return process.env;
 
     try {
+      // Load main env file
       const mainEnvVars = await loadEnv(this.options.path, {
         override: this.options?.override ?? false,
       });
@@ -1367,6 +1371,10 @@ export class EnvLoader<
         );
       }
 
+      // Start with main env vars
+      let envVars = { ...process.env, ...mainEnvVars };
+
+      // Load and merge extra files
       for (const file of this.options?.extraFiles ?? []) {
         const extraVars = await loadEnv(file, {
           override: this.options?.override ?? false,
@@ -1379,16 +1387,16 @@ export class EnvLoader<
             file
           );
         }
+
+        envVars = { ...envVars, ...extraVars };
       }
 
-      return process.env;
+      return envVars;
     } catch (error) {
       throw ConfigLoaderError.fromError(
         error,
         CONFIG_LOADER_CODES.ENV_LOAD_ERROR,
-        {
-          source: this.options?.path,
-        }
+        { source: this.options?.path }
       );
     }
   }
@@ -2558,7 +2566,7 @@ export class ApplicationError extends Error {
  *
  * @author Zhifeng Zhang
  * @created 2024-11-21
- * @modified 2024-12-11
+ * @modified 2024-12-25
  */
 
 export enum ErrorCode {
@@ -2574,11 +2582,26 @@ export enum ErrorCode {
   PARSE_ERROR = 1102,
   WATCH_ERROR = 1103,
 
-  // Connection errors
+  // Connection errors (1200-1299)
   CONNECTION_ERROR = 1200,
   TIMEOUT_ERROR = 1201,
   PING_ERROR = 1202,
-  WEBSOCKET_ERROR = 1203,
+
+  // WebSocket specific errors (1210-1219)
+  WEBSOCKET_ERROR = 1210,
+  WEBSOCKET_CLOSED = 1211, // Normal closure
+  WEBSOCKET_ABNORMAL = 1212, // Abnormal closure
+  WEBSOCKET_PROTOCOL = 1213, // Protocol error
+  WEBSOCKET_INVALID_DATA = 1214, // Invalid frame/data
+  WEBSOCKET_POLICY = 1215, // Policy violation
+  WEBSOCKET_MESSAGE_SIZE = 1216, // **Updated from WEBSOCKET_SIZE**
+  WEBSOCKET_DISCONNECT = 1217, // Going away
+  WEBSOCKET_EXTENSION = 1218, // Extension negotiation failed
+  WEBSOCKET_INTERNAL = 1219, // Internal error
+  WEBSOCKET_INVALID_URL = 1220, // Invalid WebSocket URL
+  WEBSOCKET_TIMEOUT = 1221, // Connection timeout
+  WEBSOCKET_NOT_CONNECTED = 1222, // Not connected
+  WEBSOCKET_SEND_FAILED = 1223, // Failed to send message
 
   // Operation errors
   OPERATION_ERROR = 1300,
@@ -2589,6 +2612,8 @@ export enum ErrorCode {
   AUTH_ERROR = 1401, // 401 related errors
   RATE_LIMIT_ERROR = 1429, // 429 related errors
   NETWORK_ERROR = 1500, // Network connectivity issues
+  BAD_GATEWAY = 1502,
+  SERVICE_UNAVAILABLE = 1503,
   NOT_FOUND_ERROR = 1404, // Resource not found
 
   // === Configuration Errors (2000-2999) ===
@@ -3040,465 +3065,6 @@ if (process.env.NODE_ENV !== "production") {
 }
 
 export { logger };
-
-```
-
-### networks
-
-#### index.ts
-
-```typescript
-/**
- * @fileoverview
- * @module index.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-11
- */
-
-export * from "./http/client.js";
-export * from "./websocket/client.js";
-
-```
-
-#### http
-
-##### client.ts
-
-```typescript
-/**
- * @fileoverview
- * @module client.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-11
- */
-
-import { ApplicationError, ErrorCode } from "@qi/core/errors";
-import { logger } from "@qi/core/logger";
-import { retryOperation } from "@qi/core/utils";
-import axios, {
-  AxiosInstance,
-  AxiosRequestConfig,
-  AxiosResponse,
-  InternalAxiosRequestConfig,
-} from "axios";
-
-// Extend Axios request config to include startTime
-declare module "axios" {
-  export interface InternalAxiosRequestConfig {
-    startTime?: number;
-  }
-}
-
-export interface HttpConfig {
-  baseURL?: string;
-  timeout?: number;
-  headers?: Record<string, string>;
-  retries?: number;
-  retryDelay?: number;
-}
-
-export interface RequestConfig extends AxiosRequestConfig {
-  retry?: boolean;
-}
-
-export class HttpClient {
-  private readonly client: AxiosInstance;
-  private readonly config: Required<HttpConfig>;
-
-  constructor(config: HttpConfig = {}) {
-    this.config = {
-      baseURL: config.baseURL || "",
-      timeout: config.timeout || 30000,
-      headers: config.headers || {},
-      retries: config.retries || 3,
-      retryDelay: config.retryDelay || 1000,
-    };
-
-    this.client = axios.create({
-      baseURL: this.config.baseURL,
-      timeout: this.config.timeout,
-      headers: this.config.headers,
-    });
-
-    // Add response interceptor for logging
-    this.client.interceptors.response.use(
-      (response) => {
-        const duration = response.config.startTime
-          ? Date.now() - response.config.startTime
-          : undefined;
-
-        logger.debug("HTTP Response", {
-          url: response.config.url,
-          status: response.status,
-          duration,
-        });
-        return response;
-      },
-      (error) => {
-        const duration = error.config?.startTime
-          ? Date.now() - error.config.startTime
-          : undefined;
-
-        logger.error("HTTP Error", {
-          url: error.config?.url,
-          status: error.response?.status,
-          error: error.message,
-          duration,
-        });
-        throw error;
-      }
-    );
-
-    // Add request interceptor for timing
-    this.client.interceptors.request.use(
-      (config: InternalAxiosRequestConfig) => {
-        config.startTime = Date.now();
-        return config;
-      }
-    );
-  }
-
-  private async executeRequest<T>(
-    config: RequestConfig
-  ): Promise<AxiosResponse<T>> {
-    try {
-      if (config.retry === false) {
-        return await this.client.request<T>(config);
-      }
-
-      return await retryOperation(() => this.client.request<T>(config), {
-        retries: this.config.retries,
-        minTimeout: this.config.retryDelay,
-        onRetry: (times) => {
-          logger.warn("Retrying HTTP request", {
-            url: config.url,
-            attempt: times,
-          });
-        },
-      });
-    } catch (error) {
-      // Type guard for axios error
-      if (axios.isAxiosError(error)) {
-        throw new ApplicationError(
-          "HTTP request failed",
-          ErrorCode.NETWORK_ERROR, // Use existing error code
-          error.response?.status || 500,
-          {
-            url: config.url,
-            method: config.method,
-            error: error.message,
-          }
-        );
-      }
-      // Handle non-axios errors
-      throw new ApplicationError(
-        "HTTP request failed",
-        ErrorCode.NETWORK_ERROR,
-        500,
-        {
-          url: config.url,
-          method: config.method,
-          error: error instanceof Error ? error.message : String(error),
-        }
-      );
-    }
-  }
-
-  async get<T>(url: string, config: RequestConfig = {}): Promise<T> {
-    const response = await this.executeRequest<T>({
-      ...config,
-      method: "GET",
-      url,
-    });
-    return response.data;
-  }
-
-  async post<T>(
-    url: string,
-    data?: unknown,
-    config: RequestConfig = {}
-  ): Promise<T> {
-    const response = await this.executeRequest<T>({
-      ...config,
-      method: "POST",
-      url,
-      data,
-    });
-    return response.data;
-  }
-
-  async put<T>(
-    url: string,
-    data?: unknown,
-    config: RequestConfig = {}
-  ): Promise<T> {
-    const response = await this.executeRequest<T>({
-      ...config,
-      method: "PUT",
-      url,
-      data,
-    });
-    return response.data;
-  }
-
-  async delete<T>(url: string, config: RequestConfig = {}): Promise<T> {
-    const response = await this.executeRequest<T>({
-      ...config,
-      method: "DELETE",
-      url,
-    });
-    return response.data;
-  }
-}
-
-```
-
-#### websocket
-
-##### client.ts
-
-```typescript
-/**
- * @fileoverview
- * @module client.ts
- *
- * @author zhifengzhang-sz
- * @created 2024-12-11
- * @modified 2024-12-11
- */
-
-import WebSocket from "ws";
-import { EventEmitter } from "events";
-import { ApplicationError, ErrorCode } from "@qi/core/errors";
-import { logger } from "@qi/core/logger";
-
-export interface WebSocketConfig {
-  pingInterval?: number;
-  pongTimeout?: number;
-  reconnect?: boolean;
-  reconnectInterval?: number;
-  maxReconnectAttempts?: number;
-}
-
-export interface MessageHandler {
-  (data: unknown): void | Promise<void>;
-}
-
-export class WebSocketClient extends EventEmitter {
-  private ws: WebSocket | null = null;
-  private readonly config: Required<WebSocketConfig>;
-  private reconnectAttempts = 0;
-  private pingTimer?: NodeJS.Timeout;
-  private pongTimer?: NodeJS.Timeout;
-  private readonly subscriptions = new Map<string, Set<MessageHandler>>();
-
-  constructor(config: WebSocketConfig = {}) {
-    super();
-    this.config = {
-      pingInterval: config.pingInterval || 30000,
-      pongTimeout: config.pongTimeout || 5000,
-      reconnect: config.reconnect ?? true,
-      reconnectInterval: config.reconnectInterval || 5000,
-      maxReconnectAttempts: config.maxReconnectAttempts || 5,
-    };
-  }
-
-  async connect(url: string): Promise<void> {
-    if (this.ws) {
-      throw new ApplicationError(
-        "WebSocket already connected",
-        ErrorCode.WEBSOCKET_ERROR,
-        500
-      );
-    }
-
-    try {
-      await this.establishConnection(url);
-      this.setupHeartbeat();
-      logger.info("WebSocket connected", { url });
-    } catch (error) {
-      throw new ApplicationError(
-        "WebSocket connection failed",
-        ErrorCode.WEBSOCKET_ERROR,
-        500,
-        { error: String(error) }
-      );
-    }
-  }
-
-  private async establishConnection(url: string): Promise<void> {
-    return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(url);
-
-      this.ws.on("open", () => {
-        this.reconnectAttempts = 0;
-        this.emit("connected");
-        resolve();
-      });
-
-      this.ws.on("message", (data: WebSocket.Data) => {
-        try {
-          const parsed = JSON.parse(data.toString());
-          if (parsed.channel && this.subscriptions.has(parsed.channel)) {
-            const handlers = this.subscriptions.get(parsed.channel)!;
-            handlers.forEach((handler) => {
-              try {
-                handler(parsed.data);
-              } catch (error) {
-                logger.error("Message handler error", {
-                  error,
-                  channel: parsed.channel,
-                });
-              }
-            });
-          }
-          this.emit("message", parsed);
-        } catch (error) {
-          logger.error("WebSocket message parse error", { error, data });
-        }
-      });
-
-      this.ws.on("close", () => {
-        this.cleanup();
-        this.emit("disconnected");
-        if (
-          this.config.reconnect &&
-          this.reconnectAttempts < this.config.maxReconnectAttempts
-        ) {
-          this.reconnectAttempts++;
-          setTimeout(() => {
-            logger.info("Attempting WebSocket reconnection", {
-              attempt: this.reconnectAttempts,
-              maxAttempts: this.config.maxReconnectAttempts,
-            });
-            this.connect(url).catch((error) => {
-              logger.error("WebSocket reconnection failed", { error });
-            });
-          }, this.config.reconnectInterval);
-        }
-      });
-
-      this.ws.on("error", (error) => {
-        logger.error("WebSocket error", { error });
-        this.emit("error", error);
-        reject(error);
-      });
-
-      this.ws.on("pong", () => {
-        this.clearPongTimer();
-      });
-    });
-  }
-
-  private setupHeartbeat(): void {
-    this.pingTimer = setInterval(() => {
-      if (this.ws?.readyState === WebSocket.OPEN) {
-        this.ws.ping();
-        this.setPongTimer();
-      }
-    }, this.config.pingInterval);
-  }
-
-  private setPongTimer(): void {
-    this.pongTimer = setTimeout(() => {
-      logger.warn("WebSocket pong timeout");
-      this.ws?.terminate();
-    }, this.config.pongTimeout);
-  }
-
-  private clearPongTimer(): void {
-    if (this.pongTimer) {
-      clearTimeout(this.pongTimer);
-      this.pongTimer = undefined;
-    }
-  }
-
-  private cleanup(): void {
-    if (this.pingTimer) {
-      clearInterval(this.pingTimer);
-      this.pingTimer = undefined;
-    }
-    this.clearPongTimer();
-    this.ws = null;
-  }
-
-  subscribe(channel: string, handler: MessageHandler): void {
-    if (!this.subscriptions.has(channel)) {
-      this.subscriptions.set(channel, new Set());
-    }
-    this.subscriptions.get(channel)!.add(handler);
-
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.send({ type: "subscribe", channel }).catch((error) => {
-        logger.error("Subscription request failed", { error, channel });
-      });
-    }
-  }
-
-  unsubscribe(channel: string, handler?: MessageHandler): void {
-    if (!this.subscriptions.has(channel)) return;
-
-    const handlers = this.subscriptions.get(channel)!;
-    if (handler) {
-      handlers.delete(handler);
-      if (handlers.size === 0) {
-        this.subscriptions.delete(channel);
-      }
-    } else {
-      this.subscriptions.delete(channel);
-    }
-
-    if (this.ws?.readyState === WebSocket.OPEN) {
-      this.send({ type: "unsubscribe", channel }).catch((error) => {
-        logger.error("Unsubscription request failed", { error, channel });
-      });
-    }
-  }
-
-  async send(data: unknown): Promise<void> {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      throw new ApplicationError(
-        "WebSocket not connected",
-        ErrorCode.WEBSOCKET_ERROR,
-        500
-      );
-    }
-
-    return new Promise((resolve, reject) => {
-      this.ws!.send(JSON.stringify(data), (error) => {
-        if (error) {
-          reject(
-            new ApplicationError(
-              "WebSocket send failed",
-              ErrorCode.WEBSOCKET_ERROR,
-              500,
-              { error: String(error) }
-            )
-          );
-        } else {
-          resolve();
-        }
-      });
-    });
-  }
-
-  async close(): Promise<void> {
-    if (this.ws) {
-      this.config.reconnect = false;
-      this.ws.close();
-      this.cleanup();
-      this.subscriptions.clear();
-    }
-  }
-
-  isConnected(): boolean {
-    return this.ws?.readyState === WebSocket.OPEN;
-  }
-}
 
 ```
 
@@ -6667,19 +6233,6 @@ export class TimescaleDBService extends BaseServiceClient<TimescaleDBServiceConf
 }
 
 export default TimescaleDBService;
-
-```
-
-### types
-
-#### avsc.d.ts
-
-```typescript
-declare module "*.avsc" {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const value: any;
-  export default value;
-}
 
 ```
 

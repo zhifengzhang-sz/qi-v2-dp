@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2024-12-08
- * @modified 2024-12-08
+ * @modified 2025-01-02
  */
 
 const fs = require('fs');
@@ -13,7 +13,7 @@ const path = require('path');
 // Get root directory and output file from command-line arguments or use defaults
 const projectDir = process.argv[2] || './src';
 const outputFile = process.argv[3] || 'PROJECT_DOCUMENTATION.md';
-const excludeDirs = ['cli', 'data']; // Directories to skip
+const excludeDirs = ['cli', 'data', 'networks']; // Directories to skip
 
 /**
  * Recursively traverses the directory and generates markdown sections.
