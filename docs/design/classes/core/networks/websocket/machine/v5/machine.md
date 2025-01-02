@@ -19,20 +19,20 @@ where
 $$
 \small
 \begin{aligned}
-\text{Constraints} &= \{\\
+\text{Constraints} = &\{\\
 &\quad MAX\_RETRIES: 5,\\
 &\quad MAX\_MESSAGES: 100,\\
 &\quad WINDOW\_SIZE: 1000\ \text{ms},\\
 &\quad MAX\_WINDOW\_LIFETIME: 60000\ \text{ms},\\
 &\quad MAX\_QUEUE\_SIZE: 1000\\
-\}\\
+&\}\\
 \\
-\text{Timing} &= \{\\
+\text{Timing} = &\{\\
 &\quad CONNECT\_TIMEOUT: 30000\ \text{ms},\\
 &\quad INITIAL\_RETRY\_DELAY: 1000\ \text{ms},\\
 &\quad MAX\_RETRY\_DELAY: 60000\ \text{ms},\\
 &\quad RETRY\_MULTIPLIER: 1.5\\
-\}
+&\}
 \end{aligned}
 $$
 
@@ -56,6 +56,16 @@ $$
 &\text{create}: () \rightarrow w_0\\
 &\text{expire}: W \times t \rightarrow W'\\
 &\text{increment}: w \times \text{Message} \rightarrow w'
+\end{aligned}
+$$
+
+Window lifecycle with explicit temporal constraints:
+$$
+\small
+\begin{aligned}
+&\text{create}() \rightarrow w_0 = (\text{now}(), 0, \text{now}() + \text{WINDOW\_SIZE})\\
+&\text{expire}(W,t) = \{w \in W \mid w.\text{expiry} > t\}\\
+&\text{increment}(w,m) = (w.\text{start}, w.\text{count} + 1, w.\text{expiry})
 \end{aligned}
 $$
 
@@ -409,11 +419,11 @@ Define queue overflow behavior:
 $$
 \small
 \begin{aligned}
-&\text{enqueue}(Q, m) = \begin{cases}
-(Q', \text{true}) & \text{if } |Q.M| < MAX\_QUEUE\_SIZE\\
+&\text{enqueue}(Q,m) = \begin{cases}
+(Q \cup \{m\}, \text{true}) & \text{if }|Q| < \text{MAX\_SIZE}\\
+(\text{drop}(Q) \cup \{m\}, \text{true}) & \text{if }|Q| = \text{MAX\_SIZE}\\
 (Q, \text{false}) & \text{otherwise}
-\end{cases}\\
-&\text{where } Q'.M = Q.M \cup \{m\}
+\end{cases}
 \end{aligned}
 $$
 
@@ -423,6 +433,20 @@ $$
 \begin{aligned}
 &\text{clear}: Q \rightarrow Q_0\\
 &\text{clear}(Q) = (\emptyset, Q.\text{cap}, 0, 0)
+\end{aligned}
+$$
+
+Define drop oldest operation:
+$$
+\small
+\begin{aligned}
+&\text{dropOldest}: Q \rightarrow Q \times M\\
+&\text{dropOldest}(Q) = (Q', m) \\
+&\text{ where}\\
+&\quad m = \arg\min_{m \in Q.M} t_s(m)\\
+&\quad Q'.M = Q.M \setminus \{m\}\\
+&\quad Q'.\text{head} = Q.\text{head}\\
+&\quad Q'.\text{tail} = Q.\text{tail} - 1
 \end{aligned}
 $$
 
@@ -449,6 +473,19 @@ $$
 &1 \implies \text{OPEN}\\
 &2 \implies \text{CLOSING}\\
 &3 \implies \text{CLOSED}
+\end{aligned}
+$$
+
+$$
+\small
+\begin{aligned}
+\text{AsyncState} =\ &\{\\
+&\quad \text{INIT}: \text{socket created, not connecting}\\
+&\quad \text{CONNECTING\_STARTED}: \text{connection initiated}\\
+&\quad \text{DNS\_LOOKUP}: \text{resolving hostname}\\
+&\quad \text{TCP\_CONNECTING}: \text{establishing TCP}\\
+&\quad \text{WEBSOCKET\_HANDSHAKE}: \text{performing WS handshake}\\
+&\}
 \end{aligned}
 $$
 
@@ -536,6 +573,25 @@ M_{ext} &= (M \times \text{MessageType} \times \text{Priority})\\[1ex]
 $$
 
 ## 18. Performance Requirements
+Define monitoring functions:
+$$
+\small
+\begin{aligned}
+&\text{measureLatency}: M \rightarrow \mathbb{R}^+ \\
+&\text{measureThroughput}: \text{Time} \times \text{Time} \rightarrow \mathbb{N} \\
+&\text{measureMemory}: Q \cup W \rightarrow \text{Bytes}
+\end{aligned}
+$$
+
+Performance bounds:
+$$
+\small
+\begin{aligned}
+&\text{1. Throughput: } \forall t: \text{measureThroughput}(t, t+1000) \leq 1000\\
+&\text{2. Latency: } \forall m \in M: \text{measureLatency}(m) \leq 100\\
+&\text{3. Memory: } \forall c \in C: \text{measureMemory}(c) \leq 120\text{MB}
+\end{aligned}
+$$
 
 Define critical performance bounds:
 $$
@@ -547,6 +603,16 @@ $$
 &\quad \text{latency}(m) = t_d(m) - t_s(m) \leq 100\ \text{ms}\\[2ex]
 &\text{3. Memory Usage:}\\
 &\quad |Q.M| \leq MAX\_QUEUE\_SIZE
+\end{aligned}
+$$
+
+### 19. Test Specifications
+$$
+\small
+\begin{aligned}
+&\text{Unit}: S \times E \times C \rightarrow \text{Bool}\\
+&\text{Integration}: \mathcal{WC} \times \text{Scenario} \rightarrow \text{Bool}\\
+&\text{Performance}: \mathcal{WC} \times \text{Load} \rightarrow \text{Metrics}
 \end{aligned}
 $$
 
