@@ -108,3 +108,155 @@ Before accepting changes:
    - Must document extension points used
    - Must specify default behavior
    - Must list configuration options
+
+# 6. Interface Definitions
+
+## 6.1 Handler Interfaces
+
+### Core Event Handler
+```typescript
+type CoreEventHandler<T> = {
+  // Core handler interface - DO NOT MODIFY
+  handle: (event: T, context: Context) => void;
+}
+
+// Extension point for custom handlers
+interface CustomEventHandler<T> extends CoreEventHandler<T> {
+  // Add custom methods here
+}
+```
+
+### Middleware Handler
+```typescript
+type MiddlewareHandler = {
+  // Core middleware interface - DO NOT MODIFY
+  before?: (context: Context) => Context;
+  after?: (context: Context) => Context;
+}
+```
+
+## 6.2 Configuration Boundaries
+
+### Immutable Core Configuration
+```typescript
+interface CoreConfig {
+  // These cannot be modified after initial setup
+  readonly states: ['disconnected', 'connecting', 'connected', 'reconnecting'];
+  readonly maxRetries: number;
+  readonly initialRetryDelay: number;
+}
+```
+
+### Extensible Configuration
+```typescript
+interface ExtensibleConfig {
+  // Can be modified or extended
+  customHandlers?: CustomEventHandler[];
+  middleware?: MiddlewareHandler[];
+  logging?: LogConfig;
+}
+```
+
+## 6.3 Component Interfaces
+
+### Core Components
+Each core component has a minimal, stable interface:
+
+1. State Machine
+```typescript
+interface StateMachine {
+  // Core methods - DO NOT MODIFY
+  transition(event: CoreEvent): void;
+  getState(): State;
+  
+  // Extension point
+  use(middleware: MiddlewareHandler): void;
+}
+```
+
+2. WebSocket Manager
+```typescript
+interface WebSocketManager {
+  // Core methods - DO NOT MODIFY
+  connect(url: string): void;
+  disconnect(): void;
+  send(message: unknown): void;
+  
+  // Extension point
+  onMessage(handler: MessageHandler): void;
+}
+```
+
+3. Message Queue
+```typescript
+interface MessageQueue {
+  // Core methods - DO NOT MODIFY
+  enqueue(message: unknown): void;
+  dequeue(): unknown | undefined;
+  
+  // Extension point
+  onOverflow(handler: OverflowHandler): void;
+}
+```
+
+## 6.4 Type Guards
+
+```typescript
+// Core state type guard - DO NOT MODIFY
+function isValidState(state: unknown): state is State {
+  return ['disconnected', 'connecting', 'connected', 'reconnecting'].includes(state as string);
+}
+
+// Core event type guard - DO NOT MODIFY
+function isValidEvent(event: unknown): event is CoreEvent {
+  return ['CONNECT', 'DISCONNECT', 'MESSAGE', 'ERROR'].includes((event as CoreEvent).type);
+}
+
+// Extension point for custom type guards
+interface CustomTypeGuards {
+  isValidCustomEvent?: (event: unknown) => boolean;
+  isValidCustomState?: (state: unknown) => boolean;
+}
+```
+
+## 6.5 Implementation Rules
+
+1. **Core Stability**
+   - Never modify core interfaces
+   - Always extend through designated extension points
+   - Keep core logic simple and focused
+
+2. **Extension Pattern**
+   - Add new handlers through registration
+   - Use middleware for cross-cutting concerns
+   - Keep extensions optional and removable
+
+3. **Configuration Management**
+   - Core config is immutable after initialization
+   - Extensions must provide defaults
+   - Validate all configuration changes
+
+4. **Type Safety**
+   - Use type guards for runtime validation
+   - Maintain strict typing for core components
+   - Keep type definitions simple and clear
+
+## 6.6 Review Checklist Addition
+
+Before accepting any code changes:
+
+1. Core Interface Check
+   - Are core interfaces unchanged?
+   - Are changes made through extension points?
+   - Can changes be reverted without affecting core?
+
+2. Type Safety Check
+   - Are type guards in place?
+   - Is type safety maintained?
+   - Are interfaces properly typed?
+
+3. Configuration Check
+   - Is core config protected?
+   - Are defaults provided?
+   - Is validation in place?
+
