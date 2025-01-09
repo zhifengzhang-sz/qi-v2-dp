@@ -16,16 +16,17 @@ For $S = \{disconnected, connecting, connected, reconnecting\}$:
 
 - Each $s \in S$ maps to a distinct xstate state node
 - State value function $V: S \rightarrow StateValue$ where:
-$$
-V(s) = \begin{cases}
-'disconnected' & \text{ if } s = disconnected \\
-'connecting' & \text{ if } s = connecting \\
-'connected' & \text{ if } s = connected \\
-'reconnecting' & \text{ if } s = reconnecting
-\end{cases}
-$$
+  $$
+  V(s) = \begin{cases}
+  'disconnected' & \text{ if } s = disconnected \\
+  'connecting' & \text{ if } s = connecting \\
+  'connected' & \text{ if } s = connected \\
+  'reconnecting' & \text{ if } s = reconnecting
+  \end{cases}
+  $$
 
 State configuration function $\Phi$ ensures:
+
 - $\forall t, |\Phi(t)| = 1$ (exactly one state active)
 - State transitions preserve configuration: $\Phi(t) \rightarrow \Phi(t+1)$ valid
 - Initial state $\Phi(0) = \{disconnected\}$
@@ -39,6 +40,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Psi(CONNECT\_REQUEST) &= \{type: "CONNECT", url: String\} \\
@@ -48,6 +50,7 @@ $$
 $$
 
 Properties preserved:
+
 1. Event uniqueness: $\forall e_1,e_2 \in E, e_1 \neq e_2 \implies \Psi(e_1) \neq \Psi(e_2)$
 2. Completeness: $\forall e \in E, \exists \Psi(e)$
 3. Type safety: $\Psi$ preserves event payload types
@@ -61,6 +64,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Omega(InitiateConnection) &= \{type: "initiateConnection", exec: Context \rightarrow Context\} \\
@@ -69,6 +73,7 @@ $$
 $$
 
 Action composition preserved:
+
 $$
 \forall a_1,a_2 \in A: \Omega(a_1 \circ a_2) = \Omega(a_1) \circ \Omega(a_2)
 $$
@@ -84,6 +89,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Theta(url) &\rightarrow String \cup \{null\} \\
@@ -96,6 +102,7 @@ $$
 $$
 
 Properties maintained:
+
 1. Type preservation: $\forall x \in C, type(\Theta(x)) = type(x)$
 2. Nullable handling: $\forall x \in C, x = \bot \iff \Theta(x) = null$
 3. Range preservation: $\forall x \in C, range(\Theta(x)) = range(x)$
@@ -109,6 +116,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Gamma(\gamma_1) &\text{ maps StoreUrl to context assignment} \\
@@ -118,6 +126,7 @@ $$
 $$
 
 Properties preserved:
+
 1. Immutability: $\forall \gamma \in \Gamma, \gamma(c)$ creates new context
 2. Type safety: $\forall \gamma \in \Gamma, \gamma$ preserves context types
 3. Composition: $\Gamma(\gamma_1 \circ \gamma_2) = \Gamma(\gamma_1) \circ \Gamma(\gamma_2)$
@@ -133,6 +142,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Lambda(I(disconnected)) &\text{ enforces } socket = null \land error = null \land retries = 0 \\
@@ -143,6 +153,7 @@ $$
 $$
 
 Properties maintained:
+
 1. Completeness: $\forall s \in S, \exists \Lambda(I(s))$
 2. Exclusivity: $\forall s_1,s_2 \in S, s_1 \neq s_2 \implies \Lambda(I(s_1)) \land \Lambda(I(s_2)) = \emptyset$
 3. Runtime enforcement: Invariants checked on every transition
@@ -156,6 +167,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Pi(CanConnect) &\text{ enforces } \lambda c.(c.socket = null \land c.error = null) \\
@@ -175,6 +187,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Sigma(NoUndefinedStates) &\text{ ensures } state \in S \\
@@ -192,6 +205,7 @@ $$
 $$
 
 where:
+
 $$
 \begin{aligned}
 \Delta(EventualConnection) &\text{ ensures } \Diamond(connected \lor error) \\
@@ -199,3 +213,62 @@ $$
 \Delta(EventualTermination) &\text{ ensures } \Diamond(terminated)
 \end{aligned}
 $$
+
+## 6. Component Implementation Mapping
+
+### 6.1 Core Components
+
+Maps formal specification elements to implementation components:
+
+StateMachine (xstate) implements:
+
+- State space $S = \{disconnected, connecting, connected, reconnecting\}$
+- Transition function $\delta$
+- Event handling $E$
+
+WebSocketManager implements:
+
+- Action space $\gamma$
+- Connection lifecycle
+- Message handling
+
+MessageQueue implements:
+
+- Message ordering
+- Context space $C$ for queued messages
+- FIFO properties
+
+RateLimiter implements:
+
+- Rate limiting properties from formal spec
+- Window-based constraints
+- Message flow control
+
+### 6.2 Component Interactions
+
+Key interactions preserve formal properties:
+
+1. State Machine → WebSocket Manager:
+
+   - Manages state transitions
+   - Controls connection lifecycle
+   - Handles error states
+
+2. WebSocket Manager → Message Queue:
+
+   - Ensures message ordering
+   - Maintains delivery guarantees
+   - Handles overflow conditions
+
+3. WebSocket Manager → Rate Limiter:
+   - Enforces rate constraints
+   - Controls message flow
+   - Maintains window properties
+
+### 6.3 Extension Points
+
+Following governance rules, extensions occur through:
+
+- Event handlers (not core state)
+- Middleware (not core flow)
+- Configuration (not core properties)

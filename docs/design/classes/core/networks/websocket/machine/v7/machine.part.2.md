@@ -61,6 +61,49 @@ C4Component
     Rel(stateMachine, logService, "Logs events")
 ```
 
+```mermaid
+sequenceDiagram
+    participant C as Client
+    participant SM as StateMachine
+    participant WS as WebSocketManager
+    participant Q as MessageQueue
+
+    %% Connection Flow
+    C->>SM: connect(url)
+    activate SM
+    SM->>WS: initiate connection
+    activate WS
+    WS-->>SM: OPEN event
+    deactivate WS
+    SM-->>C: connected
+    deactivate SM
+
+    %% Message Flow
+    C->>SM: send(message)
+    activate SM
+    SM->>Q: enqueue
+    activate Q
+    Q-->>SM: queued
+    deactivate Q
+    SM->>WS: send
+    activate WS
+    WS-->>SM: sent
+    deactivate WS
+    SM-->>C: success
+    deactivate SM
+
+    %% Error + Retry Flow
+    WS->>SM: ERROR event
+    activate SM
+    SM->>SM: increment retries
+    SM->>WS: reconnect
+    activate WS
+    WS-->>SM: OPEN event
+    deactivate WS
+    SM-->>C: reconnected
+    deactivate SM
+```
+
 ### 1.3 Directory Structure
 
 ```
