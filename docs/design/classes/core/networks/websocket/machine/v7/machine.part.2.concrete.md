@@ -2,7 +2,18 @@
 
 ## Preamble
 
-This document provides detailed component designs that implement the high-level architecture defined in `machine.part.2.abstract.md`. It maps the abstract concepts to concrete interfaces and relationships while maintaining implementation independence.
+This document provides detailed component designs that implement the high-level architecture defined in `machine.part.2.abstract.md`.
+
+### Document Dependencies
+This document inherits all dependencies from machine.part.2.abstract.md, specifically:
+
+1. `machine.part.1.md`: Core mathematical specification
+2. `machine.part.1.websocket.md`: Protocol specification
+3. `impl.map.md`: Implementation mappings
+4. `governance.md`: Design stability guidelines
+
+Additionally, this document directly depends on:
+- `machine.part.2.abstract.md`: High-level architecture
 
 ### Document Purpose
 
@@ -1352,3 +1363,305 @@ This chapter maps the health monitoring specifications to implementation concept
 5. Error tracking and analysis
 6. Health reporting system
 7. Integration with monitoring tools
+
+# Chapter 5: Configuration and Environment Specifications
+
+## 1. Configuration Architecture
+
+### 1.1 Core Components
+
+```mermaid
+classDiagram
+    class ConfigurationManager {
+        <<interface>>
+        +load()
+        +validate()
+        +override()
+        +getEffectiveConfig()
+    }
+
+    class Config {
+        <<interface>>
+        +core
+        +protocol
+        +message
+        +health
+    }
+
+    class ValidationResult {
+        <<interface>>
+        +isValid
+        +errors
+        +warnings
+    }
+
+    ConfigurationManager --> Config
+    ConfigurationManager --> ValidationResult
+```
+
+The configuration system must provide:
+1. Configuration Manager
+   - Manages complete configuration lifecycle
+   - Enforces validation rules
+   - Handles configuration overrides
+   - Maintains configuration state
+
+2. Configuration Structure
+   - Hierarchical organization
+   - Type-safe access
+   - Immutable core properties
+   - Mutable runtime properties
+
+3. Validation System
+   - Comprehensive error reporting
+   - Warning detection
+   - Type safety verification
+   - Relationship validation
+
+### 1.2 Domain Configuration
+
+```mermaid
+classDiagram
+    class CoreConfig {
+        <<interface>>
+        +states
+        +maxRetries
+        +retryDelays
+        +timeouts
+    }
+
+    class ProtocolConfig {
+        <<interface>>
+        +connection
+        +protocol
+        +cleanup
+    }
+
+    class MessageConfig {
+        <<interface>>
+        +queue
+        +rateLimit
+        +messageProps
+    }
+
+    class HealthConfig {
+        <<interface>>
+        +checks
+        +thresholds
+        +reporting
+    }
+
+    Config --> CoreConfig
+    Config --> ProtocolConfig
+    Config --> MessageConfig
+    Config --> HealthConfig
+```
+
+Each configuration domain must provide:
+
+1. Core Configuration
+   - State machine settings from formal model
+   - Retry policies
+   - Timeout values
+   - Must be immutable after initialization
+
+2. Protocol Configuration
+   - Connection parameters
+   - Protocol settings
+   - Cleanup procedures
+   - Can be partially modified at runtime
+
+3. Message Configuration
+   - Queue management settings
+   - Rate limiting parameters
+   - Message constraints
+   - Allows runtime updates
+
+4. Health Configuration
+   - Monitoring intervals
+   - Alert thresholds
+   - Reporting settings
+   - Fully mutable at runtime
+
+## 2. Environment Integration
+
+### 2.1 Environment Processing
+
+```mermaid
+classDiagram
+    class EnvProcessor {
+        <<interface>>
+        +processEnv()
+        +validateEnv()
+        +transformValue()
+    }
+
+    class EnvMapping {
+        <<interface>>
+        +variableName
+        +configPath
+        +transformer
+    }
+
+    class EnvValidation {
+        <<interface>>
+        +rules
+        +constraints
+        +defaults
+    }
+
+    EnvProcessor --> EnvMapping
+    EnvProcessor --> EnvValidation
+```
+
+Environment processing must provide:
+
+1. Environment Processor
+   - Systematic variable processing
+   - Type conversion
+   - Validation enforcement
+   - Default handling
+
+2. Environment Mapping
+   - Structured variable mapping
+   - Path resolution
+   - Value transformation
+   - Override management
+
+3. Environment Validation
+   - Type checking
+   - Range validation
+   - Format verification
+   - Constraint enforcement
+
+## 3. Runtime Management
+
+### 3.1 Runtime Components
+
+```mermaid
+classDiagram
+    class RuntimeManager {
+        <<interface>>
+        +updateConfig()
+        +validateUpdates()
+        +getEffectiveConfig()
+        +onConfigChange()
+    }
+
+    class MutableConfig {
+        <<interface>>
+        +protocol
+        +message
+        +health
+    }
+
+    class ChangeNotification {
+        <<interface>>
+        +path
+        +oldValue
+        +newValue
+        +timestamp
+    }
+
+    RuntimeManager --> MutableConfig
+    RuntimeManager --> ChangeNotification
+```
+
+Runtime management must provide:
+
+1. Runtime Manager
+   - Safe configuration updates
+   - Validation enforcement
+   - Current state tracking
+   - Change notification
+
+2. Mutable Configuration
+   - Clearly defined mutable properties
+   - Type-safe updates
+   - Validation rules
+   - State consistency
+
+3. Change Notification
+   - Detailed change tracking
+   - Value comparison
+   - Timestamp recording
+   - Event distribution
+
+## 4. Security Framework
+
+### 4.1 Security Components
+
+```mermaid
+classDiagram
+    class SecurityManager {
+        <<interface>>
+        +validateSecurity()
+        +maskSensitive()
+        +enforceConstraints()
+    }
+
+    class SecurityRules {
+        <<interface>>
+        +constraints
+        +sensitiveFields
+        +accessControl
+    }
+
+    class SecurityValidation {
+        <<interface>>
+        +rules
+        +auditing
+        +reporting
+    }
+
+    SecurityManager --> SecurityRules
+    SecurityManager --> SecurityValidation
+```
+
+Security framework must provide:
+
+1. Security Manager
+   - Security validation
+   - Sensitive data protection
+   - Constraint enforcement
+   - Access control
+
+2. Security Rules
+   - Security constraints
+   - Field sensitivity
+   - Access levels
+   - Protection policies
+
+3. Security Validation
+   - Security rule checking
+   - Audit logging
+   - Security reporting
+   - Violation detection
+
+## 5. Implementation Requirements
+
+The implementation must:
+
+1. Core Behavior
+   - Follow formal mathematical model
+   - Maintain state machine properties
+   - Preserve type safety
+   - Enforce immutability rules
+
+2. Extension Support
+   - Provide clear extension points
+   - Support custom validation
+   - Allow behavior customization
+   - Enable monitoring integration
+
+3. Security Enforcement
+   - Protect sensitive data
+   - Validate all changes
+   - Maintain audit trails
+   - Control access
+
+4. Documentation
+   - Map implementation to formal model
+   - Document configuration relationships
+   - Specify validation rules
+   - Detail security requirements

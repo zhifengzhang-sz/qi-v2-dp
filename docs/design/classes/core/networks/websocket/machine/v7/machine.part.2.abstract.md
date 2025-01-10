@@ -2,10 +2,30 @@
 
 ## Preamble
 
-This document defines the high-level architecture and domain language for implementing the WebSocket Client ($\mathcal{WC}$) specified in `machine.part.1.md`. It establishes the core abstractions and component boundaries that bridge between:
+This document defines the high-level architecture and domain language for implementing the WebSocket Client ($\mathcal{WC}$).
 
-1. Formal mathematical model ($\mathcal{WC}$ and protocol mappings)
-2. Implementation tools (xstate v5 and ws library)
+### Document Dependencies
+This document depends on and is constrained by the following specifications, in order:
+
+1. `machine.part.1.md`: Core mathematical specification
+   - Defines formal state machine model ($\mathcal{WC}$)
+   - Establishes system constants and properties
+   - Provides formal proofs and safety guarantees
+
+2. `machine.part.1.websocket.md`: Protocol specification
+   - Maps protocol states to core state machine
+   - Defines WebSocket-specific behaviors
+   - Establishes protocol constraints
+
+3. `impl.map.md`: Implementation mappings
+   - Maps formal model to implementation structures
+   - Defines type hierarchies and transformations
+   - Establishes implementation constraints
+
+4. `governance.md`: Design stability guidelines
+   - Defines core stability requirements
+   - Establishes extension mechanisms
+   - Provides implementation ordering
 
 ### Document Purpose
 
