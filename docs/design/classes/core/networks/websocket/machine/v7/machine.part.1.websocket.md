@@ -1,5 +1,13 @@
 # WebSocket Protocol State Machine
 
+# WebSocket Protocol State Machine
+
+Prerequisites:
+- [machine.part.1.md](./machine.part.1.md): Core state machine formal specification
+
+This specification extends the core state machine for WebSocket protocol implementation.
+
+
 ## 1. Mapping to Core Machine
 
 This specification extends the core state machine defined in `machine.part.1.md` for WebSocket protocol implementation.
@@ -60,7 +68,7 @@ $$
 The WebSocket context $C_{ws}$ extends the base context with:
 
 $$
-C_{ws} = C \cup \{
+C_{ws} = C \cup \left\{
 \begin{aligned}
 &url: String,\\
 &socket: WebSocket \cup \{null\},\\
@@ -68,7 +76,7 @@ C_{ws} = C \cup \{
 &lastError: Error \cup \{null\},\\
 &closeCode: WebSocketConstants \cup \{null\}
 \end{aligned}
-\}
+\right\}
 $$
 
 ### 1.6 Protocol Invariants
@@ -90,6 +98,7 @@ The following invariants must hold for all WebSocket states:
 
 3. **Retry Bounds**:
    $$
+   \scriptsize
    \begin{aligned}
    &s = reconnecting \implies retries \leq MAX\_RETRIES \\
    &retryDelay = min(INITIAL\_RETRY\_DELAY \times RETRY\_MULTIPLIER^{retries}, MAX\_RETRY\_DELAY)
