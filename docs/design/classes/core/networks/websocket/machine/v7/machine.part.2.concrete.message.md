@@ -6,7 +6,7 @@ This document provides detailed message system designs that implement the high-l
 architecture defined in machine.part.2.abstract.md.
 
 ### Document Dependencies
-This document inherits all dependencies from machine.part.2.abstract.md and additionally requires:
+This document inherits all dependencies from `machine.part.2.abstract.md` and additionally requires:
 
 1. `machine.part.2.concrete.core.md`: Core component design
    - Provides state management foundation
