@@ -21,6 +21,7 @@ where:
 ### 1.1 System Constants
 
 $$
+\small
 \begin{aligned}
 Constraints = \{&\\
 &MAX\_RETRIES: 5,\\
@@ -33,15 +34,19 @@ Constraints = \{&\\
 $$
 
 $$
+\small
 \begin{aligned}
 Timing = \{&\\
 &CONNECT\_TIMEOUT: 30000\text{ ms},\\
 &INITIAL\_RETRY\_DELAY: 1000\text{ ms},\\
 &MAX\_RETRY\_DELAY: 60000\text{ ms},\\
-&RETRY\_MULTIPLIER: 1.5\\
+&RETRY\_MULTIPLIER: 1.5,\\
+&STABILITY\_TIMEOUT: 5000\text{ ms},\\
+&DISCONNECT\_TIMEOUT: 3000\text{ ms}\\
 \}
 \end{aligned}
 $$
+
 
 ## 2. State Machine Core
 
@@ -207,6 +212,7 @@ $
 
 Key transitions include:
 $
+\small
 \begin{aligned}
 \delta(s_{disconnected}, e_{CONNECT}) &= (s_{connecting}, \{\gamma_1, \gamma_{10}\}) \\
 \delta(s_{connecting}, e_{OPEN}) &= (s_{connected}, \{\gamma_2\}) \\
@@ -233,6 +239,7 @@ Each state has specific constraints that must be satisfied:
 1. Disconnected State:
 
    $$
+   \small
    \begin{aligned}
    s = disconnected \implies \{&\\
    &socket = null,\\
@@ -245,6 +252,7 @@ Each state has specific constraints that must be satisfied:
 2. Disconnecting State:
 
    $$
+   \small
    \begin{aligned}
    s = disconnecting \implies \{&\\
    &socket \neq null,\\
@@ -257,6 +265,7 @@ Each state has specific constraints that must be satisfied:
 3. Connecting State:
 
    $$
+   \small
    \begin{aligned}
    s = connecting \implies \{&\\
    &socket \neq null,\\
@@ -269,6 +278,7 @@ Each state has specific constraints that must be satisfied:
 4. Connected State:
 
    $$
+   \small
    \begin{aligned}
    s = connected \implies \{&\\
    &socket \neq null,\\
@@ -281,6 +291,7 @@ Each state has specific constraints that must be satisfied:
 5. Reconnecting State:
 
    $$
+   \small
    \begin{aligned}
    s = reconnecting \implies \{&\\
    &socket = null,\\
@@ -292,6 +303,7 @@ Each state has specific constraints that must be satisfied:
 
 6. Reconnected State:
    $$
+   \small
    \begin{aligned}
    s = reconnected \implies \{&\\
    &socket \neq null,\\

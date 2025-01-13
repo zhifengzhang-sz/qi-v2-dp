@@ -5,9 +5,9 @@
 ### Document Dependencies
 This document depends on and is constrained by:
 
-1. `refactor/part_1/spec.md`: Core mathematical changes
-2. `refactor/part_1/map.md`: Specification mapping
-3. `refactor/part_2/plan.md`: Implementation planning
+1. `machine.part.1.md`: Core state machine specification
+2. `machine.part.1.websocket.md`: Protocol extensions
+3. `impl.map.md`: Implementation mappings
 4. `governance.md`: Design stability guidelines
 
 ### Document Purpose
@@ -23,239 +23,188 @@ FOCUSES on:
 - Type changes
 
 Does NOT cover:
-- Planning aspects
 - Mathematical foundations
 - Testing strategy
 - Migration guidance
 
 ## 1. machine.part.2.abstract.md Changes
 
-### 1.1 State Definition Changes
+### 1.1 State Diagram Changes
 ```diff
-abstract class State {
-  // Add new states
-+ readonly disconnecting: StateType
-+ readonly reconnected: StateType
-
-  // Properties must be updated
-- getAvailableStates(): StateType[]
-+ getAvailableStates(): StateType[] {
-+   return ['disconnected', 'disconnecting', 'connecting', 
-+           'connected', 'reconnecting', 'reconnected']
-+ }
-}
+classDiagram
+    class State {
+        <<enumeration>>
+        DISCONNECTED
+        + DISCONNECTING
+        CONNECTING
+        CONNECTED
+        RECONNECTING
+        - TERMINATING
+        - TERMINATED
+        + RECONNECTED
+    }
 ```
 
-### 1.2 Event Definition Changes
+### 1.2 Event Diagram Changes
 ```diff
-abstract class Event {
-  // Add new events
-+ readonly DISCONNECTED: EventType
-+ readonly RECONNECTED: EventType
-+ readonly STABILIZED: EventType
-
-  // Update event mapping
-- mapToProtocolEvent(event: EventType): ProtocolEvent
-+ mapToProtocolEvent(event: EventType): ProtocolEvent {
-+   // Add new mappings
-+   if (event === 'DISCONNECTED') return { type: 'close' }
-+   if (event === 'RECONNECTED') return { type: 'open' }
-+   if (event === 'STABILIZED') return { type: 'open' }
-+   // Existing mappings remain unchanged
-+ }
-}
+classDiagram
+    class Event {
+        <<enumeration>>
+        CONNECT_REQUEST
+        CONNECTION_SUCCESS
+        CONNECTION_FAILURE
+        DISCONNECT_REQUEST
+        DISCONNECTED
+        MESSAGE_RECEIVED
+        MESSAGE_SEND
+        RETRY_ATTEMPT
+        MAX_RETRIES_REACHED
+        - TERMINATE_REQUEST
+        PING
+        PONG
+        + RECONNECTED
+        + STABILIZED
+    }
 ```
 
-## 2. machine.part.2.concrete.core.md Changes
-
-### 2.1 State Machine Updates
+### 1.3 Context Changes
 ```diff
-class StateMachine {
-  // Add new state handlers
-+ private handleDisconnecting(event: Event): void {
-+   this.validateDisconnectingState()
-+   if (event.type === 'DISCONNECTED') {
-+     this.transition('disconnected')
-+   }
-+ }
-
-+ private handleReconnected(event: Event): void {
-+   this.validateReconnectedState()
-+   if (event.type === 'STABILIZED') {
-+     this.transition('connected')
-+   }
-+ }
-
-  // Update validation
-+ private validateDisconnectingState(): void {
-+   assert(this.context.socket !== null)
-+   assert(this.context.disconnectReason !== null)
-+ }
-
-+ private validateReconnectedState(): void {
-+   assert(this.context.socket !== null)
-+   assert(this.context.reconnectCount > 0)
-+ }
-}
+classDiagram
+    class Context {
+        <<interface>>
+        url: string?
+        socket: WebSocket?
+        retries: number
+        error: Error?
+        closeCode: number?
+        + disconnectReason: string?
+        + reconnectCount: number
+        + lastStableConnection: number?
+    }
 ```
 
-### 2.2 Context Updates
+### 1.4 State Machine Component Changes
 ```diff
-interface Context {
-  // Add new properties
-+ disconnectReason: string | null
-+ reconnectCount: number
-+ lastStableConnection: number | null
-
-  // Update type validator
-- validateContext(context: Context): boolean
-+ validateContext(context: Context): boolean {
-+   // Add new validations
-+   if (this.state === 'disconnecting') {
-+     if (context.disconnectReason === null) return false
-+   }
-+   if (this.state === 'reconnected') {
-+     if (context.reconnectCount <= 0) return false
-+   }
-+   // Existing validations remain unchanged
-+   return true
-+ }
-}
+classDiagram
+    class StateMachine {
+        <<interface>>
+        +current: State
+        +context: Context
+        +transition(event: Event): void
+        +canTransition(event: Event): boolean
+        + getDisconnectReason(): string?
+        + isStabilized(): boolean
+    }
 ```
 
-## 3. machine.part.2.concrete.protocol.md Changes
-
-### 3.1 Protocol Handler Updates
+### 1.5 WebSocket Protocol Types Changes
 ```diff
-class ProtocolHandler {
-  // Add new handlers
-+ private handleDisconnecting(): void {
-+   this.socket.close(1000, this.context.disconnectReason)
-+ }
-
-+ private handleReconnected(): void {
-+   this.emit('STABILIZED')
-+ }
-
-  // Update event mapping
-- private mapSocketEvent(event: WebSocket.Event): Event
-+ private mapSocketEvent(event: WebSocket.Event): Event {
-+   // Add new mappings
-+   if (event.type === 'close' && this.state === 'disconnecting') {
-+     return { type: 'DISCONNECTED' }
-+   }
-+   if (event.type === 'open' && this.state === 'reconnecting') {
-+     return { type: 'RECONNECTED' }
-+   }
-+   // Existing mappings remain unchanged
-+ }
-}
+classDiagram
+    class WebSocketContext {
+        <<interface>>
+        url: string
+        protocols: string[]
+        lastError: Error?
+        closeCode: number?
+        + disconnectReason: string?
+        + reconnectCount: number
+        + lastStableConnection: number?
+        message: Queue~Message~
+    }
 ```
 
-### 3.2 Error Handling Updates
+### 1.6 Action Diagram Changes
 ```diff
-class ErrorHandler {
-  // Add new error handlers
-+ private handleDisconnectingError(error: Error): void {
-+   this.forceDisconnect(error.message)
-+ }
-
-+ private handleReconnectedError(error: Error): void {
-+   this.retryConnection()
-+ }
-
-  // Update error mapping
-- private mapErrorToAction(error: Error): Action
-+ private mapErrorToAction(error: Error): Action {
-+   // Add new mappings
-+   if (this.state === 'disconnecting') {
-+     return this.handleDisconnectingError
-+   }
-+   if (this.state === 'reconnected') {
-+     return this.handleReconnectedError
-+   }
-+   // Existing mappings remain unchanged
-+ }
-}
+classDiagram
+    class ActionDefinition {
+        <<interface>>
+        +type: string
+        +exec(context: Context): void
+        + preExec?(context: Context): boolean
+        + postExec?(context: Context): boolean
+    }
 ```
 
-## 4. Type Definition Changes
+## 2. Component Relations Changes
 
-### 4.1 State Types
+### 2.1 State Transition Diagram Changes
 ```diff
-type State =
-  | 'disconnected'
-+ | 'disconnecting'
-  | 'connecting'
-  | 'connected'
-  | 'reconnecting'
-+ | 'reconnected'
+Add transitions:
++ connected → disconnecting
++ disconnecting → disconnected
++ reconnecting → reconnected
++ reconnected → connected
 ```
 
-### 4.2 Event Types
+### 2.2 Socket Management Changes
 ```diff
-type Event =
-  | { type: 'CONNECT' }
-  | { type: 'DISCONNECT' }
-+ | { type: 'DISCONNECTED' }
-+ | { type: 'RECONNECTED' }
-+ | { type: 'STABILIZED' }
-  // Existing event types remain unchanged
+classDiagram
+    class SocketOperations {
+        <<interface>>
+        +create(config: SocketConfig): void
+        +destroy(): void
+        +send(data: unknown): void
+        +ping(): void
+        + initiateDisconnect(reason: string): void
+        + isStabilized(): boolean
+    }
 ```
 
-## 5. Interface Changes
-
-### 5.1 Public API
+## 3. Directory Structure Changes
 ```diff
-interface WebSocketClient {
-  // Add new methods
-+ onDisconnecting(handler: (reason: string) => void): void
-+ onReconnected(handler: () => void): void
-
-  // Existing methods remain unchanged
-  connect(url: string): Promise<void>
-  disconnect(): Promise<void>
-  send(data: unknown): Promise<void>
-}
+src/
+├── client/          # Main domain interfaces
+├── state/           # State management interfaces
+├── socket/          # Socket management interfaces
+└── types/           # Type definitions
++ └── protocol/      # Protocol-specific types
 ```
 
-### 5.2 Internal Interfaces
-```diff
-interface StateHandler {
-  // Add new handlers
-+ handleDisconnecting(context: Context): void
-+ handleReconnected(context: Context): void
+## 4. Property Mapping Changes
 
-  // Existing handlers remain unchanged
-  handleConnecting(context: Context): void
-  handleConnected(context: Context): void
-}
+### 4.1 State Machine Property Updates
+```diff
+Add mappings:
++ disconnecting → xstate 'disconnecting' node
++ reconnected → xstate 'reconnected' node
++ stabilized → xstate event
 ```
 
-## 6. Constants and Configuration
-
-### 6.1 Timeout Constants
+### 4.2 Protocol Property Updates
 ```diff
-const TIMEOUTS = {
-  // Add new timeouts
-+ DISCONNECT: 5000,
-+ STABILIZE: 1000,
-
-  // Existing timeouts remain unchanged
-  CONNECT: 30000,
-  RECONNECT: 5000,
-}
+Add mappings:
++ disconnectReason → ws close reason
++ reconnectCount → internal counter
++ lastStableConnection → connection timestamp
 ```
 
-### 6.2 Error Codes
-```diff
-const ERROR_CODES = {
-  // Add new error codes
-+ DISCONNECT_TIMEOUT: 'DISCONNECT_TIMEOUT',
-+ STABILIZATION_FAILED: 'STABILIZATION_FAILED',
+## 5. Required Test Changes
 
-  // Existing error codes remain unchanged
-  CONNECT_TIMEOUT: 'CONNECT_TIMEOUT',
-  RECONNECT_FAILED: 'RECONNECT_FAILED',
-}
-```
+### 5.1 State Transition Tests
+- Add tests for new disconnecting state transitions
+- Add tests for new reconnected state transitions
+- Add stability verification tests
+
+### 5.2 Context Property Tests
+- Add tests for disconnectReason management
+- Add tests for reconnectCount tracking
+- Add tests for connection stability checks
+
+## 6. Migration Requirements
+
+### 6.1 Breaking Changes
+- State enumeration changes
+- Event type changes
+- Context interface changes
+
+### 6.2 Backward Compatibility
+- Maintain existing connection behaviors
+- Preserve message handling
+- Support existing event listeners
+
+This updated changes.md now:
+1. Properly reflects all state changes from v8 to v9
+2. Includes all new events and context properties
+3. Updates component relations and property mappings
+4. Specifies required implementation updates
+5. Follows minimum change principle while maintaining functionality
