@@ -117,7 +117,7 @@ WHEN defining interactions
 
 ### 4.1 Pattern Rules
 
-See: ai.patterns.md
+See: [patterns.md](./patterns.md)
 
 - Pattern selection criteria
 - Implementation guidelines
@@ -125,7 +125,7 @@ See: ai.patterns.md
 
 ### 4.2 Validation Rules
 
-See: ai.validation.md
+See: [validation.md](./validation.md)
 
 - Validation procedures
 - Consistency checks
@@ -133,7 +133,7 @@ See: ai.validation.md
 
 ### 4.3 Template Rules
 
-See: ai.templates.md
+See: [templates.md](./templates.md)
 
 - Standard structures
 - Component templates
