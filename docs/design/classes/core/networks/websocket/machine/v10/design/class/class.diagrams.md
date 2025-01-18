@@ -3,6 +3,7 @@
 ## 1. State Machine Classes (XState Integration)
 
 ### 1.1 Core Structure
+
 ```mermaid
 classDiagram
     class StateMachine {
@@ -56,6 +57,7 @@ classDiagram
 ```
 
 ### 1.2 Event Hierarchy
+
 ```mermaid
 classDiagram
     class Event {
@@ -84,6 +86,7 @@ classDiagram
 ```
 
 ### 1.3 Guard Types
+
 ```mermaid
 classDiagram
     class Guard {
@@ -109,6 +112,7 @@ classDiagram
 ```
 
 ### 1.4 Action Types
+
 ```mermaid
 classDiagram
     class Action {
@@ -136,6 +140,7 @@ classDiagram
 ## 2. WebSocket Handler Classes (WS Integration)
 
 ### 2.1 Core Structure
+
 ```mermaid
 classDiagram
     class WebSocketHandler {
@@ -172,6 +177,7 @@ classDiagram
 ```
 
 ### 2.2 Protocol States
+
 ```mermaid
 classDiagram
     class ProtocolState {
@@ -196,6 +202,7 @@ classDiagram
 ## 3. Message Queue Classes
 
 ### 3.1 Core Structure
+
 ```mermaid
 classDiagram
     class MessageQueue {
@@ -232,6 +239,7 @@ classDiagram
 ```
 
 ### 3.2 Queue Policies
+
 ```mermaid
 classDiagram
     class QueuePolicy {
@@ -257,6 +265,7 @@ classDiagram
 ## 4. Cross-Cutting Concerns
 
 ### 4.1 Resource Management
+
 ```mermaid
 classDiagram
     class ResourceManager {
@@ -282,6 +291,7 @@ classDiagram
 ```
 
 ### 4.2 Error Management
+
 ```mermaid
 classDiagram
     class ErrorManager {
@@ -350,6 +360,7 @@ classDiagram
 ## 2. Configuration Details
 
 ### 2.1 Connection Configuration
+
 ```mermaid
 classDiagram
     class ConnectionConfig {
@@ -379,6 +390,7 @@ classDiagram
 ```
 
 ### 2.2 State Configuration
+
 ```mermaid
 classDiagram
     class StateConfig {
@@ -417,6 +429,7 @@ classDiagram
 ```
 
 ### 2.3 Queue Configuration
+
 ```mermaid
 classDiagram
     class QueueConfig {
@@ -445,6 +458,7 @@ classDiagram
 ## 3. Configuration Validation
 
 ### 3.1 Validation Structure
+
 ```mermaid
 classDiagram
     class ValidationResult {
@@ -483,6 +497,7 @@ classDiagram
 ## 4. Configuration Flow
 
 ### 4.1 Configuration Loading
+
 ```mermaid
 sequenceDiagram
     participant App
@@ -498,6 +513,7 @@ sequenceDiagram
 ```
 
 ### 4.2 Configuration Updates
+
 ```mermaid
 stateDiagram-v2
     [*] --> Loading
@@ -513,45 +529,46 @@ stateDiagram-v2
 
 ```typescript
 const DEFAULT_CONFIG: WebSocketConfig = {
-    connection: {
-        timeout: 30000,
-        reconnect: {
-            maxAttempts: 5,
-            initialDelay: 1000,
-            maxDelay: 60000,
-            multiplier: 1.5
-        }
+  connection: {
+    timeout: 30000,
+    reconnect: {
+      maxAttempts: 5,
+      initialDelay: 1000,
+      maxDelay: 60000,
+      multiplier: 1.5,
     },
-    state: {
-        initialState: 'disconnected',
-        transitions: [
-            // Core transitions from state machine spec
-        ],
-        actions: [
-            // Core actions from state machine spec
-        ],
-        guards: [
-            // Core guards from state machine spec
-        ]
+  },
+  state: {
+    initialState: "disconnected",
+    transitions: [
+      // Core transitions from state machine spec
+    ],
+    actions: [
+      // Core actions from state machine spec
+    ],
+    guards: [
+      // Core guards from state machine spec
+    ],
+  },
+  queue: {
+    size: 1000,
+    policy: {
+      type: "fifo",
+      dropStrategy: "tail",
     },
-    queue: {
-        size: 1000,
-        policy: {
-            type: 'fifo',
-            dropStrategy: 'tail'
-        },
-        flowControl: {
-            highWaterMark: 800,
-            lowWaterMark: 200,
-            backpressureStrategy: 'block'
-        }
-    }
+    flowControl: {
+      highWaterMark: 800,
+      lowWaterMark: 200,
+      backpressureStrategy: "block",
+    },
+  },
 };
 ```
 
 ## 6. Configuration Constraints
 
 ### 6.1 Value Constraints
+
 ```mermaid
 graph TD
     A[Constraints] --> B[Connection]
@@ -560,15 +577,16 @@ graph TD
 
     B --> B1[timeout: 1000-60000ms]
     B --> B2[maxAttempts: 0-10]
-    
+
     C --> C1[states: from spec]
     C --> C2[transitions: valid pairs]
-    
+
     D --> D1[size: 100-10000]
     D --> D2[watermarks: valid range]
 ```
 
 ### 6.2 Relationship Constraints
+
 ```mermaid
 graph TD
     A[Relations] --> B[State/Action]
@@ -627,6 +645,7 @@ classDiagram
 ## 2. Component Integration Tests
 
 ### 2.1 State-WebSocket Integration
+
 ```mermaid
 classDiagram
     class StateWebSocketIntegration {
@@ -663,6 +682,7 @@ classDiagram
 ```
 
 ### 2.2 Message Flow Integration
+
 ```mermaid
 classDiagram
     class MessageFlowIntegration {
@@ -701,6 +721,7 @@ classDiagram
 ## 3. Property-Based Testing
 
 ### 3.1 State Machine Properties
+
 ```mermaid
 classDiagram
     class StateMachineProperties {
@@ -733,6 +754,7 @@ classDiagram
 ```
 
 ### 3.2 Protocol Properties
+
 ```mermaid
 classDiagram
     class ProtocolProperties {
@@ -761,6 +783,7 @@ classDiagram
 ## 4. Test Configurations
 
 ### 4.1 Test Environment Setup
+
 ```mermaid
 stateDiagram-v2
     [*] --> ConfigureTest
@@ -773,6 +796,7 @@ stateDiagram-v2
 ```
 
 ### 4.2 Mock Structure
+
 ```mermaid
 classDiagram
     class MockWebSocket {
@@ -798,6 +822,7 @@ classDiagram
 ## 5. Validation Framework
 
 ### 5.1 Test Assertions
+
 ```mermaid
 classDiagram
     class Assertion {
@@ -830,6 +855,7 @@ classDiagram
 ```
 
 ### 5.2 Test Results
+
 ```mermaid
 classDiagram
     class TestResult {
@@ -859,6 +885,7 @@ classDiagram
 ## 6. Test Coverage Requirements
 
 ### 6.1 Core Coverage
+
 ```mermaid
 graph TD
     A[Coverage Requirements] --> B[State Coverage]
@@ -867,15 +894,16 @@ graph TD
 
     B --> B1[All States Visited]
     B --> B2[All Transitions Tested]
-    
+
     C --> C1[All Events Handled]
     C --> C2[All Guards Evaluated]
-    
+
     D --> D1[Happy Paths]
     D --> D2[Error Paths]
 ```
 
 ### 6.2 Integration Coverage
+
 ```mermaid
 graph TD
     A[Integration Coverage] --> B[Component Pairs]
@@ -884,10 +912,10 @@ graph TD
 
     B --> B1[All Interactions]
     B --> B2[Boundary Cases]
-    
+
     C --> C1[Error Paths]
     C --> C2[Recovery Scenarios]
-    
+
     D --> D1[Resource Contention]
     D --> D2[Limit Scenarios]
 ```
