@@ -1,9 +1,79 @@
 # WebSocket Client: System Context Level Design
 
-## 1. System Boundaries ($B$)
+## 1. System Context Diagrams
+
+### 1.1 System Context Overview
+```mermaid
+graph TD
+    subgraph External Systems
+        WS[WebSocket Server]
+        APP[Application Logic]
+        SYS[System Resources]
+    end
+
+    subgraph WebSocket Client
+        WPH[WebSocket Protocol Handler]
+        SM[State Management]
+        CM[Connection Management]
+        MP[Message Processing]
+    end
+
+    APP -->|Commands| CM
+    CM -->|Status| APP
+    CM -->|Control| WPH
+    WPH -->|Messages| MP
+    MP -->|Events| APP
+    WPH <-->|WebSocket Protocol| WS
+    SM -->|State Updates| CM
+    SM -->|State Info| MP
+```
+
+### 1.2 Information Flow
+```mermaid
+graph LR
+    subgraph Input Flows
+        CI[Connection Instructions]
+        MI[Message Input]
+        SI[Server Input]
+    end
+
+    subgraph Output Flows
+        SO[Server Output]
+        MO[Message Output]
+        ST[Status Updates]
+    end
+
+    subgraph Processing
+        CM[Connection Management]
+        MP[Message Processing]
+        SM[State Tracking]
+    end
+
+    CI --> CM
+    MI --> MP
+    SI --> MP
+    MP --> MO
+    CM --> SO
+    SM --> ST
+```
+
+### 1.3 State Management View
+```mermaid
+stateDiagram-v2
+    [*] --> disconnected
+    disconnected --> connecting : CONNECT
+    connecting --> connected : OPEN
+    connecting --> reconnecting : ERROR
+    connected --> disconnecting : DISCONNECT
+    disconnecting --> disconnected : DISCONNECTED
+    reconnecting --> connecting : RETRY
+    reconnecting --> reconnected : RECONNECTED
+    reconnected --> connected : STABILIZED
+```
+
+## 2. System Boundaries ($B$)
 
 ### 1.1 Core System
-
 $$
 \begin{aligned}
 B_{core} = \{&\\
@@ -16,7 +86,6 @@ B_{core} = \{&\\
 $$
 
 ### 1.2 External Dependencies
-
 $$
 \begin{aligned}
 B_{ext} = \{&\\
@@ -30,7 +99,6 @@ $$
 ## 2. External Interfaces ($I$)
 
 ### 2.1 Connection Interface
-
 $$
 I_{conn} = \begin{cases}
 \text{connect}(url: URL) &\rightarrow Promise<void> \\
@@ -40,7 +108,6 @@ I_{conn} = \begin{cases}
 $$
 
 ### 2.2 Message Interface
-
 $$
 I_{msg} = \begin{cases}
 \text{send}(data: MessageData) &\rightarrow Promise<void> \\
@@ -50,7 +117,6 @@ I_{msg} = \begin{cases}
 $$
 
 ### 2.3 Control Interface
-
 $$
 I_{ctrl} = \begin{cases}
 \text{configure}(options: Config) &\rightarrow void \\
@@ -62,7 +128,6 @@ $$
 ## 3. Property Mappings ($\Phi$)
 
 ### 3.1 State Property Mapping
-
 $$
 \Phi_{state}: S \rightarrow \text{ConnectionStatus} = \begin{cases}
 disconnected &\mapsto \text{CLOSED} \\
@@ -75,7 +140,6 @@ reconnected &\mapsto \text{STABILIZING}
 $$
 
 ### 3.2 Safety Properties
-
 $$
 \begin{aligned}
 \Phi_{safety} = \{&\\
@@ -88,7 +152,6 @@ $$
 $$
 
 ### 3.3 Liveness Properties
-
 $$
 \begin{aligned}
 \Phi_{liveness} = \{&\\
@@ -103,7 +166,6 @@ $$
 ## 4. Resource Constraints ($R$)
 
 ### 4.1 Connection Resources
-
 $$
 R_{conn} = \begin{cases}
 \text{MAX\_RETRIES} &= 5 \\
@@ -114,7 +176,6 @@ R_{conn} = \begin{cases}
 $$
 
 ### 4.2 Message Resources
-
 $$
 R_{msg} = \begin{cases}
 \text{MAX\_MESSAGE\_SIZE} &= 1\text{ MB} \\
@@ -124,7 +185,6 @@ R_{msg} = \begin{cases}
 $$
 
 ### 4.3 Memory Resources
-
 $$
 R_{mem} = \begin{cases}
 \text{MAX\_BUFFER\_SIZE} &= 16\text{ MB} \\
@@ -135,9 +195,7 @@ $$
 ## 5. Validation Criteria
 
 ### 5.1 Property Validation
-
 For each property $p \in \Phi$:
-
 $$
 valid(p) \iff \begin{cases}
 mapped(p) &: \text{formal mapping exists} \\
@@ -146,10 +204,8 @@ stable(p) &: \text{resistant to changes}
 \end{cases}
 $$
 
-### 5.2 Resource Validation
-
+### 5.2 Resource Validation 
 For each resource $r \in R$:
-
 $$
 valid(r) \iff \begin{cases}
 bounded(r) &: r \leq limit(r) \\
@@ -159,9 +215,7 @@ adjustable(r) &: \text{can be configured}
 $$
 
 ### 5.3 Interface Validation
-
 For each interface $i \in I$:
-
 $$
 valid(i) \iff \begin{cases}
 complete(i) &: \text{covers all use cases} \\
@@ -173,25 +227,19 @@ $$
 ## 6. Change Impact Analysis
 
 ### 6.1 Change Sensitivity
-
 For any change $c$ to boundaries $B$:
-
 $$
 \Delta(c) \leq \epsilon \text{ where } \epsilon \text{ is stability threshold}
 $$
 
 ### 6.2 Interface Stability
-
 For any interface change $i$:
-
 $$
 impact(i) \subseteq \text{local scope}
 $$
 
 ### 6.3 Property Preservation
-
 For any modification $m$:
-
 $$
 \forall p \in \Phi: preserve(p) \text{ after } m
 $$

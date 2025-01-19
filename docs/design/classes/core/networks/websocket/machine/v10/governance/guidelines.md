@@ -243,3 +243,75 @@ recover(D) \implies \begin{cases}
 \text{system stable:} & \forall i \in I, check(i)
 \end{cases}
 $$
+
+## 7. Design Validation Requirements
+
+### 7.1 Mandatory Validation Points
+Each design level MUST be validated at:
+$$
+V_{points} = \begin{cases}
+P_{start}: & \text{before design begins} \\
+P_{level}: & \text{before level completion} \\
+P_{transition}: & \text{before moving to next level} \\
+P_{final}: & \text{before implementation}
+\end{cases}
+$$
+
+### 7.2 Validation Requirements
+For each validation point $p \in V_{points}$:
+$$
+validate(p) \text{ requires } \begin{cases}
+R_{extract}: & \text{requirement extraction complete} \\
+R_{matrix}: & \text{verification matrix populated} \\
+R_{evidence}: & \text{compliance evidence documented} \\
+R_{review}: & \text{independent verification done}
+\end{cases}
+$$
+
+### 7.3 Verification Matrix Requirements
+Each design MUST maintain:
+$$
+M_{verify} = \begin{pmatrix}
+R_{formal} & \text{formal spec requirements} \\
+R_{design} & \text{design principles adherence} \\
+R_{gov} & \text{governance compliance} \\
+R_{process} & \text{process conformance}
+\end{pmatrix}
+$$
+
+### 7.4 Evidence Requirements
+For each requirement $r$:
+$$
+evidence(r) \text{ must include } \begin{cases}
+source(r): & \text{requirement origin} \\
+map(r): & \text{design implementation} \\
+verify(r): & \text{verification method} \\
+status(r): & \text{compliance state}
+\end{cases}
+$$
+
+### 7.5 Quality Gates
+No design may proceed unless:
+$$
+proceed(D) \iff \begin{cases}
+\forall r \in R: verified(r) = true \\
+\forall m \in M_{verify}: complete(m) = true \\
+\forall e \in evidence: valid(e) = true \\
+\forall g \in gates: passed(g) = true
+\end{cases}
+$$
+
+### 7.6 Validation Process
+All validation MUST follow the process defined in [design.validation.procedure.md](./design.process.outline.md).
+
+
+### 7.7 Change Management
+Any changes MUST repeat relevant validations:
+$$
+change(D) \implies \begin{cases}
+analyze(impact) \\
+update(M_{verify}) \\
+revalidate(affected) \\
+document(evidence)
+\end{cases}
+$$
