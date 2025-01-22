@@ -8,8 +8,10 @@ Below is a **Layer 0** example set of four `.md` files—**`common.types.md`**, 
 # common.types.md
 
 ## Overview
+
 This file defines **common constants, enumerations, and utility types** used throughout the WebSocket Client.  
 References:
+
 - `machine.md` for timing and retry constraints
 - `websocket.md` for protocol constants and close codes
 
@@ -18,34 +20,45 @@ References:
 ## 1. Constants
 
 ### Connection & Retry
+
 - **MAX_RETRIES**: `5`  
-  From `machine.md` section 1.1 and 4.1 (retry limit).  
+  From `machine.md` section 1.1 and 4.1 (retry limit).
 - **INITIAL_RETRY_DELAY**: `1000` (ms)  
-  From `machine.md` timing definition (1.1).  
+  From `machine.md` timing definition (1.1).
 - **MAX_RETRY_DELAY**: `60000` (ms)  
-  From `machine.md` timing definition.  
+  From `machine.md` timing definition.
 - **RETRY_MULTIPLIER**: `1.5`  
   Exponential backoff multiplier.
 
 ### Timeouts
-- **CONNECT_TIMEOUT**: `30000` (ms)  
-- **DISCONNECT_TIMEOUT**: `3000` (ms)  
+
+- **CONNECT_TIMEOUT**: `30000` (ms)
+- **DISCONNECT_TIMEOUT**: `3000` (ms)
 - **STABILITY_TIMEOUT**: `5000` (ms)
 
 ### Message Constraints
+
 - **MAX_QUEUE_SIZE**: `1000`  
-  Max number of buffered messages.  
+  Max number of buffered messages.
 - **MAX_MESSAGE_SIZE**: `1 MB` (or `1048576` bytes)  
-  May be enforced at the protocol framing level.  
+  May be enforced at the protocol framing level.
 - **RATE_LIMIT**: `100` (msgs/sec)  
-  (From `machine.md` or `websocket.md` rate-limiting if applicable.)
+  From `machine.md` or `websocket.md` rate-limiting if applicable.
+
+### Rate Limiting Constraints
+
+- **WINDOW_SIZE**: `1000` (ms)
+  From `machine.md` section 1.1, for rate limiting periods.
+- **MAX_WINDOW_LIFETIME**: `60000` (ms)  
+  From `machine.md` section 1.1, maximum duration for a rate limiting window.
 
 ---
 
 ## 2. Common Enums
 
 ### ConnectionStatus
-Represents a *high-level* status used by external interfaces (optional mapping to internal states).
+
+Represents a _high-level_ status used by external interfaces (optional mapping to internal states).
 
 ```pseudo
 enum ConnectionStatus {
@@ -61,6 +74,7 @@ enum ConnectionStatus {
 Referenced in `machine.md` (states: disconnected → CLOSED, connecting → CONNECTING, etc.).
 
 ### CloseCode (Optional)
+
 While exact codes often come from the WebSocket standard, we may define known constants here:
 
 ```pseudo
@@ -74,6 +88,7 @@ enum CloseCode {
   INTERNAL_ERROR = 1011
 }
 ```
+
 (From `websocket.md` section 1.2.)
 
 ---
@@ -81,6 +96,7 @@ enum CloseCode {
 ## 3. Utility Types
 
 ### TimeMs
+
 An alias for “number” indicating milliseconds.
 
 ```pseudo
@@ -88,6 +104,7 @@ type TimeMs = number
 ```
 
 ### Bytes
+
 An alias for “number” indicating bytes size (useful for message size checks).
 
 ```pseudo
@@ -100,6 +117,42 @@ type Bytes = number
 
 - **machine.md**: Sections 1.1 (System Constants), 4.1 (Connection Timing), 2.5 (Transition constraints for timeouts).
 - **websocket.md**: Additional close code definitions in section 1.2, protocol constraints for message size in section 1.10.
+
+## 5. Context Implementation Guide
+
+References `machine.md` section 2.3 Context $(P, V, T)$.
+
+### 5.1 Required Context Properties
+
+1. Primary ($P$)
+   - url: Connection URL
+   - socket: WebSocket reference
+   - status: Current state
+   - readyState: Protocol state
+   - reconnectCount: Retry tracking
+
+2. Metrics ($V$)
+   - messagesSent/Received
+   - bytesSent/Received  
+   - reconnectAttempts
+
+3. Timing ($T$)
+   - connectTime
+   - disconnectTime
+   - windowStart (rate limiting)
+   - lastStableConnection
+
+### 5.2 Context Constraints
+
+1. State-Dependent Rules
+   - Socket nullability per state
+   - Valid readyState values
+   - Timeout enforcement
+
+2. Updates
+   - Atomic property changes
+   - Emit on significant changes
+   - Validate after updates
 
 ```
 
@@ -155,7 +208,7 @@ enum ClientEvent {
   RECONNECTED,
   STABILIZED
 }
-```
+````
 
 ---
 
@@ -163,11 +216,11 @@ enum ClientEvent {
 
 Some events may carry data:
 
-1. **ERROR**  
+1. **ERROR**
    - Could have `errorCode`, or a reference to the `CloseCode`.
-2. **MESSAGE**  
+2. **MESSAGE**
    - Might include the actual message payload from server or client.
-3. **SEND**  
+3. **SEND**
    - Outbound message content to be queued or sent.
 
 A possible approach is to define typed structures, e.g.:
@@ -183,6 +236,7 @@ type MessageEventPayload = {
   timestamp: TimeMs
 }
 ```
+
 ---
 
 ## 3. WebSocket-Specific Events (Optional Sub-Enum)
@@ -200,6 +254,7 @@ enum WebSocketEvent {
   stabilized
 }
 ```
+
 (If we prefer merging them into `ClientEvent`, that’s fine too—just keep it consistent.)
 
 ---
@@ -210,7 +265,7 @@ enum WebSocketEvent {
 - `websocket.md` section 1.3 for protocol event types.
 - Each event is associated with transitions in the state machine definitions (see `states.types.md` and `machine.class.md`).
 
-```
+````
 
 ---
 
@@ -244,7 +299,7 @@ enum ClientState {
   RECONNECTING,
   RECONNECTED
 }
-```
+````
 
 ---
 
@@ -258,6 +313,7 @@ enum TerminatedState {
   TERMINATED
 }
 ```
+
 Or fold `terminated` into `ClientState`. The same if we want a “transient” internal state or “stabilizing” sub-state.
 
 ---
@@ -286,11 +342,69 @@ We can note that for design reference:
 
 ## 4. References
 
-- `machine.md` sections 2.1 and 2.5 (transitions). 
+- `machine.md` sections 2.1 and 2.5 (transitions).
 - `websocket.md` sections 1.1, 1.3 (protocol states).
 - Class-level logic that uses these states will appear in `machine.class.md` and `transition.class.md`.
 
+## 5. State Invariants
+
+From `machine.md` section 2.6.1:
+
+### Disconnected State
+
+```pseudo
+when DISCONNECTED:
+  socket = null
+  error = null
+  reconnectAttempts = 0
 ```
+
+### Disconnecting State
+```pseudo
+when DISCONNECTING:
+  socket != null
+  disconnectReason != null
+  duration <= DISCONNECT_TIMEOUT
+```
+
+### Connecting State
+
+```pseudo
+when CONNECTING:
+  socket != null
+  url != null
+  duration <= CONNECT_TIMEOUT
+```
+
+### Connected State
+
+```pseudo
+when CONNECTED:
+  socket != null
+  error = null
+  readyState = 1
+```
+
+### Reconnecting State
+
+```pseudo
+when RECONNECTING:
+  socket = null
+  retries <= MAX_RETRIES
+  error != null
+```
+
+### Reconnected State
+
+```pseudo
+when RECONNECTED:
+  socket != null
+  reconnectCount > 0
+  lastStableConnection != null
+  duration <= STABILITY_TIMEOUT
+```
+
+````
 
 ---
 
@@ -300,66 +414,76 @@ We can note that for design reference:
 # errors.types.md
 
 ## Overview
-Classifies errors for the WebSocket Client, referencing `machine.md` (error actions) and `websocket.md` (close codes, error classification).  
+Defines core type structures for error classification in the WebSocket Client, referencing `machine.md` and `websocket.md`.
 
 ---
 
-## 1. ErrorType Enum
+## 1. Error Type Enumeration
 
-From `websocket.md` section 1.11 (Error Handling Properties) or section 1.10 (Message Handling if relevant), we see errors can be:
-
-- **Recoverable** (network issues, code 1001 or 1006 possibly)
-- **Fatal** (protocol errors 1002, 1003, 1008)
-- **Transient** (others, or custom classification)
-
-```pseudo
-enum ErrorType {
-  RECOVERABLE,
-  FATAL,
-  TRANSIENT
+```
+Enum ErrorType {
+    RECOVERABLE
+    FATAL
+    TRANSIENT
 }
 ```
+*Reference: `websocket.md` section 1.11 - Error Handling Properties*
 
----
+## 2. Close Code Mapping
 
-## 2. Error Structures
-
-We might define a structure to carry more details:
-
-```pseudo
-type ClientError = {
-  code: number,
-  reason?: string,
-  type: ErrorType
+```
+Enum CloseCode {
+    NORMAL_CLOSURE       = 1000  // Standard, clean connection close
+    GOING_AWAY           = 1001
+    PROTOCOL_ERROR       = 1002
+    UNSUPPORTED_DATA     = 1003
+    ABNORMAL_CLOSURE     = 1006
+    POLICY_VIOLATION     = 1008
+    MESSAGE_TOO_BIG      = 1009
+    INTERNAL_ERROR       = 1011
 }
 ```
-(where `code` might be a `CloseCode` from `common.types.md`).
+*Reference: WebSocket protocol standard close codes, validated in `websocket.md` section 1.2*
 
----
+## 3. Error Classification Diagram
 
-## 3. Mapping Close Codes to ErrorType
+```mermaid
+classDiagram
+    class IErrorContext {
+        <<interface>>
+        +type: ErrorType
+        +code: CloseCode
+        +timestamp: TimeMs  // Millisecond timestamp type
+        +message?: String
+        +retryCount?: Integer  // Optional for tracking retry attempts
+    }
 
-`websocket.md` defines close codes like `1002` = PROTOCOL_ERROR. We can store them in a map or table:
+    class IErrorClassification {
+        <<interface>>
+        +classifyError(code: CloseCode): ErrorType
+        +isRetryAllowed(code: CloseCode): Boolean
+    }
 
-| Code  | Meaning            | Default ErrorType |
-|-------|--------------------|--------------------|
-| 1000  | NORMAL_CLOSURE     | Might not be error |
-| 1001  | GOING_AWAY         | RECOVERABLE?       |
-| 1002  | PROTOCOL_ERROR     | FATAL              |
-| 1003  | UNSUPPORTED_DATA   | FATAL              |
-| 1008  | POLICY_VIOLATION   | FATAL              |
-| 1009  | MESSAGE_TOO_BIG    | FATAL              |
-| 1011  | INTERNAL_ERROR     | FATAL              |
+    IErrorContext "1" -- "1" IErrorClassification : uses
+```
+*References:* 
+- *Error context structure from `machine.md` section 2.3 (Context Properties)*
+- *`TimeMs` type defined in `common.types.md` as a timestamp representation in milliseconds*
 
-(Feel free to adjust logic as needed.)
+## 4. Error Classification Mapping
 
----
+| Close Code | Error Type    | Retry Allowed | Notes |
+|-----------|---------------|---------------|-------|
+| 1000      | NONE          | No            | Normal connection closure (not an error) |
+| 1001      | RECOVERABLE   | Yes           | Server intentionally closing connection |
+| 1002      | FATAL         | No            | Protocol error |
+| 1003      | FATAL         | No            | Unsupported data type |
+| 1006      | RECOVERABLE   | Yes           | Abnormal connection closure |
+| 1008      | FATAL         | No            | Policy violation |
+| 1009      | FATAL         | No            | Message too large |
+| 1011      | FATAL         | No            | Internal server error |
 
-## 4. References
-
-- `websocket.md` sections 1.2, 1.11 for close code definitions and error classification.  
-- `machine.md` for `ERROR` events and related transitions.
-
+*Reference: Classification logic from `websocket.md` section 1.11.1 (Error Classification Rules)*
 
 ```
 
@@ -369,11 +493,12 @@ type ClientError = {
 
 We now have **Layer 0** with four `.md` files that define all our **core types**, enumerations, and constants:
 
-1. **`common.types.md`**  
-2. **`events.types.md`**  
-3. **`states.types.md`**  
+1. **`common.types.md`**
+2. **`events.types.md`**
+3. **`states.types.md`**
 4. **`errors.types.md`**
 
-**Next Step**: Move on to **Layer 1** (Base Interfaces & Classes) where we create files like `interfaces/internal.interface.md`, `state/context.class.md`, `protocol/errors.class.md`, `message/queue.class.md`, etc.  
+**Next Step**: Move on to **Layer 1** (Base Interfaces & Classes) where we create files like `interfaces/internal.interface.md`, `state/context.class.md`, `protocol/errors.class.md`, `message/queue.class.md`, etc.
 
 Together, these Layer 0 definitions will power everything that follows—**every class** in subsequent layers will import from these `.md` specs to stay consistent with the formal specs (`machine.md` and `websocket.md`).
+```
