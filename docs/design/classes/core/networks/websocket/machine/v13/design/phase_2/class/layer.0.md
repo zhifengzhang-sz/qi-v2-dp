@@ -275,67 +275,105 @@ enum WebSocketEvent {
 # states.types.md
 
 ## Overview
+
 Lists **all states** from the formal specs, referencing `machine.md` (sections 2.1, 2.5) and `websocket.md` (section 1.1 for state mapping).
 
 ---
 
-## 1. Core State Enum
-
-From `machine.md` section 2.1:
-
-- `disconnected`
-- `disconnecting`
-- `connecting`
-- `connected`
-- `reconnecting`
-- `reconnected`
+## 1. Core States
 
 ```pseudo
-enum ClientState {
-  DISCONNECTED,
-  DISCONNECTING,
-  CONNECTING,
-  CONNECTED,
-  RECONNECTING,
-  RECONNECTED
-}
-````
-
----
-
-## 2. Optional Extended States
-
-Depending on our design, we might also define:
-
-```pseudo
-// If needed
-enum TerminatedState {
-  TERMINATED
+// From machine.md §2.1
+enum State {
+  s1: disconnected  
+  s2: disconnecting
+  s3: connecting
+  s4: connected 
+  s5: reconnecting
+  s6: reconnected
 }
 ```
 
-Or fold `terminated` into `ClientState`. The same if we want a “transient” internal state or “stabilizing” sub-state.
-
 ---
 
-## 3. State Mapping (High-Level)
+## 2. State Interface Structure
 
-`websocket.md` section 1.1 mentions these states map to core states in `machine.md`:
+```mermaid
+classDiagram
+    class IState {
+      <<interface>>
+      +validateContext(context: IContext)
+      +validateDuration(timeMs: number)
+      +isValidTransition(event: IEvent)
+    }
 
-- `disconnected` -> `s_1`
-- `disconnecting` -> `s_2`
-- `connecting` -> `s_3`
-- `connected` -> `s_4`
-- `reconnecting` -> `s_5`
-- `reconnected` -> `s_6`
+    class IStateValidator {
+      <<interface>>
+      +validateSocket(): boolean
+      +validateError(): boolean
+      +validateRetries(): boolean
+    }
 
-We can note that for design reference:
+    IState --> IStateValidator
+```
+
+## 3. State Invariants (From $\S$2.6.1)
+
+From `machine.md` section 2.6.1:
+
+### Disconnected ($s_1$)
 
 ```pseudo
-// Just a note for clarity
-// s_1 = DISCONNECTED
-// s_2 = DISCONNECTING
-// ...
+when Disconnected:
+  socket = null
+  error = null
+  reconnectAttempts = 0
+```
+
+### Disconnecting ($s_2$)
+
+```pseudo
+when Disconnecting:
+  socket != null
+  disconnectReason != null
+  duration <= DISCONNECT_TIMEOUT
+```
+
+### Connecting ($s_3$)
+
+```pseudo
+when Connecting:
+  socket != null
+  url != null
+  duration <= CONNECT_TIMEOUT
+```
+
+### Connected ($s_4$)
+
+```pseudo
+when CONNECTED:
+  socket != null
+  error = null
+  readyState = 1
+```
+
+### Reconnecting ($s_5$)
+
+```pseudo
+when RECONNECTING:
+  socket = null
+  retries <= MAX_RETRIES
+  error != null
+```
+
+### Reconnected ($s_6$)
+
+```pseudo
+when RECONNECTED:
+  socket != null
+  reconnectCount > 0
+  lastStableConnection != null
+  duration <= STABILITY_TIMEOUT
 ```
 
 ---
@@ -346,63 +384,7 @@ We can note that for design reference:
 - `websocket.md` sections 1.1, 1.3 (protocol states).
 - Class-level logic that uses these states will appear in `machine.class.md` and `transition.class.md`.
 
-## 5. State Invariants
 
-From `machine.md` section 2.6.1:
-
-### Disconnected State
-
-```pseudo
-when DISCONNECTED:
-  socket = null
-  error = null
-  reconnectAttempts = 0
-```
-
-### Disconnecting State
-```pseudo
-when DISCONNECTING:
-  socket != null
-  disconnectReason != null
-  duration <= DISCONNECT_TIMEOUT
-```
-
-### Connecting State
-
-```pseudo
-when CONNECTING:
-  socket != null
-  url != null
-  duration <= CONNECT_TIMEOUT
-```
-
-### Connected State
-
-```pseudo
-when CONNECTED:
-  socket != null
-  error = null
-  readyState = 1
-```
-
-### Reconnecting State
-
-```pseudo
-when RECONNECTING:
-  socket = null
-  retries <= MAX_RETRIES
-  error != null
-```
-
-### Reconnected State
-
-```pseudo
-when RECONNECTED:
-  socket != null
-  reconnectCount > 0
-  lastStableConnection != null
-  duration <= STABILITY_TIMEOUT
-```
 
 ````
 
