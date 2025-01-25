@@ -5,74 +5,73 @@ Defines **all events** the WebSocket Client may handle or dispatch, referencing 
 
 ---
 
-## 1. Core Event Enum
-
-From `machine.md` section 2.2, we have:
-
-- `CONNECT`
-- `DISCONNECT`
-- `OPEN`
-- `CLOSE`
-- `ERROR`
-- `RETRY`
-- `MAX_RETRIES` (reached)
-- `TERMINATE`
-- `MESSAGE`
-- `SEND`
-- `PING`
-- `PONG`
-- `DISCONNECTED`
-- `RECONNECTED`
-- `STABILIZED`
-
-We can represent them as an enumeration:
+## 1. Core Events
 
 ```pseudo
-enum ClientEvent {
-  CONNECT,
-  DISCONNECT,
-  OPEN,
-  CLOSE,
-  ERROR,
-  RETRY,
-  MAX_RETRIES_REACHED,
-  TERMINATE,
-  MESSAGE,
-  SEND,
-  PING,
-  PONG,
-  DISCONNECTED,
-  RECONNECTED,
-  STABILIZED
+// From machine.md §2.2 Events (E)
+enum Event {
+  e₁: CONNECT
+  e₂: DISCONNECT  
+  e₃: OPEN
+  e₄: CLOSE
+  e₅: ERROR
+  e₆: RETRY
+  e₇: MAX_RETRIES
+  e₈: TERMINATE
+  e₉: MESSAGE
+  e₁₀: SEND
+  e₁₁: PING
+  e₁₂: PONG
+  e₁₃: DISCONNECTED
+  e₁₄: RECONNECTED
+  e₁₅: STABILIZED
 }
 ```
 
 ---
 
-## 2. Event Payloads
+## 2. Event Interface Structure 
 
-Some events may carry data:
+```mermaid
+classDiagram
+    class IEvent {
+      <<interface>>
+      +type: Event %% From §1 Core Events above
+      +timestamp: TimeMs %% From common.types.md
+      +payload?: IMessagePayload|IErrorPayload
+    }
 
-1. **ERROR**  
-   - Could have `errorCode`, or a reference to the `CloseCode`.
-2. **MESSAGE**  
-   - Might include the actual message payload from server or client.
-3. **SEND**  
-   - Outbound message content to be queued or sent.
+    class IMessagePayload {
+      <<interface>>
+      +data: string|BinaryData %% BinaryData from common.types.md
+      +size: Bytes %% From common.types.md
+      +isBinary: boolean
+    }
 
-A possible approach is to define typed structures, e.g.:
+    class IErrorPayload {
+      <<interface>>
+      +code: CloseCode %% From errors.types.md
+      +reason: string  
+      +wasClean: boolean
+    }
 
-```pseudo
-type ErrorEventPayload = {
-  code: number
-  message?: string
-}
+    class IEventValidator {
+      <<interface>>
+      +isValid(state: IState): boolean %% IState from states.types.md
+      +canTriggerTransition(state: IState): boolean
+    }
 
-type MessageEventPayload = {
-  data: any
-  timestamp: TimeMs
-}
+    IEvent --> IMessagePayload
+    IEvent --> IErrorPayload
+    IEvent --> IEventValidator
 ```
+
+This interface definition depends on:
+
+- `TimeMs`, `Bytes`, `BinaryData` from `common.types.md`
+- `CloseCode` from `errors.types.md`
+- `IState` from `states.types.md`
+- `Event` enum from $\S 1$ above
 
 ---
 
