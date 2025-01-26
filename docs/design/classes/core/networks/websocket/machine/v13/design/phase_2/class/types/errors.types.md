@@ -1,170 +1,189 @@
-# errors.types.md
+# WebSocket Client Error Types and Classification
 
 ## Overview
 
-Classifies errors for the WebSocket Client, referencing `machine.md` (error actions) and `websocket.md` (close codes, error classification).
+The error handling system is a critical component that ensures reliable operation of the WebSocket client by managing connection failures, protocol violations, and system errors. This system supports key business requirements:
 
----
+- Automated recovery from temporary network disruptions
+- Graceful degradation during planned maintenance
+- Protection against resource exhaustion
+- Clear error reporting for monitoring and diagnostics
 
-## 1. ErrorType Enum
+## 1. Business Impact
 
-From `websocket.md` section 1.11 (Error Handling Properties) or section 1.10 (Message Handling if relevant), we see errors can be:
+### 1.1 Reliability Objectives
 
-- **Recoverable** (network issues, code 1001 or 1006 possibly)
-- **Fatal** (protocol errors 1002, 1003, 1008)
-- **Transient** (others, or custom classification)
+The error classification system directly supports these reliability targets:
 
-```pseudo
+- 99.9% successful automatic recovery from transient failures
+- Zero data loss during reconnection scenarios
+- Maximum 5-second detection and response time for fatal errors
+- Clear audit trail of all error conditions and recovery attempts
+
+### 1.2 Operational Requirements
+
+Error handling must support these operational needs:
+
+- Real-time monitoring of connection health
+- Automated escalation of critical failures
+- Detailed error context for troubleshooting
+- Configurable retry policies for different deployment environments
+
+## 2. Error Classification
+
+### 2.1 Error Categories
+
+The system classifies all errors into three categories based on their operational impact:
+
+```typescript
 enum ErrorType {
-  RECOVERABLE,
-  FATAL,
-  TRANSIENT
+  RECOVERABLE, // Temporary failures that can be automatically resolved
+  FATAL, // Severe errors requiring manual intervention
+  TRANSIENT, // Momentary disruptions that self-resolve
 }
 ```
 
----
+### 2.2 Protocol Close Codes
 
-## 2. Error Structures
+WebSocket protocol close codes map to our error categories:
 
-We might define a structure to carry more details:
-
-```pseudo
-type ClientError = {
-  code: number,
-  reason?: string,
-  type: ErrorType
+```typescript
+enum CloseCode {
+  NORMAL_CLOSURE = 1000, // Clean shutdown - not an error
+  GOING_AWAY = 1001, // Graceful disconnect (maintenance)
+  PROTOCOL_ERROR = 1002, // Protocol violation
+  UNSUPPORTED_DATA = 1003, // Invalid message format
+  ABNORMAL_CLOSURE = 1006, // Connection lost
+  POLICY_VIOLATION = 1008, // Security policy breach
+  MESSAGE_TOO_BIG = 1009, // Message size limit exceeded
+  INTERNAL_ERROR = 1011, // Unexpected server error
 }
 ```
 
-(where `code` might be a `CloseCode` from `common.types.md`).
+## 3. Error Handling Architecture
 
----
+### 3.1 Component Model
 
-## 3. Mapping Close Codes to ErrorType
-
-`websocket.md` defines close codes like `1002` = PROTOCOL_ERROR. We can store them in a map or table:
-
-| Code | Meaning          | Default ErrorType  |
-| ---- | ---------------- | ------------------ |
-| 1000 | NORMAL_CLOSURE   | Might not be error |
-| 1001 | GOING_AWAY       | RECOVERABLE?       |
-| 1002 | PROTOCOL_ERROR   | FATAL              |
-| 1003 | UNSUPPORTED_DATA | FATAL              |
-| 1008 | POLICY_VIOLATION | FATAL              |
-| 1009 | MESSAGE_TOO_BIG  | FATAL              |
-| 1011 | INTERNAL_ERROR   | FATAL              |
-
-(Feel free to adjust logic as needed.)
-
----
-
-## 4. References
-
-- `websocket.md` sections 1.2, 1.11 for close code definitions and error classification.
-- `machine.md` for `ERROR` events and related transitions.
-
-## 5. Error Classification Logic
-
-From `websocket.md` section 1.11.1 (Error Classification):
-
-### 1. Default Error Classification
-
-```pseudo
-function classifyError(error, closeCode?): ErrorType {
-  if (closeCode) {
-    // Close codes from WebSocket protocol
-    switch (closeCode) {
-      case 1001, 1006:
-        return ErrorType.RECOVERABLE  // 'Going Away' or abnormal close
-      case 1002, 1003, 1008:
-        return ErrorType.FATAL        // Protocol violations
-      default:
-        return ErrorType.TRANSIENT    // Other codes
+```mermaid
+classDiagram
+    class WebSocketError {
+        <<abstract>>
+        +type: ErrorType
+        +code: number
+        +timestamp: TimeMs
+        +wasClean: boolean
+        +message: string
     }
-  }
 
-  // Non-protocol errors (e.g., connection failures)
-  if (error instanceof NetworkError) {
-    return ErrorType.RECOVERABLE
-  }
+    class RecoverableError {
+        +retryCount: number
+        +backoffDelay: TimeMs
+        +lastAttempt: TimeMs
+    }
 
-  if (error instanceof ProtocolError) {
-    return ErrorType.FATAL
-  }
+    class FatalError {
+        +reason: string
+        +requiresCleanup: boolean
+    }
 
-  return ErrorType.TRANSIENT  // Default classification
-}
+    class TransientError {
+        +condition: string
+        +threshold: number
+    }
+
+    WebSocketError <|-- RecoverableError
+    WebSocketError <|-- FatalError
+    WebSocketError <|-- TransientError
 ```
 
-### 2. Error State Requirements
+### 3.2 Error Processing Flow
 
-From `websocket.md` section 1.11.1:
+```mermaid
+flowchart TB
+    E[Error Occurs] --> C{Classify Error}
+    C -->|Recoverable| R[Apply Retry Logic]
+    C -->|Fatal| T[Terminate Connection]
+    C -->|Transient| V[Evaluate Conditions]
 
-```pseudo
-// Error state consistency rules
-invariant ERROR_STATE_CONSISTENCY:
-  when lastError != null:
-    currentState in [RECONNECTING, DISCONNECTED]
-  when currentState == RECONNECTING:
-    lastError != null
+    R --> RC{Retry Count?}
+    RC -->|< Max| B[Apply Backoff]
+    RC -->|>= Max| T
+
+    B --> A[Attempt Reconnect]
+    V --> CC{Check Conditions}
+    CC -->|Retry| R
+    CC -->|Abort| T
+
+    T --> D[Disconnect]
 ```
 
-### 3. Error Context Tracking
+## 4. Operational Considerations
 
-Error context must maintain:
+### 4.1 Monitoring Integration
 
-- Last error type and details
-- Retry count for recoverable errors
-- Error history within current session
+The error handling system exposes these metrics:
 
-<blockquote>
+- Error rates by category
+- Recovery success rates
+- Average recovery time
+- Current retry counts
+- Error distribution patterns
 
-Note: This bridges between the error code mapping and recovery rules by:
+### 4.2 Configuration Parameters
 
-1. Defining the classification logic that converts errors into types
-2. Specifying error state invariants
-3. Outlining error context requirements
+Key configuration options:
 
-The classification logic then feeds into section 6's recovery rules.
+- Maximum retry attempts
+- Retry backoff parameters
+- Error classification thresholds
+- Monitoring integration settings
+- Logging detail levels
 
-</blockquote>
+### 4.3 Troubleshooting Guide
 
-## 5. Error Recovery Implementation Guide
+Common error scenarios and resolution steps:
 
-References `websocket.md` section 1.11.
+| Error Type         | Common Causes                       | Resolution Steps                           | Business Impact                |
+| ------------------ | ----------------------------------- | ------------------------------------------ | ------------------------------ |
+| Network Timeout    | Network congestion, DNS issues      | Check network connectivity, DNS resolution | Temporary service interruption |
+| Protocol Error     | Client/server version mismatch      | Verify protocol compatibility              | Service degradation            |
+| Security Violation | Invalid credentials, expired tokens | Update authentication credentials          | Service outage                 |
 
-### 5.1 Error Classification Rules
+## 5. Implementation Guidelines
 
-Required classification patterns based on protocol close codes:
+### 5.1 Error Context Requirements
 
-1. RECOVERABLE
+All errors must capture:
 
-   - Codes: 1001, 1006
-   - Action: Retry sequence
-   - State: RECONNECTING if retries < MAX_RETRIES
+- Timestamp in milliseconds
+- Related protocol close code
+- Clean closure status
+- Retry attempt count (if applicable)
+- Last successful operation timestamp
+- Network condition indicators
 
-2. FATAL
+### 5.2 Recovery Process Standards
 
-   - Codes: 1002, 1003, 1008
-   - Action: Terminate
-   - State: DISCONNECTED
+Recovery procedures must:
 
-3. TRANSIENT
-   - Other codes
-   - Action: Retry if under MAX_RETRIES
-   - State: Based on retry count
+- Implement exponential backoff
+- Respect rate limits
+- Maintain operation ordering
+- Preserve session state where possible
+- Log all recovery attempts
 
-### 5.2 Error State Invariants
+## 6. References
 
-From `websocket.md` section 1.11.1:
+This implementation is governed by:
 
-1. State Requirements
+- RFC 6455 (WebSocket Protocol) Section 7.4 - Error Codes
+- System Reliability Requirements (SRE-101)
+- Operational Monitoring Standards (OPS-203)
+- Error Handling Best Practices (SEC-157)
 
-   - lastError != null only in RECONNECTING/DISCONNECTED
-   - RECONNECTING requires non-null lastError
-   - Transition to DISCONNECTED after max retries
+## 7. Change Management
 
-2. Error Context
-   - Track retry counts by error type
-   - Maintain error history in session
-   - Log timestamps for debugging
+| Version | Date       | Changes                  | Author |
+| ------- | ---------- | ------------------------ | ------ |
+| 1.0     | 2024-01-26 | Initial version          | Team   |
+| 1.1     | 2024-01-26 | Added monitoring section | Team   |
