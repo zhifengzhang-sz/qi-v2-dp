@@ -1,9 +1,7 @@
 # WebSocket Client Context Interfaces
 
 ## 1. System Boundary Interfaces
-
 ### 1.1 Application Interface
-
 ```mermaid
 classDiagram
     class WebSocketClient {
@@ -15,7 +13,6 @@ classDiagram
 ```
 
 ### 1.2 Protocol Interface
-
 ```mermaid
 sequenceDiagram
     participant Client
@@ -27,17 +24,14 @@ sequenceDiagram
 ```
 
 ## 2. Cross-Cutting Interfaces
-
 ### 2.1 Monitoring Interface
-
-| Metric                         | Source          | Formal Spec Reference |
-| ------------------------------ | --------------- | --------------------- |
-| `websocket_connections_active` | State Machine   | `machine.md` §3.1     |
-| `message_queue_size`           | Queue Manager   | `machine.md` §2.7     |
-| `reconnect_attempts_total`     | Retry Scheduler | `machine.md` §5.4     |
+| Metric | Source | Formal Spec Reference |
+|--------|--------|-----------------------|
+| `websocket_connections_active` | State Machine | `machine.md` §3.1 |
+| `message_queue_size` | Queue Manager | `machine.md` §2.7 |
+| `reconnect_attempts_total` | Retry Scheduler | `machine.md` §5.4 |
 
 ### 2.2 Configuration Interface
-
 ```mermaid
 flowchart TB
     subgraph Config
@@ -48,9 +42,7 @@ flowchart TB
 ```
 
 ## 3. Error Boundary
-
 ### 3.1 Error Taxonomy
-
 ```mermaid
 stateDiagram-v2
     [*] --> Recoverable: Code 1001, 1006
@@ -59,7 +51,6 @@ stateDiagram-v2
 ```
 
 ### 3.2 Error Handling Flow
-
 ```mermaid
 sequenceDiagram
     participant Adapter
@@ -74,3 +65,11 @@ sequenceDiagram
 ```
 
 ---
+
+### **3. Next Steps**
+1. **Review the Enhanced Files**:  
+   - Ensure they align with `machine.md`, `websocket.md`, and `guidelines.md`.  
+
+2. **Proceed to Containers**:  
+   - Build on the refined context layer to design the container layer.  
+
