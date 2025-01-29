@@ -19,3 +19,6 @@ docs/config_test
 docs/claude.ai
 js.v1
 **/tsconfig.tsbuildinfo
+services/ai/ollama-deepseek/db
+services/ai/ollama-deepseek/ollama
+!services/data
