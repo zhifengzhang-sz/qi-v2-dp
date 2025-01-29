@@ -1,33 +1,87 @@
 services:
+
   mongodb:
-    image: mongo:4.4.6
+    image: mongo:5.0
+    container_name: qi-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_DATABASE: chat_db
+      MONGO_ROOT_USER: admin
+      MONGO_ROOT_PASSWORD: secret
     ports:
-      - 27017:27017
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+      - ./mongo-init:/docker-entrypoint-initdb.d:ro
+    command: mongod --bind_ip_all --auth
+    ulimits:
+      nproc: 64000
+      nofile:
+        soft: 64000
+        hard: 64000
     networks:
       - chat-ui
+    healthcheck:
+      test: >
+        mongo --quiet --eval '
+          try {
+            db.adminCommand("ping").ok
+          } catch(e) {
+            exit(1)
+          }
+        ' mongodb://admin:secret@localhost:27017/admin?authSource=admin
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   ollama-service:
     image: ollama/ollama
+    container_name: qi-ollama
+    restart: unless-stopped
     ports:
-      - 11434:11434
+      - "11434:11434"
     volumes:
       - ./ollama:/root/.ollama
-    networks:
-      - chat-ui
-  chat-ui:
-    image: ghcr.io/huggingface/chat-ui-db:latest
-    volumes:
-      - ./db:/data
-      - .env.local:/app/.env.local
-    environment:
-      - MONGODB_URL=mongodb://mongodb:27017
-      - HF_TOKEN=abc
-    ports:
-      - 3000:3100
-    depends_on:
-      - mongodb
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    healthcheck:
+      test: ["CMD-SHELL", "ps aux | grep ollama | grep -v grep || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
     networks:
       - chat-ui
 
+  chat-ui:
+    image: ghcr.io/huggingface/chat-ui:latest
+    container_name: qi-chat-ui
+    restart: unless-stopped
+    volumes:
+      - ./db:/data
+      - ./.env.local:/app/.env.local:ro
+    environment:
+      - MONGODB_URL=mongodb://admin:secret@mongodb:27017/chat_db?authSource=admin
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      ollama-service:
+        condition: service_healthy
+    networks:
+      - chat-ui
+
+volumes:
+  mongodb_data:
+    name: qi-mongodb-data
+
 networks:
   chat-ui:
+    name: qi-network
     driver: bridge
