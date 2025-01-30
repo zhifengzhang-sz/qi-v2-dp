@@ -3,11 +3,15 @@
 GREEN := $(shell tput -Txterm setaf 2)
 RESET := $(shell tput -Txterm sgr0)
 
-.PHONY: help start stop install logs clean restart status
+.PHONY: help start stop install logs clean restart status pull-model list-models model-info
 
 help: ## Show this help message
 	@echo 'Usage:'
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-15s$(RESET) %s\n", $$1, $$2}'
+	@echo "$(GREEN)Available targets:$(RESET)"
+	@echo "  pull-model   Pull a new Ollama model"
+	@echo "  list-models  List installed models" 
+	@echo "  model-info   Show info for specific model"
 
 start: ## Start all containers in detached mode
 	@echo "$(GREEN)Starting containers...$(RESET)"
@@ -32,5 +36,16 @@ restart: stop start ## Restart all containers
 
 status: ## Check container status
 	@docker-compose ps
+
+pull-model: ## Pull a new Ollama model
+	@read -p "Enter model name: " model; \
+	docker exec -it qi-ollama ollama pull $$model
+
+list-models: ## List installed models
+	@docker exec -it qi-ollama ollama list
+
+model-info: ## Show info for specific model
+	@read -p "Enter model name: " model; \
+	docker exec -it qi-ollama ollama show $$model
 
 .DEFAULT_GOAL := help
