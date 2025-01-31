@@ -5,17 +5,15 @@ services:
     container_name: qi-mongodb
     restart: unless-stopped
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: secret
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER:-admin}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-secret}
       MONGO_INITDB_DATABASE: chat_db
-      MONGO_ROOT_USER: admin
-      MONGO_ROOT_PASSWORD: secret
     ports:
-      - "27017:27017"
+      - "${MONGO_PORT:-27017}:27017"
     volumes:
       - mongodb_data:/data/db
       - ./mongo-init:/docker-entrypoint-initdb.d:ro
-    command: mongod --bind_ip_all --auth
+    command: mongod --bind_ip_all --auth --wiredTigerCacheSizeGB 2
     ulimits:
       nproc: 64000
       nofile:
@@ -24,33 +22,38 @@ services:
     networks:
       - chat-ui
     healthcheck:
-      test: >
-        mongo --quiet --eval '
-          try {
-            db.adminCommand("ping").ok
-          } catch(e) {
-            exit(1)
-          }
-        ' mongodb://admin:secret@localhost:27017/admin?authSource=admin
+      test: mongosh --eval "db.adminCommand('ping').ok" --quiet
       interval: 10s
       timeout: 5s
-      retries: 5
-      start_period: 60s
+      retries: 3
+      start_period: 30s
 
   ollama-service:
-    image: ollama/ollama
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
     container_name: qi-ollama
     restart: unless-stopped
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./Modelfile:/root/.ollama/Modelfile:ro
     ports:
       - "11434:11434"
-    volumes:
-      - ./ollama:/root/.ollama
+    environment:
+      - OLLAMA_CPU_ONLY=1
+      - OLLAMA_COMPUTE=cpu
+      - OLLAMA_NUM_THREAD=${OLLAMA_NUM_THREAD}
+      - OLLAMA_NUM_CTX=${OLLAMA_NUM_CTX}
+      - OLLAMA_NUM_BATCH=${OLLAMA_NUM_BATCH}
+      - OLLAMA_MODEL=${OLLAMA_MODEL_NAME}
+      - OLLAMA_GPU=${OLLAMA_GPU}
     deploy:
       resources:
         limits:
-          memory: 8G
+          cpus: ${CONTAINER_CPU_LIMIT}
+          memory: ${CONTAINER_MEMORY_LIMIT}
     healthcheck:
-      test: ["CMD-SHELL", "ps aux | grep ollama | grep -v grep || exit 1"]
+      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -80,6 +83,8 @@ services:
 volumes:
   mongodb_data:
     name: qi-mongodb-data
+  ollama_data:
+    name: qi-ollama-data
 
 networks:
   chat-ui:

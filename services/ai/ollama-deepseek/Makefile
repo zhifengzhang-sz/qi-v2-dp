@@ -3,7 +3,11 @@
 GREEN := $(shell tput -Txterm setaf 2)
 RESET := $(shell tput -Txterm sgr0)
 
-.PHONY: help start stop install logs clean restart status pull-model list-models model-info
+include .env
+
+MODEL_URL=https://huggingface.co/TheBloke/${MODEL_NAME}-${MODEL_SIZE}-instruct-GGUF/resolve/main/${MODEL_NAME}-${MODEL_SIZE}-instruct.${MODEL_VARIANT}.gguf
+
+.PHONY: help start stop install logs clean restart status pull-model list-models model-info build verify speedup
 
 help: ## Show this help message
 	@echo 'Usage:'
@@ -21,9 +25,9 @@ stop: ## Stop all containers
 	@echo "$(GREEN)Stopping containers...$(RESET)"
 	@docker-compose down
 
-install: ## Install Deepseek model
-	@echo "$(GREEN)Installing Deepseek model...$(RESET)"
-	@docker exec -it qi-ollama ollama pull deepseek-r1:7b
+install: speedup ## Install models
+	@echo "Installing models..."
+	@docker exec -it qi-ollama ollama pull ${OLLAMA_MODEL_NAME}
 
 logs: ## View logs from all containers
 	@docker-compose logs -f
@@ -47,5 +51,19 @@ list-models: ## List installed models
 model-info: ## Show info for specific model
 	@read -p "Enter model name: " model; \
 	docker exec -it qi-ollama ollama show $$model
+
+build: ## Build optimized Ollama
+	docker-compose build ollama-service
+
+verify: ## Check installation
+	@docker exec -it qi-ollama ollama list
+
+speedup: ## Speed up model installation
+	@docker exec -i qi-ollama /bin/sh -c 'cd /root/.ollama && \
+		if [ ! -f model.gguf ]; then \
+			wget -O model.gguf ${MODEL_URL}; \
+		fi && \
+		echo "FROM ./model.gguf\nPARAMETER num_ctx ${OLLAMA_NUM_CTX}\nPARAMETER num_thread ${OLLAMA_NUM_THREAD}\nPARAMETER num_gpu ${OLLAMA_GPU}" > Modelfile && \
+		ollama create ${OLLAMA_MODEL_NAME} -f Modelfile'
 
 .DEFAULT_GOAL := help

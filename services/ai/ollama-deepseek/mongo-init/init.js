@@ -3,15 +3,15 @@
  * @module init
  *
  * @author zhifengzhang-sz
- * @created 2025-01-29
- * @modified 2025-01-29
+ * @created 2025-01-31
+ * @modified 2025-01-31
  */
 
 db = db.getSiblingDB('chat_db');
 
 db.createUser({
-  user: _getEnv("MONGO_ROOT_USER") || 'admin',
-  pwd: _getEnv("MONGO_ROOT_PASSWORD") || 'secret',
+  user: 'admin',
+  pwd: 'secret',
   roles: [{ role: "readWrite", db: "chat_db" }]
 });
 
