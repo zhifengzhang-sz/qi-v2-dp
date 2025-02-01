@@ -1,0 +1,14 @@
+{
+  "name": "ollama-deepseek",
+  "version": "1.0.0",
+  "description": "an config helper for the olama-deepseek project",
+  "main": "generate-config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Zhifeng Zhang",
+  "license": "MIT",
+  "dependencies": {
+    "handlebars": "^4.7.8"
+  }
+}

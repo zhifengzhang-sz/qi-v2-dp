@@ -22,23 +22,20 @@ services:
     networks:
       - chat-ui
     healthcheck:
-      test: mongosh --eval "db.adminCommand('ping').ok" --quiet
+      test: ["CMD", "mongosh", "--username", "${MONGO_ROOT_USER:-admin}", "--password", "${MONGO_ROOT_PASSWORD:-secret}", "--authenticationDatabase", "admin", "--eval", "db.adminCommand('ping').ok", "--quiet"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 30s
 
   ollama-service:
-    build:
-      context: .
-      dockerfile: Dockerfile.ollama
+    image: ollama/ollama:latest
     container_name: qi-ollama
     restart: unless-stopped
     volumes:
       - ollama_data:/root/.ollama
-      - ./Modelfile:/root/.ollama/Modelfile:ro
     ports:
-      - "11434:11434"
+      - "${OLLAMA_PORT:-11434}:11434"
     environment:
       - OLLAMA_CPU_ONLY=1
       - OLLAMA_COMPUTE=cpu
@@ -53,7 +50,7 @@ services:
           cpus: ${CONTAINER_CPU_LIMIT}
           memory: ${CONTAINER_MEMORY_LIMIT}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:11434/api/version"]
+      test: ["CMD", "/bin/ollama", "serve", "--help"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -67,7 +64,7 @@ services:
     restart: unless-stopped
     volumes:
       - ./db:/data
-      - ./.env.local:/app/.env.local:ro
+      - ./.env-local:/app/.env.local:ro
     environment:
       - MONGODB_URL=mongodb://admin:secret@mongodb:27017/chat_db?authSource=admin
     ports:

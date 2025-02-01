@@ -1,0 +1,127 @@
+# To solve the space/tab issue: sed -i 's/^    /\t/' Makefile
+
+# Colors for terminal output
+GREEN := $(shell tput -Txterm setaf 2)
+RED   := $(shell tput -Txterm setaf 1)
+RESET := $(shell tput -Txterm sgr0)
+
+# Load environment variables from .env
+include .env
+
+.PHONY: help up start stop install logs clean restart status pull-model list-models model-info build verify speedup configure-host configure-container
+
+# Default target shows help
+.DEFAULT_GOAL := help
+
+help: ## Show this help message
+	@echo 'Usage:'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-15s$(RESET) %s\n", $$1, $$2}'
+	@echo "$(GREEN)Available additional targets:$(RESET)"
+	@echo "  pull-model   Pull a new Ollama model"
+	@echo "  list-models  List installed models"
+	@echo "  model-info   Show info for specific model"
+
+#############################################
+# Host Configuration
+#############################################
+
+configure-host: ## Generate host configuration files (like .env-local)
+	@if [ ! -f .env-local.template ]; then \
+		echo "$(RED)Error: .env-local.template not found. Please create it.$(RESET)"; exit 1; \
+	fi
+	@echo "$(GREEN)Generating .env-local from .env-local.template$(RESET)"
+	@set -a && . ./.env && set +a && envplate .env-local.template -d > .env-local
+	@echo "Host configuration generated."
+
+#############################################
+# Starting Containers
+#############################################
+
+up: ## Start all containers in detached mode
+	@echo "$(GREEN)Starting containers...$(RESET)"
+	@docker-compose up -d
+
+#############################################
+# Container Configuration
+#############################################
+
+configure-container: ## Configure qi-ollama container (requires it to be healthy)
+	@echo "$(GREEN)Generating container-specific config (config.json)...$(RESET)"
+	@mkdir -p ollama/config
+	@echo '{ \
+		"gpu": false, \
+		"compute": "cpu", \
+		"numThread": $(OLLAMA_NUM_THREAD), \
+		"modelPath": "/root/.ollama/models", \
+		"format": "gguf", \
+		"parameters": { \
+			"num_ctx": $(OLLAMA_NUM_CTX), \
+			"num_batch": $(OLLAMA_NUM_BATCH), \
+			"num_gqa": 8, \
+			"rope_frequency_base": 1000000 \
+		} \
+	}' > ollama/config/config.json
+	@echo "$(GREEN)Waiting for qi-ollama container to become healthy...$(RESET)"
+	@until [ "`docker inspect -f '{{.State.Health.Status}}' qi-ollama`" = "healthy" ]; do \
+		echo "Waiting for qi-ollama to become healthy..."; sleep 2; \
+	done
+	@echo "$(GREEN)Updating qi-ollama container configuration...$(RESET)"
+	@docker exec -i qi-ollama /bin/sh -c 'mkdir -p /root/.ollama/config'
+	@docker cp ollama/config/config.json qi-ollama:/root/.ollama/config/
+	@echo "qi-ollama container configured."
+
+#############################################
+# Combined Start Target
+#############################################
+
+start: ## Generate host config, start containers, then configure containers
+	@$(MAKE) configure-host
+	@$(MAKE) up
+	@$(MAKE) configure-container
+
+#############################################
+# Other Targets
+#############################################
+
+stop: ## Stop all containers
+	@echo "$(GREEN)Stopping containers...$(RESET)"
+	@docker-compose down
+
+logs: ## View logs from all containers
+	@docker-compose logs -f
+
+clean: stop ## Stop containers and remove volumes
+	@echo "$(GREEN)Cleaning up...$(RESET)"
+	@docker-compose down -v
+
+restart: stop start ## Restart all containers
+	@echo "$(GREEN)Restarting containers...$(RESET)"
+
+status: ## Check container status
+	@docker-compose ps
+
+pull-model: ## Pull a new Ollama model
+	@read -p "Enter model name: " model; \
+	docker exec -it qi-ollama ollama pull $$model
+
+list-models: ## List installed models
+	@docker exec -it qi-ollama ollama list
+
+model-info: ## Show info for specific model
+	@read -p "Enter model name: " model; \
+	docker exec -it qi-ollama ollama show $$model
+
+build: ## Build optimized Ollama
+	@docker-compose build ollama-service
+
+verify: ## Check installation
+	@docker exec -it qi-ollama ollama list
+
+speedup: ## Speed up model installation
+	@echo "Installing model: ${OLLAMA_MODEL_NAME}"
+	@docker exec -i qi-ollama ollama pull ${OLLAMA_MODEL_NAME}
+
+install: ## Install models (container config and speedup)
+	@$(MAKE) configure-container
+	@$(MAKE) speedup
+	@echo "Models installed successfully"

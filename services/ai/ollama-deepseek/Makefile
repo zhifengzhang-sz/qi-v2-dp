@@ -1,69 +1,70 @@
 # To solve the space/tab issue: sed -i 's/^    /\t/' Makefile
 # Colors for terminal output
 GREEN := $(shell tput -Txterm setaf 2)
+RED   := $(shell tput -Txterm setaf 1)
 RESET := $(shell tput -Txterm sgr0)
 
+# Include environment variables from .env
 include .env
 
-MODEL_URL=https://huggingface.co/TheBloke/${MODEL_NAME}-${MODEL_SIZE}-instruct-GGUF/resolve/main/${MODEL_NAME}-${MODEL_SIZE}-instruct.${MODEL_VARIANT}.gguf
+# Compute OLLAMA_MODEL_NAME if not already defined (Make does not support bash expansion)
+ifeq ($(strip $(OLLAMA_MODEL_NAME)),)
+  OLLAMA_MODEL_NAME := $(MODEL_NAME):$(MODEL_SIZE)$(if $(strip $(MODEL_VARIANT)),-$(strip $(MODEL_VARIANT)),)
+endif
 
-.PHONY: help start stop install logs clean restart status pull-model list-models model-info build verify speedup
+.PHONY: help configure start install stop clean logs pull-model list-models model-info
+
+# Default target shows help
+.DEFAULT_GOAL := help
 
 help: ## Show this help message
-	@echo 'Usage:'
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  $(GREEN)%-15s$(RESET) %s\n", $$1, $$2}'
-	@echo "$(GREEN)Available targets:$(RESET)"
-	@echo "  pull-model   Pull a new Ollama model"
-	@echo "  list-models  List installed models" 
-	@echo "  model-info   Show info for specific model"
+	@echo "Usage: make <target>"
+	@echo "  help         Show this help message"
+	@echo "  configure    Generate configuration file (.env-local) using Node.js"
+	@echo "  start        Generate config & start containers"
+	@echo "  install      Wait for containers to be healthy and install default model"
+	@echo "  stop         Stop all containers"
+	@echo "  clean        Stop containers and remove volumes"
+	@echo "  logs         Show logs from all containers"
+	@echo "  pull-model   Pull a new Ollama model interactively"
+	@echo "  list-models  List installed models"
+	@echo "  model-info   Show info for a specific model"
 
-start: ## Start all containers in detached mode
+configure: ## Generate configuration file (.env-local) from template
+	@echo "$(GREEN)Generating configuration file...$(RESET)"
+	@node generate-config.js
+
+start: configure ## Generate config and start all containers in detached mode
 	@echo "$(GREEN)Starting containers...$(RESET)"
 	@docker-compose up -d
+
+install: start ## Install the default model after containers are up
+	@echo "$(GREEN)Waiting for qi-ollama container to be healthy...$(RESET)"
+	@until [ "`docker inspect -f '{{.State.Health.Status}}' qi-ollama`" = "healthy" ]; do \
+		echo "Waiting for qi-ollama to become healthy..."; sleep 2; \
+	done
+	@echo "$(GREEN)Installing model: ${OLLAMA_MODEL_NAME}...$(RESET)"
+	@docker exec -i qi-ollama ollama pull ${OLLAMA_MODEL_NAME}
+	@echo "$(GREEN)Models installed successfully.$(RESET)"
 
 stop: ## Stop all containers
 	@echo "$(GREEN)Stopping containers...$(RESET)"
 	@docker-compose down
 
-install: speedup ## Install models
-	@echo "Installing models..."
-	@docker exec -it qi-ollama ollama pull ${OLLAMA_MODEL_NAME}
+clean: stop ## Stop containers and remove volumes
+	@echo "$(GREEN)Removing volumes...$(RESET)"
+	@docker-compose down -v
 
 logs: ## View logs from all containers
 	@docker-compose logs -f
 
-clean: stop ## Stop containers and remove volumes
-	@echo "$(GREEN)Cleaning up...$(RESET)"
-	@docker-compose down -v
-
-restart: stop start ## Restart all containers
-
-status: ## Check container status
-	@docker-compose ps
-
-pull-model: ## Pull a new Ollama model
+pull-model: ## Pull a new Ollama model interactively
 	@read -p "Enter model name: " model; \
 	docker exec -it qi-ollama ollama pull $$model
 
 list-models: ## List installed models
 	@docker exec -it qi-ollama ollama list
 
-model-info: ## Show info for specific model
+model-info: ## Show info for a specific model
 	@read -p "Enter model name: " model; \
 	docker exec -it qi-ollama ollama show $$model
-
-build: ## Build optimized Ollama
-	docker-compose build ollama-service
-
-verify: ## Check installation
-	@docker exec -it qi-ollama ollama list
-
-speedup: ## Speed up model installation
-	@docker exec -i qi-ollama /bin/sh -c 'cd /root/.ollama && \
-		if [ ! -f model.gguf ]; then \
-			wget -O model.gguf ${MODEL_URL}; \
-		fi && \
-		echo "FROM ./model.gguf\nPARAMETER num_ctx ${OLLAMA_NUM_CTX}\nPARAMETER num_thread ${OLLAMA_NUM_THREAD}\nPARAMETER num_gpu ${OLLAMA_GPU}" > Modelfile && \
-		ollama create ${OLLAMA_MODEL_NAME} -f Modelfile'
-
-.DEFAULT_GOAL := help

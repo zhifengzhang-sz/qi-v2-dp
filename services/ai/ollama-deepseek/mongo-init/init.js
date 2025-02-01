@@ -4,16 +4,10 @@
  *
  * @author zhifengzhang-sz
  * @created 2025-01-31
- * @modified 2025-01-31
+ * @modified 2025-02-01
  */
 
 db = db.getSiblingDB('chat_db');
-
-db.createUser({
-  user: 'admin',
-  pwd: 'secret',
-  roles: [{ role: "readWrite", db: "chat_db" }]
-});
 
 // Create collections
 db.createCollection('conversations');
