@@ -64,9 +64,9 @@ services:
     restart: unless-stopped
     volumes:
       - ./db:/data
-      - ./.env-local:/app/.env.local:ro
+      - ./.env-local:/app/.env.local
     environment:
-      - MONGODB_URL=mongodb://admin:secret@mongodb:27017/chat_db?authSource=admin
+      - MONGODB_URL=mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@qi-mongodb:27017/chat_db?authSource=admin
     ports:
       - "3000:3000"
     depends_on:

@@ -38,9 +38,12 @@ configure: ## Generate configuration file (.env-local) from template
 	@echo "$(GREEN)Generating configuration file...$(RESET)"
 	@node generate-config.js
 
-start: configure ## Generate config and start all containers in detached mode
+start: configure
 	@echo "$(GREEN)Starting containers...$(RESET)"
+	@docker-compose down
 	@docker-compose up -d
+	@echo "$(GREEN)Waiting for services to be ready...$(RESET)"
+	@sleep 10
 
 install: start ## Install the default model (single-model mode)
 	@echo "$(GREEN)Waiting for qi-ollama container to be healthy...$(RESET)"
