@@ -28,18 +28,18 @@ endif
 help: ## Show this help message
 	@printf "$(YELLOW)Usage:$(RESET) make [target]\n\n"
 	@printf "$(YELLOW)Available targets:$(RESET)\n"
-	@awk 'BEGIN {FS=":.*## "}; /^[a-zA-Z0-9_-]+:.*## / { \
-        target = $$1; \
-        sub(/^[ \t]+/, "", target); \
-        printf "  \033[32m%-20s\033[0m %s\n", target, $$2 \
-    }' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "}; /^[a-zA-Z0-9_-]+:.*?## / { \
+	    target = $$1; \
+	    sub(/^[ \t]+/, "", target); \
+	    printf "  \033[32m%-20s\033[0m %s\n", target, $$2 \
+	}' $(MAKEFILE_LIST)
 
 configure: ## Generate configuration file (.env-local) from template
 	@echo "$(GREEN)Generating configuration file in $(MODE) mode...$(RESET)"
 	@if [ "$(MODE)" = "multi" ]; then \
-		node generate-config.js --multi; \
+		NODE_ENV=production node generate-config.js --multi; \
 	else \
-		node generate-config.js; \
+		NODE_ENV=production node generate-config.js; \
 	fi
 
 start: configure ## Generate config & start containers
@@ -49,13 +49,13 @@ start: configure ## Generate config & start containers
 	@echo "$(GREEN)Waiting for services to be ready...$(RESET)"
 	@sleep 10
 
-start-multi: MODE=multi ## Start in multi-model mode with all models
-start-multi: start install-multi-models
+start-multi: ## Start in multi-model mode with all models
+	@$(MAKE) MODE=multi start install-multi-models
 
-start-single: MODE=single ## Start in single-model mode with default model
-start-single: start install
+start-single: ## Start in single-model mode with default model
+	@$(MAKE) MODE=single start install
 
-install: start ## Install the default model (single-model mode)
+install: ## Install the default model (single-model mode)
 	@echo "$(GREEN)Waiting for qi-ollama container to be healthy...$(RESET)"
 	@until [ "`docker inspect -f '{{.State.Health.Status}}' qi-ollama`" = "healthy" ]; do \
 		echo "Waiting for qi-ollama to become healthy..."; sleep 2; \
@@ -64,6 +64,7 @@ install: start ## Install the default model (single-model mode)
 	@docker exec qi-ollama ollama list | grep -q "${OLLAMA_MODEL_NAME}" || (echo "$(GREEN)Installing model: ${OLLAMA_MODEL_NAME}...$(RESET)" && docker exec -i qi-ollama ollama pull ${OLLAMA_MODEL_NAME})
 	@echo "$(GREEN)Default model installation complete.$(RESET)"
 
+# Rest of the Makefile remains the same...
 install-multi-models: ## Install all models defined in .env-multi
 	@echo "$(GREEN)Installing multiple models from .env-multi...$(RESET)"
 	@for model in $$(jq -r '.MODELS[].endpoints[].ollamaName' .env-multi); do \
