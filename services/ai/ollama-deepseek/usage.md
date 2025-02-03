@@ -1,45 +1,63 @@
 # Operation & Maintenance Guide
 
 ## System Overview
-- Chat UI: Port 3100
+- Chat UI: Port 3000
 - Ollama API: Port 11434
 - MongoDB: Port 27017
 
 ## Common Operations
 
-### Starting Services
-```bash
-make start
-```
+### Service Management
 
-### Stopping Services
 ```bash
+# Start services (single model)
+make start-single
+
+# Start services (multi-model)
+make start-multi
+
+# Stop services
 make stop
+
+# Clean up (stop & remove volumes)
+make clean
 ```
 
 ### Model Management
-```bash
-# Install model
-make install
 
-# Verify model
-docker exec -it qi-ollama ollama list
+```bash
+# List installed models
+make list-models
+
+# Get model information
+make model-info
+
+# Pull new model
+make pull-model
+
+# View model logs
+docker logs qi-ollama
 ```
 
-### Log Management
+### Monitoring
+
 ```bash
-# View all logs
+# View all service logs
 make logs
 
-# View specific service logs
+# View individual service logs
 docker logs qi-chat-ui
 docker logs qi-ollama
 docker logs qi-mongodb
+
+# Check container stats
+docker stats qi-chat-ui qi-ollama qi-mongodb
 ```
 
 ## Backup Procedures
 
 ### MongoDB Backup
+
 ```bash
 # Backup
 docker exec qi-mongodb mongodump --out /data/backup/
@@ -49,102 +67,103 @@ docker exec qi-mongodb mongorestore /data/backup/
 ```
 
 ### Model Backup
+
 ```bash
 # Backup Ollama models
 tar -czf ollama_backup.tar.gz ./ollama
 ```
 
-## Monitoring
-
-### Health Checks
-```bash
-# Check service status
-make status
-
-# Check individual endpoints
-curl http://localhost:11434/api/health
-curl http://localhost:3100/health
-```
-
-### Resource Usage
-```bash
-# Monitor container resources
-docker stats qi-chat-ui qi-ollama qi-mongodb
-```
-
-## Troubleshooting
+## Troubleshooting Guide
 
 ### Common Issues
 
-1. **MongoDB Connection Issues**
-```bash
-# Check logs
-docker logs qi-mongodb
+1. **Service Won't Start**
+   ```bash
+   # Check logs
+   make logs
+   
+   # Try clean restart
+   make clean
+   make start-single  # or make start-multi
+   ```
 
-# Verify credentials
-docker exec -it qi-mongodb mongosh --eval "db.auth('$MONGO_ROOT_USER', '$MONGO_ROOT_PASSWORD')"
-```
+2. **MongoDB Connection Issues**
+   ```bash
+   # Check MongoDB logs
+   docker logs qi-mongodb
+   
+   # Verify MongoDB is running
+   docker ps | grep qi-mongodb
+   
+   # Test connection
+   docker exec -it qi-mongodb mongosh --eval "db.auth('$MONGO_ROOT_USER', '$MONGO_ROOT_PASSWORD')"
+   ```
 
-2. **Ollama Model Issues**
-```bash
-# Reinstall model
-make install
+3. **Model Loading Issues**
+   ```bash
+   # Check model list
+   make list-models
+   
+   # Check Ollama logs
+   docker logs qi-ollama
+   
+   # Reinstall model
+   make pull-model
+   ```
 
-# Clear model cache
-docker exec -it qi-ollama rm -rf /root/.ollama/models
-```
-
-3. **Chat UI Issues**
-```bash
-# Check environment
-docker exec qi-chat-ui env
-
-# Restart service
-docker restart qi-chat-ui
-```
+4. **Chat UI Issues**
+   ```bash
+   # Check UI logs
+   docker logs qi-chat-ui
+   
+   # Verify environment
+   docker exec qi-chat-ui env
+   
+   # Restart UI
+   docker restart qi-chat-ui
+   ```
 
 ## Maintenance Schedule
 
-1. **Daily**
-   - Check service status
-   - Monitor resource usage
-   - Review logs
+### Daily Tasks
+- Monitor service status
+- Check logs for errors
+- Monitor resource usage
 
-2. **Weekly**
-   - Backup MongoDB data
-   - Check for model updates
-   - Clean unused Docker resources
+### Weekly Tasks
+- Backup MongoDB data
+- Update models if needed
+- Clean unused Docker resources
 
-3. **Monthly**
-   - Full system backup
-   - Performance review
-   - Security updates
+### Monthly Tasks
+- Full system backup
+- Security updates
+- Performance review
 
 ## Security Guidelines
 
 1. **Access Control**
-   - Change default passwords
+   - Use strong passwords in .env
    - Restrict port access
-   - Use secure connections
+   - Keep HF_TOKEN secure
 
 2. **Updates**
    - Keep Docker images updated
-   - Monitor security advisories
+   - Monitor for security advisories
    - Update models regularly
 
-## Emergency Procedures
+## Emergency Recovery
 
 ### Quick Recovery
 ```bash
-# Stop all services
-make stop
-
-# Clean volumes
+# Full system reset
 make clean
+make start-single  # or make start-multi
 
-# Start fresh
-make start
-make install
+# Individual service restart
+docker restart qi-chat-ui
+docker restart qi-ollama
+docker restart qi-mongodb
 ```
 
 ### Data Recovery

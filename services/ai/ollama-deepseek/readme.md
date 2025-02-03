@@ -13,6 +13,7 @@ A containerized chat service using Ollama, MongoDB, and HuggingFace's Chat UI.
 - Docker Engine 24.0+
 - Docker Compose v2.0+
 - Make
+- Node.js v18+ (for configuration generation)
 - 8GB+ RAM (for the Ollama service)
 - NVIDIA GPU (optional)
 
@@ -25,39 +26,49 @@ A containerized chat service using Ollama, MongoDB, and HuggingFace's Chat UI.
    cd <repository-name>
    ```
 
-2. **Create environment files:**
+2. **Install dependencies:**
 
    ```bash
-   cp .env.example .env
-   cp .env.local.example .env.local
+   npm install
    ```
-   
+
 3. **Configure your environment:**
 
    - **Common Configuration (.env):**  
-     Edit `.env` for global settings such as MongoDB, Ollama port, UI port, HuggingFace token, and single‑model parameters.
+     Edit `.env` for global settings such as MongoDB, Ollama port, UI port, HuggingFace token, and model parameters.
 
      Example `.env`:
-
      ```ini
+     # MongoDB Configuration
      MONGO_ROOT_USER=admin
      MONGO_ROOT_PASSWORD=your_secure_password
      MONGO_PORT=27017
-     OLLAMA_PORT=11434
-     UI_PORT=3100
-     HF_TOKEN=your_huggingface_token
 
-     # Single-model configuration:
+     # Ollama Configuration
+     CONTAINER_CPU_LIMIT=12
+     CONTAINER_MEMORY_LIMIT=32G
+     OLLAMA_PORT=11434
+
+     # Model Configuration
      MODEL_NAME=deepseek-r1
      MODEL_SIZE=8b
      MODEL_VARIANT=llama-distill-q4_K_M
+
+     # Performance Settings
+     OLLAMA_NUM_THREAD=12
+     OLLAMA_NUM_CTX=2048
+     OLLAMA_NUM_BATCH=512
+     OLLAMA_GPU=0
+
+     # Chat UI Configuration
+     UI_PORT=3000
+     HF_TOKEN=your_huggingface_token
      ```
 
    - **Multi‑Model Configuration (.env-multi, optional):**  
-     If running in multi‑model mode, create/edit a JSON file named `.env-multi` that includes only model-specific details. When using multi‑model mode, the common settings from `.env` are loaded first, then model definitions from `.env-multi` are used for model installation.
+     For multi‑model mode, create/edit `.env-multi` with your model configurations.
 
      Example `.env-multi`:
-
      ```json
      {
        "MODELS": [
@@ -75,36 +86,6 @@ A containerized chat service using Ollama, MongoDB, and HuggingFace's Chat UI.
                "ollamaName": "deepseek-r1:8b-llama-distill-q4_K_M"
              }
            ]
-         },
-         {
-           "name": "deepseek-r1:7b-qwen-distill-q4_K_M",
-           "parameters": {
-             "num_thread": 12,
-             "num_ctx": 2048,
-             "num_batch": 512
-           },
-           "endpoints": [
-             {
-               "type": "ollama",
-               "url": "http://ollama-service:11434",
-               "ollamaName": "deepseek-r1:7b-qwen-distill-q4_K_M"
-             }
-           ]
-         },
-         {
-           "name": "deepseek-r1:7b",
-           "parameters": {
-             "num_thread": 8,
-             "num_ctx": 1024,
-             "num_batch": 256
-           },
-           "endpoints": [
-             {
-               "type": "ollama",
-               "url": "http://ollama-service:11434",
-               "ollamaName": "deepseek-r1:7b"
-             }
-           ]
          }
        ]
      }
@@ -112,101 +93,73 @@ A containerized chat service using Ollama, MongoDB, and HuggingFace's Chat UI.
 
 ## Usage
 
-The Makefile supports both single‑model (default) and multi‑model modes.
-
 ### Available Commands
 
-- **make help**  
-  Show available commands.
+```bash
+# View all available commands
+make help
 
-- **make start**  
-  Generate configuration and start all containers.
+# Start services:
+make start-single     # Single model mode (default)
+make start-multi      # Multi-model mode
 
-- **make install**  
-  Install the default (single) model if not already installed.
+# Stop and clean:
+make stop            # Stop all containers
+make clean           # Stop and remove volumes
 
-- **make install-multi-models**  
-  Install models defined in `.env-multi` (multi‑model mode).  
-  (Note: The global settings still come from `.env`.)
+# Model management:
+make list-models     # List installed models
+make model-info      # Show model details
+make pull-model      # Pull a new model
 
-- **make stop**  
-  Stop all containers.
-
-- **make clean**  
-  Stop containers and remove volumes.
-
-- **make logs**  
-  View logs from all containers.
-
-- **make pull-model**  
-  Pull a new Ollama model interactively.
-
-- **make list-models**  
-  List installed models.
-
-- **make model-info**  
-  Show info for a specific model.
+# Monitoring:
+make logs           # View container logs
+```
 
 ### Quick Start
 
-1. **Start services:**
-
+1. **Start in single-model mode:**
    ```bash
-   make start
+   make start-single
+   ```
+   Or for multi-model mode:
+   ```bash
+   make start-multi
    ```
 
-2. **Install Deepseek model(s):**
-
-   - For single‑model mode (default from `.env`):
-     ```bash
-     make install
-     ```
-   - For multi‑model mode (using models from `.env-multi`):
-     ```bash
-     make install-multi-models
-     ```
-
-3. **Access services:**
-
-   - **Chat UI:** [http://localhost:3100](http://localhost:3100)
-   - **Ollama API:** [http://localhost:11434](http://localhost:11434)
-   - **MongoDB:** localhost:27017
+2. **Access services:**
+   - Chat UI: http://localhost:3000
+   - Ollama API: http://localhost:11434
+   - MongoDB: localhost:27017
 
 ## Troubleshooting
 
-- **MongoDB startup issues:**
+If you encounter issues:
 
-  ```bash
-  make clean
-  make start
-  ```
+1. **Check logs:**
+   ```bash
+   make logs
+   ```
 
-- **Model installation issues:**
+2. **Restart services:**
+   ```bash
+   make stop
+   make clean
+   make start-single  # or make start-multi
+   ```
 
-  For single‑model mode:
-  ```bash
-  make install
-  ```
-  For multi‑model mode:
-  ```bash
-  make install-multi-models
-  ```
-
-- **Viewing service logs:**
-
-  ```bash
-  docker logs qi-ollama
-  docker logs qi-mongodb
-  docker logs qi-chat-ui
-  ```
+3. **Verify model installation:**
+   ```bash
+   make list-models
+   ```
 
 ## Contributing
 
-1. Fork the repository.
-2. Create a feature branch.
-3. Commit your changes.
-4. Push to your branch.
-5. Create a Pull Request.
+1. Fork the repository
+2. Create a feature branch
+3. Commit your changes
+4. Push to your branch
+5. Create a Pull Request
 
 ## License
 
