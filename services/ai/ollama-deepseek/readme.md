@@ -91,7 +91,69 @@ A containerized chat service using Ollama, MongoDB, and HuggingFace's Chat UI.
      }
      ```
 
+---
+
 ## Usage
+
+```mermaid
+graph TD
+    subgraph Configuration["Configuration Layer"]
+        ENV[".env File"] --> |Single Model| GenConfig["generate-config.js"]
+        MultiEnv[".env-multi"] --> |Multiple Models| GenConfig
+        GenConfig --> LocalEnv[".env-local"]
+    end
+
+    subgraph Deployment["Deployment Layer"]
+        LocalEnv --> Docker["docker-compose.yml"]
+        Docker --> |Spawns| MongoDB["MongoDB Container"]
+        Docker --> |Spawns| Ollama["Ollama Container"]
+        Docker --> |Spawns| ChatUI["Chat UI Container"]
+    end
+
+    subgraph Models["Model Management"]
+        Ollama --> |Loads| Model1["DeepSeek 8B"]
+        Ollama --> |Loads| Model2["DeepSeek 7B"]
+        Ollama --> |Loads| Model3["DeepSeek 7B Qwen"]
+    end
+
+    MongoDB --> |Stores| Conversations["Conversations"]
+    MongoDB --> |Stores| Messages["Messages"]
+    MongoDB --> |Stores| Settings["Settings"]
+
+    ChatUI --> |Interacts| Ollama
+    ChatUI --> |Stores Data| MongoDB
+```
+
+---
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Make as Makefile
+    participant Config as generate-config.js
+    participant Docker as Docker Compose
+    participant Ollama
+
+    User->>Make: make start-multi
+    activate Make
+    Make->>Config: Generate config (--multi)
+    Config->>Config: Read .env-multi
+    Config->>Config: Process model configs
+    Config-->>Make: .env-local created
+    Make->>Docker: docker-compose up
+    Docker->>Ollama: Start container
+    Make->>Ollama: Wait for health check
+    loop For each model
+        Make->>Ollama: Check if installed
+        alt Model not installed
+            Make->>Ollama: ollama pull model
+        end
+    end
+    deactivate Make
+    Note over User,Ollama: System ready with all models
+```
+
+---
 
 ### Available Commands
 

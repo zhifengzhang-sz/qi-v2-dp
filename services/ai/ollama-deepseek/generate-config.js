@@ -4,7 +4,7 @@
  *
  * @author zhifengzhang-sz
  * @created 2025-02-01
- * @modified 2025-02-04
+ * @modified 2025-02-05
  */
 
 // generate-config.js
@@ -30,21 +30,29 @@ Handlebars.registerHelper("formatModelName", function (name, size, variant) {
 
 // Function to generate model config
 function generateModelConfig(model) {
-  // Parse the name to extract components (assuming format: name:size-variant)
-  const [baseName, details] = model.name.split(":");
-  const [size, ...variantParts] = details.split("-");
-  const variant = variantParts.join("-");
+  // Extract parameters with proper type conversion
+  const envParams = {
+    num_thread: parseInt(process.env.OLLAMA_NUM_THREAD) || 12,
+    num_ctx: parseInt(process.env.OLLAMA_NUM_CTX) || 2048,
+    num_batch: parseInt(process.env.OLLAMA_NUM_BATCH) || 512
+  };
 
   return {
-    name: `DeepSeek ${size}${variant ? ` ${variant}` : ""}`,
-    description: `DeepSeek Code Language Model - ${size}${
-      variant ? ` (${variant})` : ""
-    } Version`,
+    name: model.name,
+    displayName: model.displayName || model.name,
+    description: model.description,
     parameters: {
-      temperature: 0.7,
-      top_p: 0.95,
-      repetition_penalty: 1.2,
-      ...model.parameters,
+      ...model.parameters || {},  // Ensure model.parameters exists and comes first
+      temperature: model.parameters?.temperature || 0.7,
+      top_p: model.parameters?.top_p || 0.95,
+      repetition_penalty: model.parameters?.repetition_penalty || 1.2,
+      num_thread: model.parameters?.num_thread || envParams.num_thread,
+      num_ctx: model.parameters?.num_ctx || envParams.num_ctx,
+      num_batch: model.parameters?.num_batch || envParams.num_batch,
+      tokenizer: model.parameters?.tokenizer || {
+        type: "llama-bpe",
+        model: "gpt2"
+      }
     },
     endpoints: model.endpoints.map((endpoint) => ({
       ...endpoint,
