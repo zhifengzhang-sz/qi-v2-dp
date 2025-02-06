@@ -1,0 +1,25 @@
+services:
+  coder:
+    build: .
+    container_name: deepseek-coder
+    volumes:
+      - .:/app
+      - model_cache:/cache
+    environment:
+      - TRANSFORMERS_CACHE=/cache/transformers
+      - HF_HOME=/cache/huggingface
+      - OMP_NUM_THREADS=8
+      - MKL_NUM_THREADS=8
+    deploy:
+      resources:
+        limits:
+          memory: 48G # Increased because we can't use 4-bit quantization
+        reservations:
+          memory: 32G
+    command: python app.py
+    stdin_open: true
+    tty: true
+
+volumes:
+  model_cache:
+    name: deepseek-coder-cache
