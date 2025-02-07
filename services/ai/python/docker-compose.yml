@@ -10,10 +10,12 @@ services:
       - HF_HOME=/cache/huggingface
       - OMP_NUM_THREADS=8
       - MKL_NUM_THREADS=8
+      - TOKENIZERS_PARALLELISM=true
     deploy:
       resources:
         limits:
-          memory: 48G # Increased because we can't use 4-bit quantization
+          memory: 56G # Leave some headroom for the system
+          cpus: "8"
         reservations:
           memory: 32G
     command: python app.py
