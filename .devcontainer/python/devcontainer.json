@@ -1,0 +1,190 @@
+{
+    "name": "Python AI Development",
+    "dockerComposeFile": [
+        "../docker-compose.yml"
+    ],
+    "service": "coder",
+    "workspaceFolder": "/home/${localEnv:USERNAME}",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-toolsai.jupyter",
+                "ms-azuretools.vscode-docker",
+                "huggingface.huggingface-vscode",
+                "GitHub.copilot",
+                "GitHub.copilot-chat",
+                "ms-python.vscode-pylance",
+                "njpwerner.autodocstring",
+                "ms-python.black-formatter",
+                "streetsidesoftware.code-spell-checker"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.linting.enabled": true,
+                "python.formatting.provider": "black",
+                "python.linting.pylintEnabled": true,
+                "editor.formatOnSave": true,
+                "editor.codeActionsOnSave": {
+                    "source.organizeImports": true
+                },
+                "python.analysis.typeCheckingMode": "basic",
+                "python.analysis.autoImportCompletions": true,
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "editor.rulers": [88],  // Black's default line length
+                "isort.args": ["--profile", "black"],
+                "files.trimTrailingWhitespace": true,
+                "python.linting.mypyEnabled": true,
+                "python.linting.banditEnabled": true,
+                "python.linting.flake8Enabled": true,
+                "terminal.integrated.defaultProfile.linux": "zsh",
+                "python.linting.ignorePatterns": [
+                    "**/site-packages/**/*.py",
+                    ".vscode/*.py"
+                ],
+                "python.testing.pytestArgs": [
+                    "tests"
+                ],
+                "files.watcherExclude": {
+                    "**/model-cache/**": true
+                },
+                "python.envFile": "${workspaceFolder}/.env"
+            },
+            "tasks": {
+                "version": "2.0.0",
+                "problemMatcher": {
+                    "pattern": {
+                        "regexp": "^(.+):(\\d+):(\\d+):\\s+(warning|error):\\s+(.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    },
+                    "base": "$pylint",
+                    "background": {
+                        "activeOnStart": true,
+                        "beginsPattern": "^Processing files",
+                        "endsPattern": "^\\d+ files checked"
+                    }
+                },
+                "tasks": [
+                    {
+                        "label": "Run Tests",
+                        "type": "shell",
+                        "command": "pytest",
+                        "group": {
+                            "kind": "test",
+                            "isDefault": true
+                        }
+                    },
+                    {
+                        "label": "Format Code",
+                        "type": "shell",
+                        "command": "black .",
+                        "group": {
+                            "kind": "build",
+                            "isDefault": true
+                        }
+                    },
+                    {
+                        "label": "Type Check",
+                        "type": "shell",
+                        "command": "mypy .",
+                        "group": "test"
+                    },
+                    {
+                        "label": "Security Check",
+                        "type": "shell",
+                        "command": "bandit -r .",
+                        "group": "test"
+                    },
+                    {
+                        "label": "Check All",
+                        "type": "shell",
+                        "command": "make check-all",
+                        "group": {
+                            "kind": "test",
+                            "isDefault": true
+                        },
+                        "dependsOrder": "sequence",
+                        "dependsOn": [
+                            "Format Code",
+                            "Type Check",
+                            "Security Check",
+                            "Run Tests"
+                        ]
+                    },
+                    {
+                        "label": "Clean Cache",
+                        "type": "shell",
+                        "command": "rm -rf /cache/transformers/* /cache/huggingface/*",
+                        "group": "none"
+                    },
+                    {
+                        "label": "Backup Model Cache",
+                        "type": "shell",
+                        "command": "/home/${localEnv:USERNAME}/scripts/backup.sh",
+                        "group": "none",
+                        "problemMatcher": []
+                    }
+                ]
+            },
+            "launch": {
+                "configurations": [
+                    {
+                        "name": "Python: Current File",
+                        "type": "python",
+                        "request": "launch",
+                        "program": "${file}",
+                        "console": "integratedTerminal",
+                        "justMyCode": false
+                    },
+                    {
+                        "name": "Python: Debug Tests",
+                        "type": "python",
+                        "request": "launch",
+                        "module": "pytest",
+                        "args": ["tests/", "-v"],
+                        "justMyCode": false
+                    },
+                    {
+                        "name": "Python: AI Service",
+                        "type": "python",
+                        "request": "launch",
+                        "program": "${workspaceFolder}/app.py",
+                        "env": {
+                            "PYTHONPATH": "${workspaceFolder}",
+                            "MODEL_DEVICE": "cpu"
+                        },
+                        "console": "integratedTerminal",
+                        "justMyCode": false
+                    }
+                ]
+            },
+            "problemMatcher": {
+                "mypy": {
+                    "pattern": [{
+                        "regexp": "^(.+):(\\d+):(\\d+): (error|warning): (.*)$",
+                        "file": 1,
+                        "line": 2,
+                        "column": 3,
+                        "severity": 4,
+                        "message": 5
+                    }]
+                }
+            }
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/python:1": {
+            "version": "3.11"
+        },
+        "ghcr.io/devcontainers/features/git:1": {},
+        "ghcr.io/devcontainers/features/github-cli:1": {},
+        "ghcr.io/devcontainers/features/docker-in-docker:1": {}
+    },
+    "remoteUser": "${localEnv:USERNAME}",
+    "shutdownAction": "stopCompose"
+}

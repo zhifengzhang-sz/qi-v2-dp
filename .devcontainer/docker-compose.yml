@@ -1,38 +1,93 @@
+x-common-networks: &common-networks
+  networks:
+    - qi_db_network
+    - redis_network 
+    - redpanda_network
+
+name: qi-v2-dp
+
 services:
   dp_js:
     build:
       context: .
       dockerfile: ./Dockerfile
       args:
-        - USERNAME=${USERNAME}
-        - USER_UID=${UID}
-        - USER_GID=${GID}
-        - VERSION=${VERSION}
-        - REGISTRY=${REGISTRY}
-    image: qi/data-platform-dev-container:${VERSION}
+        USERNAME: ${USERNAME:-user}
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+        VERSION: ${VERSION:-latest}
+        REGISTRY: ${REGISTRY:-local}
+    image: ${REGISTRY:-local}/qi/data-platform-dev-container:${VERSION:-latest}
     container_name: data-platform-dev-container
     hostname: data-platform-dev.local
-    working_dir: /home/${USERNAME}
+    working_dir: /home/${USERNAME:-user}
     ports:
       - "7071:7071"
     volumes:
-      - ../:/workspace:cached
-      - ../qi:/home/${USERNAME}/qi:cached
-      - ../docs:/home/${USERNAME}/docs:cached
-      - ./shared:/shared:cached  # Host-relative path to ensure the same 'shared' access
+      - ..:/home/${USERNAME:-user}/workspace:cached  # Mount project at workspace
+      - ./shared:/shared:cached
     networks:
       - qi_db_network
-      - redis_network
+      - redis_network 
       - redpanda_network
     command: sleep infinity
+    healthcheck:
+      test: ["CMD", "node", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+  coder:
+    build:
+      context: ./python
+      dockerfile: Dockerfile
+      args:
+        USERNAME: ${USERNAME:-user}
+        USER_UID: ${UID:-1000}
+        USER_GID: ${GID:-1000}
+    image: ${REGISTRY:-local}/qi/coder:${VERSION:-latest}
+    container_name: coder
+    hostname: coder
+    working_dir: /home/${USERNAME:-user}
+    volumes:
+      - ../services/ai/python:/home/${USERNAME:-user}/workspace:cached  # Mount project directory
+      - ../services/ai/python/model-cache:/cache:cached  # Local model cache directory
+      - ./.zshrc:/home/${USERNAME:-user}/.zshrc:cached
+    environment:
+      - TRANSFORMERS_CACHE=/cache/transformers
+      - HF_HOME=/cache/huggingface
+      - TORCH_HOME=/cache/torch
+      - OMP_NUM_THREADS=${MODEL_THREADS:-8}
+      - MKL_NUM_THREADS=${MODEL_THREADS:-8}
+      - TOKENIZERS_PARALLELISM=true
+      - HF_HUB_ENABLE_HF_TRANSFER=0
+    networks:
+      - qi_db_network
+      - redis_network 
+      - redpanda_network
+    deploy:
+      resources:
+        limits:
+          memory: ${MODEL_MAX_MEMORY:-56G}
+          cpus: "${MODEL_THREADS:-8}"
+        reservations:
+          memory: ${MODEL_MIN_MEMORY:-32G}
+    command: sleep infinity
+    healthcheck:
+      test: ["CMD", "python", "-c", "import torch; print(torch.__version__)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
 
 networks:
   qi_db_network:
     external: true
     name: qi_db
-  redis_network:
+  redis_network:  
     external: true
     name: redis_network
   redpanda_network:
-    external: true
+    external: true 
     name: redpanda_network

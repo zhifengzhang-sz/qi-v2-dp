@@ -5,7 +5,7 @@
     "../docker-compose.yml"
   ],
   "service": "dp_js",
-  "workspaceFolder": "/home/${localEnv:USER}",
+  "workspaceFolder": "/home/${localEnv:USERNAME}",
   "extensions": [
     "esbenp.prettier-vscode",
     "eamodio.gitlens",
@@ -17,10 +17,11 @@
     "streetsidesoftware.code-spell-checker",
     "shd101wyy.markdown-preview-enhanced",
     "GitHub.copilot-chat",
-    "GitHub.copilot"
+    "GitHub.copilot",
+    "Continue.continue"
   ],
   "shutdownAction": "stopCompose",
-  "remoteUser": "${localEnv:USER}",
+  "remoteUser": "${localEnv:USERNAME}",
   "postCreateCommand": "apt-get update && apt-get install -y locales && locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8",
   "settings": {
     "terminal.integrated.shell.linux": "/bin/bash"
