@@ -1,64 +1,42 @@
 FROM python:3.11-slim-bookworm
 
-ARG TARGETARCH
-RUN echo "Building for architecture: $TARGETARCH"
-
 ARG USERNAME=zzhang
 ARG USER_UID=1000
 ARG USER_GID=1000
+ARG COMPOSE_PROJECT_NAME=qi-v2-dp
+ARG PYTHON_WORKDIR=/home/${USERNAME}/python
+ENV PYTHON_WORKDIR=${PYTHON_WORKDIR}
 
-# System dependencies - install sudo first
+# Install system packages
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      sudo \
-      git \
-      curl \
-      gcc \
-      g++ \
-      make \
-      procps \
-      zsh \
-      locales && \
-    rm -rf /var/lib/apt/lists/* && \
-    mkdir -p /etc/sudoers.d && \
-    mkdir -p /cache/transformers /cache/huggingface && \
-    locale-gen && \
-    echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen && \
-    locale-gen
+    curl \
+    git \
+    sudo \
+    && rm -rf /var/lib/apt/lists/*
 
-# User setup
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m -s /bin/zsh $USERNAME && \
-    echo "$USERNAME ALL=(root) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME && \
-    chmod 0440 /etc/sudoers.d/$USERNAME
+# Create user with sudo access
+RUN useradd -l -m -s /bin/bash -u ${USER_UID} ${USERNAME} && \
+    echo ${USERNAME} ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/${USERNAME} && \
+    chmod 0440 /etc/sudoers.d/${USERNAME}
 
-# Cache directories
-RUN chown -R $USERNAME:$USERNAME /cache
+# Set up workspace and cache directories
+RUN mkdir -p /home/${USERNAME}/services/ai/python/.cache/{transformers,huggingface,torch} && \
+    chown -R ${USERNAME}:${USERNAME} /home/${USERNAME}
 
-# Install oh-my-zsh and plugins
-RUN mkdir -p "/home/$USERNAME/.zsh" && \
-    git clone https://github.com/sindresorhus/pure.git "/home/$USERNAME/.zsh/pure" && \
-    git clone https://github.com/zsh-users/zsh-syntax-highlighting.git "/home/$USERNAME/.zsh/zsh-syntax-highlighting" && \
-    git clone https://github.com/zsh-users/zsh-autosuggestions "/home/$USERNAME/.zsh/zsh-autosuggestions" && \
-    chown -R $USERNAME:$USERNAME "/home/$USERNAME/.zsh"
+# Environment variables for ML tools
+ENV PYTHONUNBUFFERED=1 \
+    PYTHONPATH="/home/${USERNAME}/services/ai/python" \
+    TRANSFORMERS_CACHE="/home/${USERNAME}/services/ai/python/.cache/transformers" \
+    HF_HOME="/home/${USERNAME}/services/ai/python/.cache/huggingface" \
+    TORCH_HOME="/home/${USERNAME}/services/ai/python/.cache/torch"
 
-# Python setup
-WORKDIR /home/${USERNAME}
-COPY requirements.txt .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install Python packages
+COPY requirements.txt /tmp/
+RUN pip install --no-cache-dir -r /tmp/requirements.txt
 
-# Ensure the workspace is owned by the user
-RUN chown -R $USERNAME:$USERNAME /home/${USERNAME}
+USER ${USERNAME}
+WORKDIR ${PYTHON_WORKDIR}
 
-USER $USERNAME
-
-# Install oh-my-zsh after switching to user
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-
-RUN if [ "$TARGETARCH" = "arm64" ]; then \
-    echo "Installing ARM-specific dependencies"; \
-    fi
-
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD python -c "import torch; print(torch.__version__)" || exit 1
+CMD ["sleep", "infinity"]
+ENTRYPOINT ["sh", "-c", "exec \"$@\" || sleep infinity", "--"]

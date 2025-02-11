@@ -1,29 +1,33 @@
-// .devcontainer/qi/devcontainer.json
 {
   "name": "data platform - javascript",
   "dockerComposeFile": [
     "../docker-compose.yml"
   ],
   "service": "dp_js",
-  "workspaceFolder": "/home/${localEnv:USERNAME}",
-  "extensions": [
-    "esbenp.prettier-vscode",
-    "eamodio.gitlens",
-    "ms-vsliveshare.vsliveshare",
-    "rtbenfield.vscode-jest-test-adapter",
-    "dbaeumer.vscode-eslint",
-    "donjayamanne.typescript-notebook",
-    "statelyai.stately-vscode",
-    "streetsidesoftware.code-spell-checker",
-    "shd101wyy.markdown-preview-enhanced",
-    "GitHub.copilot-chat",
-    "GitHub.copilot",
-    "Continue.continue"
-  ],
-  "shutdownAction": "stopCompose",
+  "workspaceFolder": "/home/${localEnv:USERNAME}/qi",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "eamodio.gitlens",
+        "ms-vsliveshare.vsliveshare",
+        "rtbenfield.vscode-jest-test-adapter",
+        "dbaeumer.vscode-eslint",
+        "donjayamanne.typescript-notebook",
+        "statelyai.stately-vscode",
+        "streetsidesoftware.code-spell-checker",
+        "shd101wyy.markdown-preview-enhanced",
+        "GitHub.copilot-chat",
+        "GitHub.copilot",
+        "Continue.continue"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+      }
+    }
+  },
+  "postCreateCommand": "mkdir -p ~/.zsh && git clone https://github.com/sindresorhus/pure.git ~/.zsh/pure && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions",
   "remoteUser": "${localEnv:USERNAME}",
-  "postCreateCommand": "apt-get update && apt-get install -y locales && locale-gen en_US.UTF-8 && update-locale LANG=en_US.UTF-8",
-  "settings": {
-    "terminal.integrated.shell.linux": "/bin/bash"
-  }
+  "updateRemoteUserUID": false
 }
