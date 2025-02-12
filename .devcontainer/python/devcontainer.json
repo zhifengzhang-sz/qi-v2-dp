@@ -4,7 +4,7 @@
         "../docker-compose.yml"
     ],
     "service": "coder",
-    "workspaceFolder": "/home/${localEnv:USERNAME}/python",
+    "workspaceFolder": "/home/${localEnv:USER}/python",
     "customizations": {
         "vscode": {
             "extensions": [
@@ -13,32 +13,12 @@
                 "ms-python.black-formatter",
                 "ms-python.isort",
                 "ms-python.debugpy",
-                "GitHub.copilot",
-                "eamodio.gitlens",
                 "ms-azuretools.vscode-docker"
             ],
-            "settings": {
-                "python.defaultInterpreterPath": "/usr/local/bin/python",
-                "python.formatting.provider": "black",
-                "python.linting.enabled": true,
-                "python.linting.pylintEnabled": true,
-                "editor.formatOnSave": true,
-                "editor.codeActionsOnSave": {
-                    "source.organizeImports": true
-                },
-                "python.testing.pytestEnabled": true,
-                "editor.rulers": [
-                    88
-                ],
-                "isort.args": [
-                    "--profile",
-                    "black"
-                ],
-                "python.analysis.typeCheckingMode": "basic"
-            }
+            "settings": { }
         }
     },
-    "postCreateCommand": "mkdir -p ~/.zsh && git clone https://github.com/sindresorhus/pure.git ~/.zsh/pure && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions",
-    "remoteUser": "${localEnv:USERNAME}",
+    "postCreateCommand": "mkdir -p ~/.zsh && git clone https://github.com/sindresorhus/pure.git ~/.zsh/pure && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions && make install",
+    "remoteUser": "${localEnv:USER}",
     "updateRemoteUserUID": false
 }

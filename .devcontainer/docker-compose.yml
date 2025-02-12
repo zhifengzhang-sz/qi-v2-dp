@@ -9,8 +9,8 @@ name: qi-v2-dp
 services:
   coder:
     build:
-      context: ./python
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./python/Dockerfile
       args:
         USERNAME: ${USERNAME}
         USER_UID: ${UID}
@@ -42,8 +42,8 @@ services:
 
   dp_js:
     build:
-      context: ./qi
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./qi/Dockerfile
       args:
         USERNAME: ${USERNAME}
         USER_UID: ${UID}

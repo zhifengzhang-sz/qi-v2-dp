@@ -1,7 +1,4 @@
-.PHONY: setup env clean
-
-# Default values
-.PHONY: setup env clean
+.PHONY: setup env clean install
 
 include .env
 
@@ -41,3 +38,6 @@ env: .env
 clean:
 	rm -f .env
 	rm -rf ../services/ai/python/.cache
+
+install: env setup
+	@echo "Devcontainer installation complete."

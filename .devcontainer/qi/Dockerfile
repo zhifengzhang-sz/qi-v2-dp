@@ -1,7 +1,7 @@
 FROM node:22-bookworm
 RUN npm install -g npm@10.8.3
 
-# Install prerequisites
+# Install prerequisites including zsh
 RUN apt-get update && \
     apt-get install -y \
     lsb-release \
@@ -12,6 +12,8 @@ RUN apt-get update && \
     rsync \
     zip \
     clang-format \
+    zsh \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 # SSH configuration
@@ -32,10 +34,10 @@ ARG USER_GID=$USER_UID
 ARG QI_WORKDIR=/home/${USERNAME}/qi
 ENV QI_WORKDIR=${QI_WORKDIR}
 
-# Create the user
+# Create the user with /bin/zsh as default shell
 RUN userdel node \
     && groupadd -f --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m -s /bin/bash $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m -s /bin/zsh $USERNAME \
     && echo $USERNAME ALL=\(root\) NOPASSWD:ALL > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
@@ -46,6 +48,10 @@ RUN echo '#!/bin/sh\n\
 /usr/sbin/sshd\n\
 exec "$@"' > /usr/local/bin/docker-entrypoint.sh && \
 chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Copy custom zsh configuration
+COPY .zshrc /home/${USERNAME}/.zshrc
+RUN chown ${USER_UID}:${USER_GID} /home/${USERNAME}/.zshrc
 
 USER $USERNAME
 WORKDIR ${QI_WORKDIR}
