@@ -13,12 +13,16 @@
                 "ms-python.black-formatter",
                 "ms-python.isort",
                 "ms-python.debugpy",
-                "ms-azuretools.vscode-docker"
+                "ms-azuretools.vscode-docker",
+                "shd101wyy.markdown-preview-enhanced"
             ],
             "settings": { }
         }
     },
-    "postCreateCommand": "mkdir -p ~/.zsh && git clone https://github.com/sindresorhus/pure.git ~/.zsh/pure && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting && git clone https://github.com/zsh-users/zsh-autosuggestions ~/.zsh/zsh-autosuggestions && make install",
+    "postCreateCommand": "mkdir -p ~/.zsh && git clone https://github.com/ohmyzsh/ohmyzsh.git ~/.oh-my-zsh && git clone https://github.com/sindresorhus/pure.git ~/.zsh/pure && git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ~/.zsh/zsh-syntax-highlighting && git clone https://github.com/zsh-users/zsh-autosuggestions.git ~/.zsh/zsh-autosuggestions && make install",
     "remoteUser": "${localEnv:USER}",
-    "updateRemoteUserUID": false
+    "updateRemoteUserUID": false,
+    "containerEnv": {
+        "HF_HOME": "/home/${localEnv:USER}/python/.cache/huggingface"
+    }
 }

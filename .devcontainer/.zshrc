@@ -12,9 +12,14 @@ ZSH_THEME=""
 # Plugins
 plugins=(git docker docker-compose)
 
-source $ZSH/oh-my-zsh.sh
-source $HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-source $HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh
+if [ -f "$ZSH/oh-my-zsh.sh" ]; then
+	source "$ZSH/oh-my-zsh.sh"
+else
+	echo "oh-my-zsh not found, skipping..."
+fi
+
+source "$HOME/.zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh"
+source "$HOME/.zsh/zsh-autosuggestions/zsh-autosuggestions.zsh"
 
 # User configuration
 export LANG=en_US.UTF-8

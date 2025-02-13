@@ -31,6 +31,7 @@ services:
       USERNAME: ${USERNAME}
       USER_UID: ${UID}
       USER_GID: ${GID}
+      HF_HOME: /home/${USER}/python/.cache/huggingface
     deploy:
       resources:
         limits:
