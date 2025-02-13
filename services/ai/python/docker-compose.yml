@@ -1,27 +1,18 @@
+version: '3.8'
+
 services:
   coder:
     build: .
-    container_name: deepseek-coder
-    volumes:
-      - .:/app
-      - model_cache:/cache
     environment:
-      - TRANSFORMERS_CACHE=/cache/transformers
-      - HF_HOME=/cache/huggingface
+      - HF_HOME=/app/.cache/huggingface
+      - HF_HUB_DOWNLOAD_TIMEOUT=1000
       - OMP_NUM_THREADS=8
       - MKL_NUM_THREADS=8
-      - TOKENIZERS_PARALLELISM=true
+      - MODEL_NAME=codegen-350m  # Default to CPU-friendly model
+    volumes:
+      - .cache:/app/.cache:cached
     deploy:
       resources:
         limits:
-          memory: 56G # Leave some headroom for the system
-          cpus: "8"
-        reservations:
-          memory: 32G
-    command: python app.py
-    stdin_open: true
-    tty: true
-
-volumes:
-  model_cache:
-    name: deepseek-coder-cache
+          cpus: '8'
+          memory: 16G

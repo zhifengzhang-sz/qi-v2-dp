@@ -1,0 +1,11 @@
+[user]
+	email = zhifeng.zhang.sz@gmail.com
+	name = zhifengzhang-sz
+[credential "https://github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential "https://gist.github.com"]
+	helper = 
+	helper = !/usr/bin/gh auth git-credential
+[credential]
+	helper = "!f() { /home/zzhang/.vscode-server/bin/33fc5a94a3f99ebe7087e8fe79fbe1d37a251016/node /tmp/vscode-remote-containers-981b9aa3-4184-41cc-95f2-8ab72f5ccb23.js git-credential-helper $*; }; f"
