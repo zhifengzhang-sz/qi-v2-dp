@@ -7,31 +7,67 @@ A Python-based service for running Large Language Models (LLMs) optimized for co
 ```plaintext
 .
 ├── app.py              # Main application
-├── models/            
-│   ├── base.py        # Abstract base model
-│   ├── deepseek.py    # DeepSeek implementation
-│   └── codellama.py   # CodeLlama implementation
-├── config/            # Configuration files
-├── utils/            # Utility functions
-├── tests/            # Test suite
-└── model-cache/      # Model storage
-    ├── transformers/  # Model weights
-    └── huggingface/  # HF cache
+├── config/            
+│   └── dataset_config.py  # Dataset configurations
+├── training_data/
+│   └── download_data.py   # Data download utilities
+└── scripts/
+    └── prepare_data.py    # Data preparation script
 ```
 
-## Setup
+## Data Preparation
 
-The service runs in a devcontainer (`coder` service) with:
-- Project mounted at `/home/${USERNAME}`
-- Model cache mounted at `/cache`
-- Resource limits configurable via environment
+### Available Datasets
 
-### Model Cache
+The project supports downloading and preparing two types of training data:
 
-Models are automatically downloaded and cached in the user's home directory:
-- `$HF_HOME`: `/home/${USERNAME}/python/.cache/huggingface`
+1. **C4 Design Patterns** (`c4_design`)
+   - Source: allenai/c4
+   - Content: Software architecture and design patterns
+   - Keywords: "design pattern", "architecture", "software design"
 
-The cache is mounted inside the devcontainer for persistence between sessions.
+2. **TypeScript Examples** (`typescript`)
+   - Source: codeparrot/github-code
+   - Content: TypeScript code examples
+   - Keywords: "typescript", "angular", "react"
+
+### Usage
+
+1. Set up the environment:
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+2. Download training data:
+```bash
+# Download design patterns dataset
+python scripts/prepare_data.py --source="c4_design" --output="training_data"
+
+# Download typescript examples
+python scripts/prepare_data.py --source="typescript" --output="training_data"
+```
+
+### Output
+
+The script will:
+- Create JSON files in the specified output directory
+- Filter content based on configured keywords
+- Include progress updates during download
+- Save metadata with each sample
+
+Output files:
+- `training_data/c4_design_samples.json`
+- `training_data/typescript_samples.json`
+
+### Configuration
+
+To modify dataset configurations, edit `config/dataset_config.py`. You can adjust:
+- Sample size
+- Keywords for filtering
+- Text length limits
+- Data sources
 
 ## Development
 

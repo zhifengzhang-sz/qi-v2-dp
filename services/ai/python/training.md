@@ -7,57 +7,86 @@ This document outlines the process to fine-tune the model for specialized areas,
 ## Specialized Training Areas
 
 1. **C4 System Design**  
-   Focuses on system architecture, component design, integration patterns, and configuration management.  
+   Focuses on system architecture, component design, integration patterns, and configuration management.
 2. **TypeScript Development**  
-   Enhances capabilities in TypeScript, covering type systems, modern patterns, API implementations, and testing practices.  
+   Enhances capabilities in TypeScript, covering type systems, modern patterns, API implementations, and testing practices.
 3. **Continuous Project Learning**  
    The model adapts to your project over time by learning from new commits, pull requests, code reviews, and documentation.
 
 ---
 
-## Training Data Preparation
+## Collecting Training Data
 
-### Data Sources
+Since you currently don’t have a prepared dataset, here are some concrete approaches to collect data:
 
-- **C4 Design Documents:**  
-  Collect design artifacts from your engineering documentation or public repositories.
-  
-- **TypeScript Codebase:**  
-  Gather source code, tests, and API definitions from your project repository or open-source projects.
-  
-- **Project Context:**  
-  Export Git commit logs, pull request discussions, and project documentation.
+### 1. Public Data Sources
 
-### Collecting Training Data
+- **C4 Data via Hugging Face Datasets:**  
+  The [C4 (Colossal Clean Crawled Corpus)](https://huggingface.co/datasets/c4) can be used as a raw text source. You can load a subset and filter for design-related keywords:
+  ```python
+  from datasets import load_dataset
 
-#### C4 Design Examples
+  # Load a small subset of the C4 dataset
+  dataset = load_dataset("c4", "en", split="train[:1%]")  
+  # Filter examples containing 'architecture' or 'design'
+  design_data = dataset.filter(lambda x: "architecture" in x["text"].lower() or "design" in x["text"].lower())
+  print(f"Collected {len(design_data)} design-related examples.")
+  ```
+  Save the output as part of your training data.
 
-Clone your design repository:
-```bash
-git clone https://github.com/yourorg/c4-designs.git
-cp -r c4-designs/design-docs ./training_data/c4_designs
-```
+- **GitHub Repositories for TypeScript:**  
+  Explore public GitHub repositories to collect real-world TypeScript code. For example, clone a popular project and extract the TypeScript files:
+  ```bash
+  git clone https://github.com/angular/angular.git
+  # List all TypeScript files and archive them:
+  find angular -type f -name "*.ts" > angular_ts_files.txt
+  tar -czvf training_data/angular_typescript.tar.gz -T angular_ts_files.txt
+  ```
 
-#### TypeScript Source Files
+### 2. Scraping or Using APIs
 
-Archive TypeScript files:
-```bash
-find ./src -name "*.ts" > ts_files.txt
-tar -czvf training_data/typescript_codebase.tar.gz -T ts_files.txt
-```
+- **GitHub API:**  
+  Use the GitHub API to search for repositories or code snippets related to design documents or TypeScript code. For example, using Python’s `requests`:
+  ```python
+  import requests
 
-#### Project Context
+  query = "language:TypeScript stars:>500"
+  url = f"https://api.github.com/search/repositories?q={query}"
+  response = requests.get(url)
+  data = response.json()
+  for repo in data.get("items", []):
+      print(repo["full_name"], repo["html_url"])
+  ```
+  This provides a list of popular TypeScript repositories you can consider cloning.
 
-Export commit messages as training data:
-```bash
-git log --pretty=format:"%s" > training_data/commit_messages.txt
-cp -r ./docs ./training_data/project_docs
-```
+- **Web Scraping Design Docs:**  
+  If some organizations publish design documents publicly (for instance, blog posts or PDF files), consider using tools like `wget` or Python’s `BeautifulSoup` to scrape them. Example with `wget`:
+  ```bash
+  wget -r -l1 -H -t1 -nd -N -np -A.pdf,http://example.com/design-docs/
+  ```
+  Then, manually review and convert the PDFs to text if needed.
 
-### Preprocessing and Consolidation
+### 3. Internal Sources (If Available)
 
-A helper script can be used to consolidate these sources:
+- **Project Documentation and Git History:**  
+  Even if you don’t have a standalone dataset, you may collect internal documents:
+  ```bash
+  # Extract commit messages
+  git log --pretty=format:"%s" > training_data/commit_messages.txt
 
+  # Copy internal design docs or markdown files:
+  cp -r ./internal_design_docs ./training_data/internal_design_docs
+  cp -r ./docs ./training_data/project_docs
+  ```
+
+### 4. Data Cleaning and Consolidation
+
+After collecting the data, you will likely need to preprocess it:
+- Remove duplicates.
+- Convert PDFs to plain text (using tools such as `pdftotext`).
+- Normalize formatting (e.g., converting markdown to plain text if necessary).
+
+A helper script can combine and clean these sources:
 ```python
 # filepath: /home/zzhang/python/scripts/prepare_data.py
 import argparse, os, shutil
@@ -83,7 +112,7 @@ def prepare_data(source, output):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--source", required=True, help="Path to the source project repository")
+    parser.add_argument("--source", required=True, help="Path to the source project or data repository")
     parser.add_argument("--output", default="training_data", help="Output directory for training data")
     args = parser.parse_args()
     prepare_data(args.source, args.output)
@@ -166,14 +195,4 @@ python scripts/benchmark.py --models="codegen-350m,project-tuned"
 
 ---
 
-This document provides comprehensive details on acquiring training data and fine-tuning your model. For a quick reference on running the service, please see the main README.
-
-Finally, update your main README.md to reference this new TRAINING.md file. For example, under a new section like "Advanced Training" you could add:
-
-```markdown
-## Advanced Training
-
-For detailed instructions on preparing training data and fine-tuning the model, please refer to [TRAINING.md](./TRAINING.md).
-```
-
-This structure keeps your main README clean while providing in-depth training documentation separately.
+This document now provides concrete methods and examples for collecting training data—even when starting without an existing dataset. For quick reference on running the service, please see the main README.

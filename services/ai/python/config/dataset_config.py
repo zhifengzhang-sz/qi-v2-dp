@@ -1,30 +1,34 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List
+
 
 @dataclass
 class DatasetConfig:
     name: str
-    split: str
-    sample_size: str
-    filter_keywords: List[str]
     description: str
-    source_type: str  # Added to distinguish data sources
+    source: str = "allenai/c4"  # Add source attribute
+    split: str = "train"
+    filter_keywords: List[str] = None
+    sample_size: int = 100
+    min_length: int = 500
+    max_length: int = 8000
 
-DATASET_CONFIGS: Dict[str, DatasetConfig] = {
+
+DATASET_CONFIGS = {
     "c4_design": DatasetConfig(
-        name="c4",
-        split="train",
-        sample_size="0.1%",
-        filter_keywords=["architecture", "design", "system", "component"],
+        name="c4_design",
         description="C4 dataset filtered for design and architecture content",
-        source_type="web_text"
+        source="allenai/c4",
+        filter_keywords=["design pattern", "architecture", "software design"],
+        sample_size=100,
     ),
-    "github_typescript": DatasetConfig(
-        name="codeparrot/github-code",
-        split="train",
-        sample_size="1000",
-        filter_keywords=[".ts", ".tsx"],
-        description="GitHub TypeScript code examples",
-        source_type="code"
-    )
+    "typescript": DatasetConfig(
+        name="typescript",
+        description="TypeScript code examples from GitHub",
+        source="codeparrot/github-code",
+        split="train",  # Changed from "TypeScript-mit"
+        filter_keywords=["typescript", "angular", "react"],
+        sample_size=50,
+        min_length=1000,
+    ),
 }
