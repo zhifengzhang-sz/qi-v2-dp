@@ -1,0 +1,30 @@
+# docker-compose.yml
+services:
+  tgi:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    ports:
+      - "8080:80"
+    environment:
+      - MODEL_ID=${MODEL_ID:-deepseek-ai/deepseek-coder-6.7b-base}
+      - NUM_SHARD=1
+      - MAX_TOTAL_TOKENS=8192
+      - MAX_INPUT_LENGTH=4096
+      - MAX_BATCH_PREFILL_TOKENS=4096
+      - MAX_BATCH_TOTAL_TOKENS=16384
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        limits:
+          memory: 32G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - .cache:/data

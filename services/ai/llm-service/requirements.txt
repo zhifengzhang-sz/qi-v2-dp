@@ -1,0 +1,4 @@
+# System monitoring
+psutil>=7.0.0
+
+# Add future packages here
