@@ -1,4 +1,3 @@
-# System monitoring
-psutil>=7.0.0
-
-# Add future packages here
+huggingface_hub
+requests
+urllib3

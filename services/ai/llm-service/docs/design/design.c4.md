@@ -1,6 +1,7 @@
 # TGI-Based LLM Server Design
 
 ## 1. Context Diagram
+
 ```mermaid
 C4Context
     title LLM Service - System Context
@@ -8,21 +9,26 @@ C4Context
     Person(developer, "Developer", "Uses LLM service for code generation")
     Person(admin, "Administrator", "Manages and monitors the service")
 
-    System(llm_service, "LLM Service", "Provides code generation using TGI")
+    System_Boundary(llm, "LLM Service") {
+        Container(model, "Model Service", "Handles model loading and execution\n[CPU/GPU]")
+        Container(inference, "Inference Engine", "Manages generation requests")
+        Container(cache, "Cache Service", "Model weights and generation cache")
+    }
 
-    System_Ext(tgi, "Text Generation Inference", "HuggingFace TGI service")
-    System_Ext(monitoring, "Monitoring Stack", "Prometheus/Grafana stack")
-    System_Ext(logging, "Logging Stack", "Centralized logging service")
+    System_Ext(docker, "Docker Engine", "Container runtime")
+    System_Ext(cuda, "CUDA Runtime", "GPU computation [Optional]")
+    System_Ext(huggingface, "HuggingFace Hub", "Model repository")
 
-    Rel(developer, llm_service, "Sends code generation requests", "REST API")
-    Rel(admin, llm_service, "Manages and monitors", "Admin API")
-    
-    Rel(llm_service, tgi, "Uses for inference", "HTTP/WebSocket")
-    Rel(llm_service, monitoring, "Reports metrics to", "Metrics API")
-    Rel(llm_service, logging, "Sends logs to", "Log stream")
+    Rel(developer, model, "Sends prompts")
+    Rel(admin, model, "Manages and monitors")
+
+    Rel(model, huggingface, "Downloads models")
+    Rel(model, docker, "Runs in")
+    Rel(model, cuda, "Uses for GPU acceleration [Optional]")
 ```
 
 ## 2. Container Diagram
+
 ```mermaid
 C4Container
     title LLM Service - Containers
@@ -32,8 +38,8 @@ C4Container
 
     Container_Boundary(llm_service, "LLM Service") {
         Container(api_gateway, "API Gateway", "FastAPI", "Handles external API requests")
-        Container(tgi_service, "TGI Service", "Docker", "Manages TGI instance")
-        Container(config_service, "Config Service", "Python", "Configuration management")
+        Container(tgi_service, "TGI Service", "Docker", "Manages TGI instance\n[CPU/GPU modes]")
+        Container(config_service, "Config Service", "Python", "Infrastructure & model configuration")
         Container(health_monitor, "Health Monitor", "Python", "Service health monitoring")
     }
 
@@ -50,6 +56,7 @@ C4Container
 ```
 
 ## 3. Component Diagram
+
 ```mermaid
 C4Component
     title LLM Service - Components
@@ -84,6 +91,7 @@ C4Component
 ```
 
 ## 4. Class Diagram
+
 ```mermaid
 classDiagram
     %% Base Classes
@@ -92,7 +100,7 @@ classDiagram
         +generate_stream(prompt: str)
         -handle_response()
     }
-    
+
     class ConfigManager {
         +load_config()
         +get_model_config()
@@ -132,11 +140,13 @@ classDiagram
 ## Key Differences from Previous Design
 
 1. **Simplified Architecture**
+
    - TGI handles model management, inference, and resource optimization
    - Removed custom model managers and inference engine
    - Simplified configuration management
 
 2. **Component Reduction**
+
    - No need for separate model factory
    - No custom tokenizer implementation
    - Resource management handled by TGI
@@ -149,11 +159,13 @@ classDiagram
 ## Implementation Approach
 
 1. **Infrastructure Layer**
+
    - Docker configuration for TGI
    - Resource allocation
    - Network setup
 
 2. **Service Layer**
+
    - API Gateway implementation
    - TGI client wrapper
    - Configuration management
@@ -164,6 +176,7 @@ classDiagram
    - Logging integration
 
 ## Deployment Structure
+
 ```
 /
 ├── docker-compose.yml           # TGI and service configuration

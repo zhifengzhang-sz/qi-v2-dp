@@ -6,24 +6,28 @@
 ```
 /
 ├── docker/
-│   ├── Dockerfile.tgi          # TGI service configuration
-│   └── Dockerfile.api          # API service configuration
-├── docker-compose.yml          # Service orchestration
+│   ├── Dockerfile.tgi           # TGI service configuration
+│   └── Dockerfile.api           # API service configuration
+├── docker-compose.cpu.yml       # CPU-only service orchestration
+├── docker-compose.gpu.yml       # CPU+GPU service orchestration
 ├── config/
-│   ├── models/
-│   │   ├── deepseek.env       # DeepSeek model settings
-│   │   └── codellama.env      # CodeLlama model settings
-│   └── service/
+│   ├── models/                  # Model configurations
+│   │   ├── deepseek.env        # DeepSeek model settings
+│   │   ├── codellama.env       # CodeLlama model settings
+│   │   └── default.env         # Default model settings
+│   └── infra/                  # Infrastructure configurations
+│       ├── cpu.env             # CPU-only settings
+│       ├── gpu.env             # GPU settings
 │       └── production.env      # Production environment settings
 ├── src/
-│   ├── api/                   # FastAPI implementation
+│   ├── api/                    # FastAPI implementation
 │   │   ├── __init__.py
-│   │   ├── main.py           # API entry point
-│   │   ├── routes.py         # API routes
-│   │   └── models.py         # Pydantic models
-│   ├── client/               # TGI client implementation
+│   │   ├── main.py            # API entry point
+│   │   ├── routes.py          # API routes
+│   │   └── models.py          # Pydantic models
+│   ├── client/                # TGI client implementation
 │   │   ├── __init__.py
-│   │   └── tgi.py           # TGI client wrapper
+│   │   └── tgi.py            # TGI client wrapper
 │   └── monitoring/           # Monitoring implementation
 │       ├── __init__.py
 │       ├── health.py         # Health checks
@@ -38,34 +42,85 @@
 ```
 
 ### 1.2 Docker Configuration
-1. TGI Service (`Dockerfile.tgi`)
-   ```dockerfile
-   FROM ghcr.io/huggingface/text-generation-inference:latest
-   # Add custom configurations and health check
-   ```
 
-2. API Service (`Dockerfile.api`)
-   ```dockerfile
-   FROM python:3.10-slim
-   # Install dependencies and set up environment
-   ```
+1. Infrastructure Configurations:
 
-3. Docker Compose (`docker-compose.yml`)
-   ```yaml
-   services:
-     tgi:
-       build:
-         context: .
-         dockerfile: docker/Dockerfile.tgi
-       environment: [...] # TGI settings
-     
-     api:
-       build:
-         context: .
-         dockerfile: docker/Dockerfile.api
-       depends_on:
-         - tgi
-   ```
+CPU-only configuration (`config/infra/cpu.env`):
+```ini
+USE_CUDA=0
+USE_FLASH_ATTENTION=0
+USE_TRITON=0
+HF_HUB_ENABLE_HF_TRANSFER=1
+HF_HUB_OFFLINE=0
+NUM_SHARD=1
+MAX_CONCURRENT_REQUESTS=32
+MAX_BATCH_SIZE=8
+```
+
+GPU configuration (`config/infra/gpu.env`):
+```ini
+USE_CUDA=1
+USE_FLASH_ATTENTION=1
+USE_TRITON=1
+HF_HUB_ENABLE_HF_TRANSFER=1
+HF_HUB_OFFLINE=0
+NUM_SHARD=1
+MAX_CONCURRENT_REQUESTS=128
+MAX_BATCH_SIZE=32
+```
+
+2. Docker Compose Configurations:
+
+CPU-only deployment (`docker-compose.cpu.yml`):
+```yaml
+services:
+  tgi:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    ports:
+      - "8080:80"
+    env_file:
+      - ${INFRA_CONFIG:-config/infra/cpu.env}
+      - ${MODEL_CONFIG:-config/models/default.env}
+    deploy:
+      resources:
+        limits:
+          memory: 8G
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - .cache:/data
+```
+
+GPU deployment (`docker-compose.gpu.yml`):
+```yaml
+services:
+  tgi:
+    image: ghcr.io/huggingface/text-generation-inference:latest
+    ports:
+      - "8080:80"
+    env_file:
+      - ${INFRA_CONFIG:-config/infra/gpu.env}
+      - ${MODEL_CONFIG:-config/models/default.env}
+    deploy:
+      resources:
+        limits:
+          memory: 16G
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - .cache:/data
+```
 
 ## Phase 2: Core Service Implementation
 

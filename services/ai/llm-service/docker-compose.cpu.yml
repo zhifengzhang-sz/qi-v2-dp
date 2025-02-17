@@ -3,11 +3,13 @@ services:
     image: ghcr.io/huggingface/text-generation-inference:latest
     ports:
       - "8080:80"
-    environment:
-      - HF_HUB_ENABLE_HF_TRANSFER=0
     env_file:
       - ${INFRA_CONFIG:-config/infra/cpu.env}
       - ${MODEL_CONFIG:-config/models/model.env}
+    environment:
+      - HF_HUB_OFFLINE=1
+      - HF_HOME=/data
+      - HUGGING_FACE_HUB_CACHE=/data
     mem_limit: 32G
     cpus: 8.0
     healthcheck:
@@ -16,4 +18,4 @@ services:
       timeout: 10s
       retries: 3
     volumes:
-      - ./cache:/data
+      - ./.cache:/data:rw
