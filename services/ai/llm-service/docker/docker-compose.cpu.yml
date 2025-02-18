@@ -4,8 +4,8 @@ services:
     ports:
       - "8080:80"
     env_file:
-      - ${INFRA_CONFIG:-config/infra/cpu.env}
-      - ${MODEL_CONFIG:-config/models/model.env}
+      - ${INFRA_CONFIG:-../config/infra/cpu.env}
+      - ${MODEL_CONFIG:-../config/models/model.env}
     environment:
       - HF_HUB_OFFLINE=1
       - HF_HOME=/data
@@ -18,4 +18,4 @@ services:
       timeout: 10s
       retries: 3
     volumes:
-      - ./.cache:/data:rw
+      - ../.cache:/data:rw

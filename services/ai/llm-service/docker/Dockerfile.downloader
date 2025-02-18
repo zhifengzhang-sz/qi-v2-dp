@@ -1,0 +1,15 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+# Install dependencies
+RUN pip install --no-cache-dir \
+    "huggingface_hub>=0.19.0" \
+    "hf_transfer>=0.1.4" && \
+    rm -rf /root/.cache/pip/*
+
+# Copy download script
+COPY scripts/download_model.py .
+RUN chmod +x download_model.py
+
+ENTRYPOINT ["./download_model.py"]

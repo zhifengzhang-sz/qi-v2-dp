@@ -1,0 +1,21 @@
+services:
+  download:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.downloader
+    volumes:
+      - ../.cache:/data
+    env_file:
+      - ${DOWNLOAD_CONFIG:-../config/models/download.env}
+    environment:
+      - HF_HUB_ENABLE_HF_TRANSFER=0 # Disable hf_transfer
+      - HF_HOME=/data
+      - HUGGING_FACE_HUB_CACHE=/data
+      - PYTHONUNBUFFERED=1
+    mem_limit: 4g
+    restart: "no" # Don't restart on failure for now
+    healthcheck:
+      test: [ "CMD", "test", "-f", "/data/config.json" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3

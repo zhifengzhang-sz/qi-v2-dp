@@ -1,3 +1,0 @@
-huggingface_hub
-requests
-urllib3

@@ -9,69 +9,80 @@
 │   ├── Dockerfile.tgi           # TGI service configuration
 │   └── Dockerfile.api           # API service configuration
 ├── docker-compose.cpu.yml       # CPU-only service orchestration
-├── docker-compose.gpu.yml       # CPU+GPU service orchestration
+├── docker-compose.download.yml  # Model download orchestration
 ├── config/
 │   ├── models/                  # Model configurations
-│   │   ├── deepseek.env        # DeepSeek model settings
-│   │   ├── codellama.env       # CodeLlama model settings
-│   │   └── default.env         # Default model settings
+│   │   └── model.env           # Model settings
 │   └── infra/                  # Infrastructure configurations
-│       ├── cpu.env             # CPU-only settings
-│       ├── gpu.env             # GPU settings
-│       └── production.env      # Production environment settings
+│       └── default.env         # Default CPU settings
 ├── src/
 │   ├── api/                    # FastAPI implementation
-│   │   ├── __init__.py
-│   │   ├── main.py            # API entry point
-│   │   ├── routes.py          # API routes
-│   │   └── models.py          # Pydantic models
 │   ├── client/                # TGI client implementation
-│   │   ├── __init__.py
-│   │   └── tgi.py            # TGI client wrapper
 │   └── monitoring/           # Monitoring implementation
-│       ├── __init__.py
-│       ├── health.py         # Health checks
-│       └── metrics.py        # Metrics collection
-├── tests/                    # Test suite
-│   ├── test_api/
-│   ├── test_client/
-│   └── test_monitoring/
 └── scripts/
-    ├── deploy.sh            # Deployment script
-    └── test.sh             # Test runner
+    └── deploy.sh             # Deployment script
 ```
 
 ### 1.2 Docker Configuration
 
-1. Infrastructure Configurations:
-
-CPU-only configuration (`config/infra/cpu.env`):
+1. Default Infrastructure Configuration (config/infra/default.env):
 ```ini
 USE_CUDA=0
 USE_FLASH_ATTENTION=0
 USE_TRITON=0
 HF_HUB_ENABLE_HF_TRANSFER=1
-HF_HUB_OFFLINE=0
+HF_HUB_OFFLINE=1
 NUM_SHARD=1
-MAX_CONCURRENT_REQUESTS=32
-MAX_BATCH_SIZE=8
+
+# Performance settings
+MAX_CONCURRENT_REQUESTS=8
+MAX_BATCH_SIZE=4
+MAX_WAITING_TOKENS=20
+WAITING_SERVED_RATIO=0.3
 ```
 
-GPU configuration (`config/infra/gpu.env`):
+2. Model Configuration (config/models/model.env):
 ```ini
-USE_CUDA=1
-USE_FLASH_ATTENTION=1
-USE_TRITON=1
-HF_HUB_ENABLE_HF_TRANSFER=1
-HF_HUB_OFFLINE=0
-NUM_SHARD=1
-MAX_CONCURRENT_REQUESTS=128
-MAX_BATCH_SIZE=32
+MODEL_ID=codellama/CodeLlama-7b-instruct-hf
+MAX_INPUT_LENGTH=4096
+MAX_TOTAL_TOKENS=8192
+TEMPERATURE=0.7
+TOP_P=0.95
+TOP_K=50
+REPETITION_PENALTY=1.0
 ```
 
-2. Docker Compose Configurations:
+3. Docker Compose Configurations:
 
-CPU-only deployment (`docker-compose.cpu.yml`):
+Model download (docker-compose.download.yml):
+```yaml
+services:
+  model-prep:
+    image: python:3.10-slim
+    volumes:
+      - ./.cache:/data
+    environment:
+      - HF_HUB_ENABLE_HF_TRANSFER=1
+      - HF_HOME=/data
+      - HUGGING_FACE_HUB_CACHE=/data
+    command: >
+      bash -c "
+        pip install --no-cache-dir huggingface_hub &&
+        python -c '
+        from huggingface_hub import snapshot_download
+        import os
+        
+        snapshot_download(
+            \"codellama/CodeLlama-7b-instruct-hf\",
+            local_dir=\"/data\",
+            cache_dir=\"/data\",
+            max_workers=1,
+            force_download=True
+        )
+        '"
+```
+
+CPU deployment (docker-compose.cpu.yml):
 ```yaml
 services:
   tgi:
@@ -80,46 +91,32 @@ services:
       - "8080:80"
     env_file:
       - ${INFRA_CONFIG:-config/infra/cpu.env}
-      - ${MODEL_CONFIG:-config/models/default.env}
-    deploy:
-      resources:
-        limits:
-          memory: 8G
+      - ${MODEL_CONFIG:-config/models/model.env}
+    environment:
+      - HF_HUB_OFFLINE=1
+      - HF_HOME=/data
+      - HUGGING_FACE_HUB_CACHE=/data
+    mem_limit: 32G
+    cpus: 8.0
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
     volumes:
-      - .cache:/data
+      - ./.cache:/data:rw
 ```
 
-GPU deployment (`docker-compose.gpu.yml`):
-```yaml
-services:
-  tgi:
-    image: ghcr.io/huggingface/text-generation-inference:latest
-    ports:
-      - "8080:80"
-    env_file:
-      - ${INFRA_CONFIG:-config/infra/gpu.env}
-      - ${MODEL_CONFIG:-config/models/default.env}
-    deploy:
-      resources:
-        limits:
-          memory: 16G
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:80/health" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    volumes:
-      - .cache:/data
+### 1.3 Deployment Process
+
+1. Download model:
+```bash
+docker compose -f docker-compose.download.yml up
+```
+
+2. Start service:
+```bash
+docker compose -f docker-compose.cpu.yml up
 ```
 
 ## Phase 2: Core Service Implementation
