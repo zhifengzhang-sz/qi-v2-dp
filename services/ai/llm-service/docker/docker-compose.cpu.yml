@@ -7,9 +7,11 @@ services:
       - ${INFRA_CONFIG:-../config/infra/cpu.env}
       - ${MODEL_CONFIG:-../config/models/model.env}
     environment:
+      - CUDA_VISIBLE_DEVICES=""  # Hide GPU devices
       - HF_HUB_OFFLINE=1
       - HF_HOME=/data
       - HUGGING_FACE_HUB_CACHE=/data
+    command: --model-id "${MODEL_ID}" --disable-custom-kernels --trust-remote-code
     mem_limit: 32G
     cpus: 8.0
     healthcheck:

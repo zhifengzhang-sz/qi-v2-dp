@@ -20,36 +20,40 @@ A production-ready service for running large language models, built on HuggingFa
 
 ## Quick Start
 
-1. Clone the repository:
+1. **Download the model**:
 ```bash
-#git clone <repository-url>
-cd services/ai/llm-service
+# Clean download with proper permissions
+make download-clean
+
+# If you encounter permission issues
+make fix-permissions
 ```
 
-2. Create required directories:
+2. **Start the service**:
 ```bash
-mkdir -p .cache/huggingface
-mkdir -p metrics/db
-mkdir -p metrics/grafana
+# For CPU mode
+make start-cpu
+
+# For GPU mode
+make start-gpu
 ```
 
-3. Start the service:
+3. **Stop the service**:
 ```bash
-# With DeepSeek model
-docker-compose --env-file config/models/deepseek.env up -d
-
-# Or with CodeLlama
-docker-compose --env-file config/models/codellama.env up -d
+make stop
 ```
 
-4. Verify deployment:
-```bash
-# Check service status
-docker-compose ps
+## Commands
 
-# Run health check
-docker-compose exec llm-service python /app/workspace/health_check.py
-```
+| Command | Description |
+|---------|-------------|
+| `make download` | Download model |
+| `make download-clean` | Clean cache and download fresh |
+| `make fix-permissions` | Fix cache directory permissions |
+| `make start-cpu` | Start CPU service |
+| `make start-gpu` | Start GPU service |
+| `make stop` | Stop all services |
+| `make clean` | Clean all temporary files |
 
 ## Documentation
 
@@ -99,17 +103,27 @@ python alerts/alert_system.py
 ## Directory Structure
 
 ```
-/
-├── docker-compose.yml           # Service configuration
-├── config/
-│   ├── models/                 # Model configurations
-│   └── resources/             # Resource configurations
-├── workspace/                 # Service scripts
-├── tests/                    # Test suite
-├── alerts/                   # Alert system
-├── metrics/                  # Metrics collection
-├── docs/                    # Documentation
-└── .cache/                 # Model cache
+llm-service/
+├── Makefile           # Service management commands
+├── docker/            # Docker-related files
+│   ├── config/        # Configuration files
+│   ├── Dockerfile*    # Various Dockerfiles
+│   └── docker-compose*.yml
+├── .cache/           # Model cache directory
+└── README.md
+```
+
+## Configuration
+
+All configuration is managed through environment files in the `docker/config` directory:
+- `config/infra/` - Infrastructure settings
+- `config/models/` - Model-specific settings
+
+## Development
+
+To see all available commands:
+```bash
+make help
 ```
 
 ## License

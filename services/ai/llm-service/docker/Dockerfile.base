@@ -1,0 +1,11 @@
+FROM python:3.10-slim
+
+# Install required packages with fixed versions
+# Note: Versions are pinned for reproducibility
+RUN pip install --no-cache-dir \
+    "huggingface_hub==0.20.3" \
+    "hf_transfer==0.1.4" \
+    "tqdm==4.66.1" \
+    "charset-normalizer>=2.0"  # Added for requests dependency
+
+WORKDIR /app

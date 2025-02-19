@@ -1,21 +1,27 @@
 services:
-  download:
+  base:
+    image: local/llm-service-base:latest
     build:
       context: ..
-      dockerfile: docker/Dockerfile.downloader
+      dockerfile: docker/Dockerfile.base
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+  download:
+    image: local/llm-service-base:latest
     volumes:
-      - ../.cache:/data
+      - ../scripts:/app/scripts
+      - ../.cache:/data/hub
     env_file:
-      - ${DOWNLOAD_CONFIG:-../config/models/download.env}
+      - ../config/models/model.env
     environment:
-      - HF_HUB_ENABLE_HF_TRANSFER=0 # Disable hf_transfer
-      - HF_HOME=/data
-      - HUGGING_FACE_HUB_CACHE=/data
-      - PYTHONUNBUFFERED=1
-    mem_limit: 4g
-    restart: "no" # Don't restart on failure for now
-    healthcheck:
-      test: [ "CMD", "test", "-f", "/data/config.json" ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
+      - MODEL_ID=${MODEL_ID:-codellama/CodeLlama-7b-instruct-hf}
+      - HF_HUB_ENABLE_HF_TRANSFER=0
+      - HF_HUB_DOWNLOAD_TIMEOUT=600
+      - REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    working_dir: /app
+    entrypoint: ["python3", "-u", "scripts/download_model.py"]
