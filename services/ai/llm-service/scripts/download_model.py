@@ -18,6 +18,8 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+T = TypeVar('T')  # For generic return type in RetryPolicy
+
 
 @dataclass  # Should use dataclass decorator
 class DownloadResult:
@@ -41,7 +43,8 @@ class SafetensorsStrategy(DownloadStrategy):
                 local_dir=cache_dir,
                 resume_download=True,
                 max_workers=1,
-                allow_patterns=ModelDownloader.MODEL_FILE_PATTERNS + ModelDownloader.CONFIG_FILE_PATTERNS
+                allow_patterns=ModelDownloader.MODEL_FILE_PATTERNS +
+                ModelDownloader.CONFIG_FILE_PATTERNS
             )
             return True
         except Exception as e:
@@ -73,10 +76,9 @@ class DownloadStrategyFactory:
             model_info = self.repository.get_model_info(model_id)
             if any(f.rfilename.endswith('.safetensors') for f in model_info.siblings):
                 return SafetensorsStrategy()
-            return DefaultStrategy()
         except Exception as e:
             logger.error(f"Strategy creation failed: {e}")
-            return DefaultStrategy()
+        return DefaultStrategy()
 
 
 @dataclass
@@ -119,8 +121,6 @@ class CacheManager:
                 shutil.rmtree(path)
 
 
-T = TypeVar('T')
-
 class RetryPolicy:
     def __init__(self, max_retries: int, delay: int):
         self.max_retries = max_retries
@@ -135,7 +135,8 @@ class RetryPolicy:
                 retry_count += 1
                 if retry_count == self.max_retries:
                     raise
-                logger.warning(f"Retry {retry_count}/{self.max_retries} after error: {e}")
+                logger.warning(
+                    f"Retry {retry_count}/{self.max_retries} after error: {e}")
                 time.sleep(self.delay)
 
 
@@ -147,17 +148,17 @@ class ModelDownloader:
         SPACE_BUFFER (float): Extra space factor for downloads
         RETRY_DELAY (int): Seconds to wait between retries
     """
-    # File patterns
+    # File patterns for different types of model files
     MODEL_FILE_PATTERNS = ["*.safetensors", "*.bin"]
     CONFIG_FILE_PATTERNS = ["*.json", "*.txt", "*.md"]
     INCOMPLETE_PATTERNS = ["*.incomplete", "*.part*"]
-    
-    # Performance tuning
+
+    # Performance and retry settings
     MAX_RETRIES = 3
-    SPACE_BUFFER = 1.1
-    RETRY_DELAY = 1
-    
-    # Size constants
+    SPACE_BUFFER = 1.1  # 10% extra space required
+    RETRY_DELAY = 1     # seconds between retries
+
+    # Size constants for readable conversions
     GB = 1024 ** 3
     MB = 1024 ** 2
 
@@ -168,7 +169,8 @@ class ModelDownloader:
         self.cache_dir = Path(cache_dir)
         self.api = HfApi()  # Initialize API first
         self.repository = HuggingFaceRepository()  # Then repository
-        self.strategy = DownloadStrategyFactory().create_strategy(model_id)  # Finally strategy
+        self.strategy = DownloadStrategyFactory().create_strategy(
+            model_id)  # Finally strategy
 
     def validate_cache(self) -> bool:
         """Check if model is already downloaded and valid"""
@@ -199,20 +201,17 @@ class ModelDownloader:
         try:
             info = self.api.model_info(self.model_id)
             total_size = sum(f.size for f in info.siblings if f.size)
-            required = total_size * self.SPACE_BUFFER  # 10% buffer
-            # Fix: Use statvfs for actual available space
-            stats = self.cache_dir.parent.statvfs()
+            required = total_size * 1.1  # 10% buffer
+
+            # Fix: Use os.statvfs instead of Path.statvfs
+            stats = os.statvfs(str(self.cache_dir.parent))
             available = stats.f_frsize * stats.f_bavail
+
             logger.info(
-                f"Required space: {required/self.GB:.1f}GB, "
-                f"Available: {available/self.GB:.1f}GB")
+                f"Required space: {required/self.GB:.1f}GB, Available: {available/self.GB:.1f}GB")
             return available >= required
         except Exception as e:
-            if "NameResolutionError" in str(e):
-                logger.error(
-                    f"Network error: Failed to resolve hostname. Check DNS settings: {e}")
-            else:
-                logger.error(f"Space check failed: {e}")
+            logger.error(f"Space check failed: {e}")
             return False
 
     def download_files(self) -> bool:

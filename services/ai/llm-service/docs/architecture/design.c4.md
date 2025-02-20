@@ -1,192 +1,129 @@
-# TGI-Based LLM Server Design
+# LLM Service C4 Architecture
 
-## 1. Context Diagram
+## Level 1: System Context
 
 ```mermaid
 C4Context
-    title LLM Service - System Context
+    title LLM Service System Context
 
-    Person(developer, "Developer", "Uses LLM service for code generation")
-    Person(admin, "Administrator", "Manages and monitors the service")
+    Person(user, "Service User", "Uses LLM service")
+    Person(admin, "Administrator", "Manages service")
 
-    System_Boundary(llm, "LLM Service") {
-        Container(model, "Model Service", "Handles model loading and execution\n[CPU/GPU]")
-        Container(inference, "Inference Engine", "Manages generation requests")
-        Container(cache, "Cache Service", "Model weights and generation cache")
-    }
+    System(llm, "LLM Service", "Text generation inference service")
 
-    System_Ext(docker, "Docker Engine", "Container runtime")
-    System_Ext(cuda, "CUDA Runtime", "GPU computation [Optional]")
-    System_Ext(huggingface, "HuggingFace Hub", "Model repository")
+    System_Ext(model_repo, "Model Repository", "HuggingFace Hub")
+    System_Ext(compute, "Compute Resources", "CPU/GPU")
+    System_Ext(metrics, "Monitoring", "Metrics & logging")
 
-    Rel(developer, model, "Sends prompts")
-    Rel(admin, model, "Manages and monitors")
-
-    Rel(model, huggingface, "Downloads models")
-    Rel(model, docker, "Runs in")
-    Rel(model, cuda, "Uses for GPU acceleration [Optional]")
+    Rel(user, llm, "Makes inference requests")
+    Rel(admin, llm, "Manages models and deployment")
+    Rel(llm, model_repo, "Downloads models")
+    Rel(llm, compute, "Uses for inference")
+    Rel(llm, metrics, "Reports status")
 ```
 
-## 2. Container Diagram
+## Level 2: Container
 
 ```mermaid
 C4Container
-    title LLM Service - Containers
+    title LLM Service Containers
 
-    Person(developer, "Developer", "Uses LLM service")
-    Person(admin, "Administrator", "Manages service")
+    Person(user, "Service User")
+    Person(admin, "Administrator")
 
-    Container_Boundary(llm_service, "LLM Service") {
-        Container(api_gateway, "API Gateway", "FastAPI", "Handles external API requests")
-        Container(tgi_service, "TGI Service", "Docker", "Manages TGI instance\n[CPU/GPU modes]")
-        Container(config_service, "Config Service", "Python", "Infrastructure & model configuration")
-        Container(health_monitor, "Health Monitor", "Python", "Service health monitoring")
+    System_Boundary(llm, "LLM Service") {
+        Container(gateway, "API Gateway", "FastAPI", "Service interface")
+        Container(model_mgr, "Model Manager", "Python", "Model lifecycle")
+        Container(inference, "Inference Engine", "TGI/Rust", "Text generation")
+
+        ContainerDb(model_store, "Model Store", "File System", "Model storage")
+        ContainerDb(metrics_db, "Metrics Store", "Prometheus", "Service metrics")
     }
 
-    System_Ext(monitoring, "Monitoring Stack", "Metrics collection")
-    System_Ext(logging, "Logging Service", "Log aggregation")
+    System_Ext(model_repo, "HuggingFace")
 
-    Rel(developer, api_gateway, "Uses", "HTTPS")
-    Rel(admin, api_gateway, "Manages", "HTTPS")
-
-    Rel(api_gateway, tgi_service, "Sends requests to")
-    Rel(tgi_service, config_service, "Gets config from")
-    Rel(health_monitor, monitoring, "Reports to")
-    Rel(api_gateway, logging, "Logs to")
+    Rel(user, gateway, "Uses", "HTTPS/REST")
+    Rel(admin, gateway, "Manages", "HTTPS/REST")
+    Rel(gateway, inference, "Routes to", "gRPC")
+    Rel(model_mgr, model_repo, "Downloads from", "HTTPS")
+    Rel(model_mgr, model_store, "Manages", "File I/O")
+    Rel(inference, model_store, "Loads from", "File I/O")
 ```
 
-## 3. Component Diagram
+## Level 3: Component
+
+### Model Manager Components
 
 ```mermaid
 C4Component
-    title LLM Service - Components
+    title Model Manager Components
 
-    Container_Boundary(api, "API Gateway") {
-        Component(request_handler, "Request Handler", "Handles API requests")
-        Component(tgi_client, "TGI Client", "Communicates with TGI")
-        Component(response_formatter, "Response Formatter", "Formats TGI responses")
+    Container_Boundary(model_mgr, "Model Manager") {
+        Component(dl_svc, "Download Service", "Core", "Downloads models")
+        Component(validation, "Validation Service", "Core", "Validates models")
+        Component(storage, "Storage Service", "Core", "Manages storage")
+        Component(lifecycle, "Lifecycle Manager", "Core", "Model lifecycle")
     }
 
-    Container_Boundary(tgi, "TGI Service") {
-        Component(tgi_server, "TGI Server", "Text Generation Inference")
-        Component(model_loader, "Model Loader", "Loads models from HF")
-        Component(inference_engine, "Inference Engine", "Handles generation")
-    }
+    ContainerDb(model_store, "Model Store")
+    System_Ext(model_repo, "HuggingFace")
 
-    Container_Boundary(config, "Config Service") {
-        Component(config_loader, "Config Loader", "Loads configurations")
-        Component(env_manager, "Environment Manager", "Manages env variables")
-    }
-
-    Container_Boundary(monitor, "Health Monitor") {
-        Component(health_checker, "Health Checker", "Checks service health")
-        Component(metric_collector, "Metric Collector", "Collects metrics")
-    }
-
-    Rel(request_handler, tgi_client, "Uses")
-    Rel(tgi_client, tgi_server, "Sends requests to")
-    Rel(tgi_server, model_loader, "Uses")
-    Rel(tgi_server, inference_engine, "Uses")
-    Rel(health_checker, tgi_server, "Monitors")
+    Rel(dl_svc, model_repo, "Downloads from")
+    Rel(dl_svc, validation, "Validates using")
+    Rel(validation, storage, "Stores via")
+    Rel(storage, model_store, "Manages")
+    Rel(lifecycle, storage, "Uses")
 ```
 
-## 4. Class Diagram
+### Inference Engine Components
 
 ```mermaid
-classDiagram
-    %% Base Classes
-    class TGIClient {
-        +generate(prompt: str)
-        +generate_stream(prompt: str)
-        -handle_response()
+C4Component
+    title Inference Engine Components
+
+    Container_Boundary(inference, "Inference Engine") {
+        Component(tgi, "TGI Service", "Core", "Model inference")
+        Component(loader, "Model Loader", "Core", "Loads models")
+        Component(scheduler, "Request Scheduler", "Core", "Manages requests")
+        Component(monitor, "Health Monitor", "Core", "Monitors health")
     }
 
-    class ConfigManager {
-        +load_config()
-        +get_model_config()
-        +get_service_config()
-    }
+    ContainerDb(model_store, "Model Store")
+    ContainerDb(metrics_db, "Metrics Store")
 
-    class HealthMonitor {
-        +check_health()
-        +collect_metrics()
-        -monitor_resources()
-    }
-
-    %% Data Classes
-    class ModelConfig {
-        +model_id: str
-        +parameters: Dict
-    }
-
-    class ServiceConfig {
-        +max_batch_size: int
-        +max_total_tokens: int
-        +max_input_length: int
-    }
-
-    class HealthStatus {
-        +status: str
-        +metrics: Dict
-        +timestamp: datetime
-    }
-
-    %% Relationships
-    TGIClient --> ModelConfig
-    ConfigManager --> ServiceConfig
-    HealthMonitor --> HealthStatus
+    Rel(loader, model_store, "Loads from")
+    Rel(tgi, loader, "Uses")
+    Rel(scheduler, tgi, "Routes to")
+    Rel(monitor, metrics_db, "Reports to")
 ```
 
-## Key Differences from Previous Design
+### API Gateway Components
 
-1. **Simplified Architecture**
+```mermaid
+C4Component
+    title API Gateway Components
 
-   - TGI handles model management, inference, and resource optimization
-   - Removed custom model managers and inference engine
-   - Simplified configuration management
+    Container_Boundary(gateway, "API Gateway") {
+        Component(http, "HTTP Handler", "FastAPI", "REST endpoints")
+        Component(rpc, "RPC Handler", "gRPC", "Internal comms")
+        Component(auth, "Auth Service", "Core", "Authentication")
+        Component(router, "Request Router", "Core", "Request routing")
+    }
 
-2. **Component Reduction**
+    Container_Ext(inference, "Inference Engine")
+    Container_Ext(model_mgr, "Model Manager")
 
-   - No need for separate model factory
-   - No custom tokenizer implementation
-   - Resource management handled by TGI
-
-3. **New Components**
-   - TGI Client for communication with TGI service
-   - Health monitoring specific to TGI
-   - Streamlined configuration for TGI parameters
-
-## Implementation Approach
-
-1. **Infrastructure Layer**
-
-   - Docker configuration for TGI
-   - Resource allocation
-   - Network setup
-
-2. **Service Layer**
-
-   - API Gateway implementation
-   - TGI client wrapper
-   - Configuration management
-
-3. **Monitoring Layer**
-   - Health checks
-   - Metrics collection
-   - Logging integration
-
-## Deployment Structure
-
+    Rel(http, auth, "Authenticates via")
+    Rel(http, router, "Routes through")
+    Rel(router, rpc, "Uses")
+    Rel(rpc, inference, "Calls")
+    Rel(rpc, model_mgr, "Manages")
 ```
-/
-├── docker-compose.yml           # TGI and service configuration
-├── config/
-│   ├── models/                 # Model configurations
-│   └── service/               # Service configurations
-├── src/
-│   ├── api/                   # API Gateway implementation
-│   ├── client/               # TGI client wrapper
-│   └── monitoring/           # Health and metrics
-└── scripts/
-    └── deploy.sh             # Deployment automation
-```
+
+## Level 4: Class
+
+See component-specific class diagrams:
+
+- [Model Manager Classes](classes/model_manager.md)
+- [Inference Engine Classes](classes/inference_engine.md)
+- [API Gateway Classes](classes/api_gateway.md)
