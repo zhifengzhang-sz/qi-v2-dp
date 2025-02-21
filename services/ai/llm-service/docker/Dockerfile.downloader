@@ -1,5 +1,0 @@
-FROM local/llm-service-base:latest
-
-WORKDIR /app
-
-ENTRYPOINT ["python3", "scripts/download_model.py"]

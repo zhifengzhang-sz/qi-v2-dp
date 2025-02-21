@@ -1,0 +1,12 @@
+FROM python:3.10-slim
+
+WORKDIR /app
+
+COPY requirements-dev.txt .
+RUN pip install -r requirements-dev.txt
+
+COPY scripts/ scripts/
+COPY tests/ tests/
+COPY pytest.ini .
+
+CMD ["pytest", "tests/test_download_model.py", "-v", "--cov=scripts"]

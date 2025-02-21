@@ -19,100 +19,75 @@ classDiagram
         +validate() bool
     }
 
-    class ModelMetadata {
-        +identity: ModelIdentity
-        +files: List[ModelFile]
-        +created_at: datetime
-        +updated_at: datetime
+    class DownloadState {
+        <<enumeration>>
+        INITIALIZING
+        CHECKING_CACHE
+        CHECKING_SPACE
+        DOWNLOADING
+        VALIDATING
+        COMPLETE
+        FAILED
     }
 
-    ModelMetadata --> ModelIdentity
-    ModelMetadata --> ModelFile
+    class DownloadStatus {
+        +state: DownloadState
+        +progress: float
+        +bytes_downloaded: int
+        +total_bytes: int
+        +error: Optional[str]
+    }
+
+    ModelFile --> ModelIdentity
+    DownloadStatus --> DownloadState
 ```
 
-## Service Interfaces
+## Service Components
 
 ```mermaid
 classDiagram
-    class IService {
-        <<interface>>
-        +initialize()
-        +shutdown()
-        +health_check() bool
-    }
-
     class IModelManager {
         <<interface>>
-        +download(model: ModelIdentity) Result
-        +validate(model: ModelIdentity) bool
-        +get_status(model: ModelIdentity) Status
+        +download_model(model: ModelIdentity) Result
+        +get_model_status(model: ModelIdentity) Status
+        +validate_model(model: ModelIdentity) bool
     }
 
-    class IDownloader {
-        <<interface>>
-        +download_file(file: ModelFile) Result
-        +cancel_download(model: ModelIdentity)
-        +get_progress(model: ModelIdentity) float
-    }
-
-    class IStorage {
-        <<interface>>
-        +store_file(file: ModelFile)
-        +load_file(file: ModelFile)
-        +exists(file: ModelFile) bool
-    }
-
-    IService <|-- IModelManager
-    IService <|-- IDownloader
-    IService <|-- IStorage
-```
-
-## Service Implementations
-
-```mermaid
-classDiagram
     class ModelManager {
-        -downloader: IDownloader
-        -storage: IStorage
-        -validator: IValidator
+        -downloader: Downloader
+        -cache: CacheManager
+        -validator: ModelValidator
         +download_model(model: ModelIdentity)
-        +validate_model(model: ModelIdentity)
         +get_model_status(model: ModelIdentity)
+        -handle_download_event(event: Event)
     }
 
-    class DownloadService {
-        -workers: List[Worker]
-        -queue: DownloadQueue
-        -strategy_factory: StrategyFactory
-        +schedule_download(model: ModelIdentity)
-        +cancel_download(model: ModelIdentity)
-        +get_download_progress(model: ModelIdentity)
+    class Downloader {
+        -strategy: DownloadStrategy
+        -progress: ProgressTracker
+        -cache: CacheManager
+        +start_download(model: ModelIdentity)
+        +pause_download(model: ModelIdentity)
+        +resume_download(model: ModelIdentity)
     }
 
-    class StorageService {
-        -root_path: Path
-        -cache_policy: CachePolicy
-        +store_model_file(file: ModelFile)
-        +load_model_file(file: ModelFile)
-        +cleanup_old_files()
+    class CacheManager {
+        -root_dir: Path
+        -policies: List[CachePolicy]
+        +validate_cache(model: ModelIdentity)
+        +ensure_space(required: int)
+        +store_file(file: ModelFile)
     }
 
     IModelManager <|-- ModelManager
-    IDownloader <|-- DownloadService
-    IStorage <|-- StorageService
+    ModelManager --> Downloader
+    ModelManager --> CacheManager
 ```
 
-## Workers and Strategies
+## Download Components
 
 ```mermaid
 classDiagram
-    class DownloadWorker {
-        -strategy: DownloadStrategy
-        -validator: FileValidator
-        +execute(task: DownloadTask)
-        +report_progress(progress: float)
-    }
-
     class DownloadStrategy {
         <<interface>>
         +download_file(file: ModelFile)
@@ -120,24 +95,56 @@ classDiagram
         +resume_download(file: ModelFile)
     }
 
-    class SafetensorsStrategy {
-        +download_file(file: ModelFile)
-        +validate_file(file: ModelFile)
-        +resume_download(file: ModelFile)
+    class ProgressTracker {
+        -total_bytes: int
+        -downloaded_bytes: int
+        +update_progress(bytes: int)
+        +get_progress() float
+        +get_eta() datetime
     }
 
-    class FileValidator {
-        -validators: List[Validator]
-        +validate(file: ModelFile)
-        +add_validator(validator: Validator)
+    class DownloadWorker {
+        -strategy: DownloadStrategy
+        -progress: ProgressTracker
+        -cache: CacheManager
+        +execute_download(task: DownloadTask)
+        +report_progress(progress: float)
     }
 
     DownloadWorker --> DownloadStrategy
-    DownloadStrategy <|-- SafetensorsStrategy
-    DownloadWorker --> FileValidator
+    DownloadWorker --> ProgressTracker
 ```
 
-## Events and Error Handling
+## Cache Integration
+
+```mermaid
+classDiagram
+    class CachePolicy {
+        <<interface>>
+        +should_evict() bool
+        +select_candidates() List[CacheEntry]
+    }
+
+    class CacheEntry {
+        +model: ModelIdentity
+        +files: List[ModelFile]
+        +size: int
+        +last_accessed: datetime
+        +is_complete: bool
+    }
+
+    class CacheValidator {
+        +validate_entry(entry: CacheEntry)
+        +verify_hash(file: ModelFile)
+        +check_completeness(entry: CacheEntry)
+    }
+
+    CacheManager --> CachePolicy
+    CacheManager --> CacheEntry
+    CacheManager --> CacheValidator
+```
+
+## Event System
 
 ```mermaid
 classDiagram
@@ -149,18 +156,17 @@ classDiagram
     }
 
     class DownloadEvent {
+        +state: DownloadState
         +progress: float
         +bytes_downloaded: int
-        +total_bytes: int
     }
 
-    class ModelError {
-        +code: ErrorCode
-        +message: str
-        +details: Dict
-        +is_retryable: bool
+    class CacheEvent {
+        +action: CacheAction
+        +entry: CacheEntry
+        +result: Result
     }
 
     ModelEvent <|-- DownloadEvent
-    ModelEvent --> ModelIdentity
+    ModelEvent <|-- CacheEvent
 ```
