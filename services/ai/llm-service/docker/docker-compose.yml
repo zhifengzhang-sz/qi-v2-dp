@@ -10,30 +10,11 @@ services:
     env_file:
       - ../config/infra/default.env
       - ../config/infra/${DEVICE_TYPE:-cpu}.env
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: ${NUM_GPUS:-0}
-              capabilities: [ gpu ]
-      restart_policy:
-        condition: on-failure
-      update_config:
-        order: start-first
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
-    environment:
-      HF_HUB_DOWNLOAD_TIMEOUT: "600"
-      HF_HUB_ENABLE_HF_TRANSFER: "0"
-      REQUESTS_CA_BUNDLE: /etc/ssl/certs/ca-certificates.crt
     healthcheck:
-      test: [ "CMD", "python", "-c", "import os; exit(0 if os.path.exists('/app/.ready') else 1)" ]
+      test: ["CMD", "python", "-c", "import os; exit(0 if os.path.exists('/app/.ready') else 1)"]
       interval: 30s
       timeout: 30s
       retries: 3
-      start_period: 5s
 
 volumes:
   model-cache:

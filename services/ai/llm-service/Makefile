@@ -1,121 +1,88 @@
-.PHONY: help download start-cpu start-gpu stop clean test lint clean-cache download-clean fix-permissions build-base download-model show-config
+# for format the tab spacing: use shell command: sed -i 's/^    /\t/' Makefile
+.PHONY: help clean test build run docs lint install dev fmt check setup python-env download-model download-tiny download clean-cache
 
-# Configuration
-DOCKER_COMPOSE := docker compose
-SERVICE_NAME := llm-service
-CONFIG_DIR := config
-DOCKER_DIR := docker
-CACHE_DIR := .cache
-MIN_SPACE_GB := 15
+PYTHON_VERSION := 3.10.13
+VENV_DIR := .venv
+PYENV_ROOT := $(HOME)/.pyenv
+PYENV_BIN := $(PYENV_ROOT)/versions/$(PYTHON_VERSION)/bin/python
+SHELL := /bin/bash
 
-# Colors for pretty printing
-GREEN := \033[0;32m
-NC := \033[0m # No Color
+# Auto-generated help menu
+help: ## Show this help menu
+	@echo 'Usage: make [TARGET]'
+	@echo ''
+	@echo 'Targets:'
+	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
-# Help target
-help:
-	@echo "LLM Service Management Commands:"
-	@echo "--------------------------------"
-	@echo "${GREEN}Basic Commands:${NC}"
-	@echo "  make download    - Download model using downloader container"
-	@echo "  make start-cpu  - Start service in CPU mode"
-	@echo "  make start-gpu  - Start service in GPU mode"
-	@echo "  make stop       - Stop all running services"
-	@echo ""
-	@echo "${GREEN}Development Commands:${NC}"
-	@echo "  make test       - Run all tests"
-	@echo "  make lint       - Run linters"
-	@echo "  make clean      - Clean up cache and temporary files"
-	@echo "  make build-base     - Build base Docker image"
-	@echo "  make download-model - Download model (resumable)"
-	@echo "  make clean-cache    - Clean model cache (with confirmation)"
+python-env: ## Setup Python environment with pyenv
+	@echo "Setting up Python $(PYTHON_VERSION)..."
+	@pyenv install --skip-existing $(PYTHON_VERSION)
+	@pyenv local $(PYTHON_VERSION)
+	@rm -rf $(VENV_DIR)
+	@$(PYENV_BIN) -m venv $(VENV_DIR)
+	@. $(VENV_DIR)/bin/activate && python --version
+	@$(VENV_DIR)/bin/pip install --upgrade pip
 
-# Core service commands
-build-base:
-	@echo "Building base Docker image..."
-	@if ! docker image inspect local/llm-service-base:latest >/dev/null 2>&1; then \
-	    echo "Building fresh base image..."; \
-	    BUILD_DATE=$$(date -u +'%Y-%m-%dT%H:%M:%SZ') \
-	    $(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.download.yml build base; \
-	else \
-	    echo "Using cached base image"; \
+setup: clean python-env ## Setup development environment
+	@echo "Installing development dependencies..."
+	@$(VENV_DIR)/bin/pip install -r requirements/dev.txt
+	@. $(VENV_DIR)/bin/activate && python --version
+
+clean: ## Clean Python cache files and artifacts
+	@rm -rf $(VENV_DIR)
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -type f -name "*.pyc" -delete
+	@find . -type f -name "*.pyo" -delete
+	@find . -type f -name "*.pyd" -delete
+	@find . -type f -name ".coverage" -delete
+	@find . -type d -name "*.egg-info" -exec rm -rf {} +
+	@find . -type d -name "*.egg" -exec rm -rf {} +
+	@find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
+
+install: ## Install production dependencies
+	$(VENV_DIR)/bin/pip install -r requirements.txt
+
+dev: clean ## Install development dependencies
+	$(VENV_DIR)/bin/pip install -r requirements/dev.txt
+
+fmt: ## Format code using black and isort
+	black scripts tests
+	isort scripts tests
+
+check: ## Run type checking with mypy
+	mypy scripts tests
+
+lint: fmt check ## Run all linters and type checking
+	flake8 scripts tests
+
+test: lint ## Run tests with coverage
+	pytest tests/test_download_model.py -v --cov=scripts --cov-report=term-missing
+
+build: test ## Build Docker image (requires tests to pass)
+	./scripts/build.sh
+
+run: ## Run the download service
+	docker compose -f docker/docker-compose.yml up
+
+docs: ## Build documentation
+	@echo "Documentation structure:"
+	@tree docs/
+
+validate: lint test ## Run all validation (lint, type check, test)
+
+download-model: ## Download model with arguments
+	python scripts/download_model.py $(MODEL_ARGS)
+
+download-tiny: ## Download tiny test model
+	$(MAKE) download-model MODEL_ARGS="--model-id hf-internal-testing/tiny-random-gpt2 --cache-dir .cache/huggingface"
+
+download: clean-cache ## Download model with specified MODEL_ID
+	@if [ -z "$(MODEL_ID)" ]; then \
+		echo "Error: MODEL_ID is required. Usage: make download MODEL_ID=org/model"; \
+		exit 1; \
 	fi
+	python scripts/download_model.py --model-id $(MODEL_ID) --cache-dir .cache
 
-export MODEL_ID ?= $(shell grep MODEL_ID config/models/model.env | cut -d'=' -f2)
-
-download-model:
-	@echo "Starting download for model: $${MODEL_ID}"
-	@MODEL_ID="$${MODEL_ID}" docker compose -f docker/docker-compose.download.yml up --force-recreate download
-
-download:
-	@echo "Warning: 'make download' is deprecated."
-	@echo "Use 'make download-model' instead for better download management"
-	@make download-model
-
-start-cpu:
-	@echo "Starting service in CPU mode..."
-	$(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.cpu.yml up -d
-
-start-gpu:
-	@echo "Starting service in GPU mode..."
-	$(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.gpu.yml up -d
-
-stop:
-	@echo "Stopping all services..."
-	-$(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.cpu.yml down
-	-$(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.gpu.yml down
-	-$(DOCKER_COMPOSE) -f $(DOCKER_DIR)/docker-compose.download.yml down
-
-# Development commands
-test:
-	@echo "Running tests..."
-	# Add test commands here
-
-lint:
-	@echo "Running linters..."
-	# Add lint commands here
-
-clean:
-	@echo "Cleaning up..."
-	rm -rf $(CACHE_DIR)/*
-
-clean-cache:
-	@echo "WARNING: This will remove ALL downloaded models!"
-	@read -p "Are you sure? [y/N] " confirm; \
-	if [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ]; then \
-	    echo "Cleaning model cache..."; \
-	    sudo rm -rf $(CACHE_DIR)/* && \
-	    echo "Cache cleaned successfully"; \
-	else \
-	    echo "Operation cancelled"; \
-	fi
-
-# Keep this for backwards compatibility but mark as deprecated
-download-clean:
-	@echo "Warning: 'download-clean' is deprecated."
-	@echo "Use 'make download-model' to download while preserving existing models."
-	@echo "Use 'make clean-cache' if you really need to clean the cache."
-	@exit 1
-
-# Add new target for fixing permissions
-fix-permissions:
-	@echo "Fixing cache directory permissions..."
-	@sudo chown -R $(shell id -u):$(shell id -g) .cache
-	@sudo chmod -R u+rw .cache
-	@echo "Permissions fixed"
-
-show-config:
-	@echo "=== Download Configuration ==="
-	@echo "MODEL_ID: $${MODEL_ID:-$$(grep MODEL_ID config/models/model.env | cut -d'=' -f2)}"
-	@echo "CACHE_DIR: $(CACHE_DIR)"
-	@echo "MIN_SPACE_GB: $(MIN_SPACE_GB)"
-	@echo
-	@echo "=== Environment Files ==="
-	@echo "Default ENV:"
-	@cat config/infra/default.env
-	@echo
-	@echo "Model ENV:"
-	@cat config/models/model.env
-	@echo
-	@echo "=== Docker Compose Environment ==="
-	@docker compose -f docker/docker-compose.download.yml config
+clean-cache: ## Clean cache
+	@./scripts/clean_cache.sh

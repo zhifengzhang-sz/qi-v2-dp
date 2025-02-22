@@ -1,113 +1,110 @@
-import pytest
 from pathlib import Path
-from scripts.download_model import download_model
-from unittest.mock import patch, Mock
-from huggingface_hub.utils import (
-    HfHubHTTPError,
-    RepositoryNotFoundError,
-)
-import os
-import shutil
-import requests
+from typing import Any
+
+import pytest
+from huggingface_hub.utils import HfHubHTTPError, RepositoryNotFoundError
+from pytest_mock import MockFixture
+
+from scripts.download_model import REQUIRED_FILES, download_model, verify_model
 
 
 @pytest.fixture
-def cache_dir(tmp_path):
-    """Provide a temporary cache directory"""
-    path = tmp_path / "model_cache"
-    path.mkdir(parents=True, exist_ok=True)
-    return path
+def cache_dir(tmp_path: Path) -> Path:
+    """Create a temporary cache directory."""
+    cache = tmp_path / "cache"
+    models_dir = cache / "models"
+    models_dir.mkdir(parents=True)
+    return cache
 
 
 @pytest.fixture
-def mock_snapshot_download():
-    with patch('scripts.download_model.snapshot_download') as mock:
-        yield mock
+def setup_model_files(cache_dir: Path) -> Path:
+    """Setup model files for testing."""
+    model_dir = cache_dir / "models" / "valid--model"
+    model_dir.mkdir(parents=True)
+    for file in REQUIRED_FILES:
+        (model_dir / file).touch()
+    return model_dir
 
 
-def test_download_model_success(cache_dir, mock_snapshot_download):
-    """Test successful model download"""
-    mock_snapshot_download.return_value = str(cache_dir)
+@pytest.fixture
+def mock_snapshot_download(mocker: MockFixture) -> Any:
+    """Mock HuggingFace download function."""
+    return mocker.patch("scripts.download_model.snapshot_download")
+
+
+def test_download_model_success(
+    cache_dir: Path, mock_snapshot_download: Any, setup_model_files: Path
+) -> None:
+    """Test successful model download."""
+    mock_snapshot_download.return_value = str(setup_model_files)
     assert download_model("valid/model", cache_dir)
 
 
-def test_download_model_not_found(cache_dir, mock_snapshot_download):
-    """Test handling of non-existent model"""
-    mock_snapshot_download.side_effect = RepositoryNotFoundError(
-        "Model not found")
+def test_download_invalid_model(cache_dir: Path, mock_snapshot_download: Any) -> None:
+    """Test download with invalid model ID."""
+    mock_snapshot_download.side_effect = RepositoryNotFoundError("Invalid model")
     assert not download_model("invalid/model", cache_dir)
 
 
-def test_download_model_http_error(cache_dir, mock_snapshot_download):
-    """Test handling of HTTP errors"""
-    # Create a mock Request object
-    mock_request = Mock(spec=requests.Request)
-
-    # Create a mock Response object with all required attributes
-    mock_response = Mock(spec=requests.Response)
-    mock_response.headers = {"x-request-id": "test-request-id"}
-    mock_response.status_code = 500
-    mock_response.request = mock_request
-    mock_response.url = "https://huggingface.co/api/models/test"
-
-    # Create HfHubHTTPError with proper Response object
-    error = HfHubHTTPError("HTTP Error", response=mock_response)
-    mock_snapshot_download.side_effect = error
-
+def test_download_http_error(cache_dir: Path, mock_snapshot_download: Any) -> None:
+    """Test download with HTTP error."""
+    mock_snapshot_download.side_effect = HfHubHTTPError("HTTP Error", None)
     assert not download_model("valid/model", cache_dir)
 
 
-def test_download_model_unexpected_error(cache_dir, mock_snapshot_download):
-    """Test handling of unexpected errors"""
+def test_download_unexpected_error(
+    cache_dir: Path, mock_snapshot_download: Any
+) -> None:
+    """Test download with unexpected error."""
     mock_snapshot_download.side_effect = Exception("Unexpected error")
     assert not download_model("valid/model", cache_dir)
 
 
-def test_download_model_no_token(cache_dir, mock_snapshot_download, monkeypatch):
-    """Test download without HF token"""
-    monkeypatch.delenv("HF_TOKEN", raising=False)
-    mock_snapshot_download.return_value = str(cache_dir)
-    assert download_model("valid/model", cache_dir)
+def test_verify_model(setup_model_files: Path) -> None:
+    """Test model verification."""
+    assert verify_model(setup_model_files, "valid/model")
 
 
-@pytest.mark.integration
-def test_download_real_model(cache_dir):
-    """Test downloading a real tiny test model"""
+def test_verify_model_missing_files(cache_dir: Path) -> None:
+    """Test model verification with missing files."""
+    model_dir = cache_dir / "models" / "test--model"
+    model_dir.mkdir(parents=True)
+    assert not verify_model(model_dir, "test/model")
+
+
+def test_main_success(monkeypatch: pytest.MonkeyPatch, cache_dir: Path) -> None:
+    """Test main function success."""
+    monkeypatch.setattr(
+        "sys.argv",
+        ["script", "--model-id", "test/model", "--cache-dir", str(cache_dir)],
+    )
+    monkeypatch.setattr("scripts.download_model.download_model", lambda *args: True)
+
+    with pytest.raises(SystemExit) as exc:
+        from scripts.download_model import main
+
+        main()
+    assert exc.value.code == 0
+
+
+def test_main_failure(monkeypatch: pytest.MonkeyPatch, cache_dir: Path) -> None:
+    """Test main function failure."""
+    monkeypatch.setattr(
+        "sys.argv",
+        ["script", "--model-id", "test/model", "--cache-dir", str(cache_dir)],
+    )
+    monkeypatch.setattr("scripts.download_model.download_model", lambda *args: False)
+
+    with pytest.raises(SystemExit) as exc:
+        from scripts.download_model import main
+
+        main()
+    assert exc.value.code == 1
+
+
+def test_download_real_model() -> None:
+    """Integration test with real tiny model."""
+    cache_dir = Path(".cache")
     model_id = "hf-internal-testing/tiny-random-gpt2"
     assert download_model(model_id, cache_dir)
-    # Verify files were downloaded
-    assert any(cache_dir.iterdir())
-
-
-def test_main_no_model_id(monkeypatch):
-    """Test main function when MODEL_ID is not set"""
-    monkeypatch.delenv("MODEL_ID", raising=False)
-    with pytest.raises(SystemExit) as exit_info:
-        from scripts.download_model import main
-        main()
-    assert exit_info.value.code == 1
-
-
-def test_main_success(monkeypatch, cache_dir):
-    """Test main function with successful download"""
-    monkeypatch.setenv("MODEL_ID", "test/model")
-    monkeypatch.setenv("HF_TOKEN", "test-token")
-    monkeypatch.setattr(
-        "scripts.download_model.download_model", lambda *args: True)
-
-    with pytest.raises(SystemExit) as exit_info:
-        from scripts.download_model import main
-        main()
-    assert exit_info.value.code == 0
-
-
-def test_main_failure(monkeypatch, cache_dir):
-    """Test main function with failed download"""
-    monkeypatch.setenv("MODEL_ID", "test/model")
-    monkeypatch.setattr(
-        "scripts.download_model.download_model", lambda *args: False)
-
-    with pytest.raises(SystemExit) as exit_info:
-        from scripts.download_model import main
-        main()
-    assert exit_info.value.code == 1

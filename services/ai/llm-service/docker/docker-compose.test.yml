@@ -1,9 +1,0 @@
-services:
-  test:
-    build:
-      context: ..
-      dockerfile: docker/Dockerfile.test
-    environment:
-      - MODEL_ID=TinyLlama/TinyLlama-1.1B-Chat-v1.0
-    volumes:
-      - ../.cache:/app/.cache
