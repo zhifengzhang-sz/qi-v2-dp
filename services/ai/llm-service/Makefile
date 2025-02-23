@@ -1,5 +1,5 @@
 # for format the tab spacing: use shell command: sed -i 's/^    /\t/' Makefile
-.PHONY: help clean test build run docs lint install dev fmt check setup python-env download-model download-tiny download clean-cache
+.PHONY: help clean test build run docs lint install dev fmt check setup python-env download-model download-tiny download clean-cache clean-models clean-python clean-all
 
 PYTHON_VERSION := 3.10.13
 VENV_DIR := .venv
@@ -28,17 +28,22 @@ setup: clean python-env ## Setup development environment
 	@$(VENV_DIR)/bin/pip install -r requirements/dev.txt
 	@. $(VENV_DIR)/bin/activate && python --version
 
-clean: ## Clean Python cache files and artifacts
-	@rm -rf $(VENV_DIR)
+clean-python: ## Clean Python artifacts
+	@echo "Cleaning Python cache..."
 	@find . -type d -name "__pycache__" -exec rm -rf {} +
 	@find . -type f -name "*.pyc" -delete
-	@find . -type f -name "*.pyo" -delete
-	@find . -type f -name "*.pyd" -delete
-	@find . -type f -name ".coverage" -delete
-	@find . -type d -name "*.egg-info" -exec rm -rf {} +
-	@find . -type d -name "*.egg" -exec rm -rf {} +
-	@find . -type d -name ".pytest_cache" -exec rm -rf {} +
-	@find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	@echo "Python cache cleaned"
+
+clean-cache: ## Clean model cache
+	@echo "Cleaning model cache..."
+	@rm -rf .cache/models/*
+	@echo "Model cache cleaned"
+
+clean: clean-python ## Clean Python artifacts
+	@echo "Clean completed"
+
+clean-all: clean clean-cache ## Clean everything including models
+	@echo "All clean completed"
 
 install: ## Install production dependencies
 	$(VENV_DIR)/bin/pip install -r requirements.txt
@@ -83,6 +88,3 @@ download: clean-cache ## Download model with specified MODEL_ID
 		exit 1; \
 	fi
 	python scripts/download_model.py --model-id $(MODEL_ID) --cache-dir .cache
-
-clean-cache: ## Clean cache
-	@./scripts/clean_cache.sh

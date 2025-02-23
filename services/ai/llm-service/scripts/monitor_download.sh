@@ -1,32 +1,38 @@
 #!/bin/bash
+set -euo pipefail
 
-CACHE_DIR=".cache/hub"
-MODEL_DIR="${CACHE_DIR}/models--codellama--CodeLlama-7b-instruct-hf"
+CACHE_DIR="${CACHE_DIR:-.cache}"
+MODEL_ID="$1"
 INTERVAL=5
+
+if [ -z "$MODEL_ID" ]; then
+    echo "Usage: $0 <model-id>"
+    exit 1
+fi
+
+MODEL_DIR="$CACHE_DIR/models/${MODEL_ID//\/\//--}"
 
 while true; do
     clear
-    echo "=== CodeLlama Download Progress ==="
-    echo
+    echo "=== Model Download Progress: $MODEL_ID ==="
     echo "Time: $(date '+%H:%M:%S')"
     echo
 
     if [ -d "$MODEL_DIR" ]; then
-        # Model files only (safetensors, bin, model files)
-        model_size=$(find "$MODEL_DIR" -type f \( -name "*.safetensors" -o -name "*.bin" -o -name "*.model" \) ! -name "*.incomplete" -exec ls -l {} + |
-            awk '{total += $5} END {printf "%.1fG", total/1024/1024/1024}')
+        # Get downloaded size
+        size=$(du -sh "$MODEL_DIR" 2>/dev/null | cut -f1)
+        echo "Current Size: $size"
 
-        # Current downloading file
-        incomplete_file=$(find "$MODEL_DIR" -name "*.incomplete" -type f -exec ls -lh {} + |
-            awk '{print $5 " - " $9}')
-
-        echo "Model Size: $model_size"
-        [ -n "$incomplete_file" ] && echo "Downloading: $incomplete_file"
-        echo "Status: $(find "$MODEL_DIR" -name "*.incomplete" -type f | wc -l) files downloading"
+        # Check for safetensors/pytorch files
+        weights=$(find "$MODEL_DIR" -type f \( -name "*.safetensors" -o -name "*.bin" \))
+        if [ -n "$weights" ]; then
+            echo "Model weights downloaded"
+        else
+            echo "Waiting for model weights..."
+        fi
     else
-        echo "Waiting for download..."
+        echo "Waiting for download to start..."
     fi
-    echo "Target size: ~13GB"
 
     sleep $INTERVAL
 done

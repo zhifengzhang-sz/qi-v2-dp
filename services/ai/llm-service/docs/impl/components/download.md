@@ -1,10 +1,41 @@
-# Download Component Implementation
+# Download Component Design
+
+## Responsibility
+
+- Download models from HuggingFace
+- Verify downloaded files
+- Manage download process
+
+## Structure
+
+```python
+class ModelDownloader:
+    """Model download management."""
+    def __init__(self, settings: Settings):
+        self.settings = settings
+
+    def download(self, model_id: str) -> bool:
+        """Download and verify model."""
+```
+
+## File Structure
+
+```
+downloader/
+└── hf.py          # HuggingFace downloader implementation
+
+scripts/
+├── download_model.py    # CLI interface
+└── monitor_download.sh  # Download monitoring
+```
 
 ## Related Documentation
+
 - [Design](../../architecture/design.download.md)
 - [HF Integration](../huggingface/integration.md)
 
 ## Implementation Status
+
 - Location: `scripts/download_model.py`
 - Test Coverage: 97%
 - Configuration: Environment-based
@@ -42,3 +73,8 @@ def download_model(model_id: str, cache_dir: Path) -> bool:
 ## Test Coverage: 97%
 
 See `tests/test_download_model.py` for test cases.
+
+## References
+
+- [C4 Component Design](../architecture/design.c4.md#download-component)
+- [HuggingFace Integration](../huggingface/integration.md)
