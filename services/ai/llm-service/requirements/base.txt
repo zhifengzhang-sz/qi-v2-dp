@@ -1,0 +1,6 @@
+huggingface-hub>=0.29.1  # Latest stable as of Feb 2024
+-r torch.txt
+pydantic-settings==2.1.0
+requests[security]>=2.31.0
+charset-normalizer>=3.3.2
+pydantic<3.0.0  # Pin to v2 for better compatibility

@@ -1,25 +1,50 @@
 from pathlib import Path
 import os
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Callable, Optional, Set, ClassVar
 from cache.manager import CacheManager
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import Field, model_validator
 
 logger = logging.getLogger(__name__)
 
 
-class Settings:
+class Settings(BaseSettings):
     """Configuration component."""
-    REQUIRED_ENV = {"ENV"}
-    OPTIONAL_ENV = {
-        "MODEL_ID",
-        "CACHE_DIR",
-        "HF_HUB_DOWNLOAD_TIMEOUT",
+    # Pydantic model config
+    model_config = SettingsConfigDict(arbitrary_types_allowed=True)
+
+    # Class variables
+    REQUIRED_ENV: ClassVar[Set[str]] = {"ENV"}
+    OPTIONAL_ENV: ClassVar[Set[str]] = {
         "HF_MAX_RETRIES",
         "HF_HUB_ENABLE_HF_TRANSFER",
-        "HF_HUB_OFFLINE"
+        "HF_HUB_OFFLINE",
+        "CACHE_DIR",
+        "HF_HUB_DOWNLOAD_TIMEOUT",
+        "MODEL_ID"
     }
 
-    VALIDATORS = {
+    # Instance fields
+    ENV: str = "test"
+    CACHE_DIR: Path = Path.home() / ".cache" / "huggingface"
+    HF_MAX_RETRIES: Optional[int] = 3
+    HF_HUB_ENABLE_HF_TRANSFER: Optional[bool] = True
+    HF_HUB_OFFLINE: Optional[bool] = False
+    HF_HUB_DOWNLOAD_TIMEOUT: Optional[int] = 300
+    MODEL_ID: Optional[str] = None
+    cache: Optional[CacheManager] = None
+
+    @model_validator(mode='after')
+    def setup_cache(self) -> 'Settings':
+        """Initialize cache manager after model validation."""
+        if self.ENV == "test":
+            self.CACHE_DIR = Path("/tmp/test_cache")
+        if self.cache is None:
+            self.cache = CacheManager(self.CACHE_DIR)
+        return self
+
+    VALIDATORS: Dict[str, Callable[[Any], Any]] = {
         "HF_HUB_DOWNLOAD_TIMEOUT": lambda x: int(x) if x else 300,
         "CACHE_DIR": lambda x: str(x) if x else ".cache",
         "HF_MAX_RETRIES": lambda x: int(x) if x else 3,
@@ -29,12 +54,11 @@ class Settings:
         "HF_HUB_OFFLINE": lambda x: bool(int(x)) if x else False,
     }
 
-    def __init__(self) -> None:
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(**kwargs)
         self._config: Dict[str, Any] = {}
         if not self._load_env():
             logger.error("Failed to load environment configuration")
-        self.cache_dir = Path(self.get("CACHE_DIR", ".cache"))
-        self.cache = CacheManager(self.cache_dir)
 
     def _load_env(self) -> bool:
         """Load environment configuration."""

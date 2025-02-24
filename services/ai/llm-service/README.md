@@ -1,142 +1,136 @@
 # LLM Service
 
-A production-ready service for running large language models, built on HuggingFace's infrastructure. Optimized for code generation with support for DeepSeek and CodeLlama models.
-
-## Features
-
-- 🚀 Production-ready HuggingFace model execution
-- 📊 Built-in monitoring and metrics
-- ⚡ Resource optimization and management
-- 🔄 Support for multiple models
-- 🛟 Comprehensive error handling
-- 📈 Performance monitoring and alerting
+A production-ready service for running large language models, built on HuggingFace's infrastructure.
 
 ## Prerequisites
 
-- Docker and Docker Compose
+- Python 3.10 or higher
+- pyenv (for Python version management)
 - 48GB RAM minimum
 - 100GB available disk space
 - NVIDIA GPU (optional but recommended)
 
 ## Quick Start
 
-1. **Download the model**:
 ```bash
-# Clean download with proper permissions
-make download-clean
+# Setup Python environment
+make python-env
 
-# If you encounter permission issues
-make fix-permissions
+# Install components separately (recommended)
+make install-base      # Install base requirements
+make install-torch     # Install PyTorch (large download)
+make install-dev       # Install development tools
+
+# Or install everything at once (might timeout)
+make install-all
 ```
 
-2. **Start the service**:
-```bash
-# For CPU mode
-make start-cpu
+## Development Environment Setup
 
-# For GPU mode
-make start-gpu
+### 1. Install pyenv
+
+```bash
+# Install build dependencies
+sudo apt update
+sudo apt install -y make build-essential libssl-dev zlib1g-dev \
+libbz2-dev libreadline-dev libsqlite3-dev wget curl llvm \
+libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev \
+libffi-dev liblzma-dev
+
+# Install pyenv
+curl https://pyenv.run | bash
+
+# Add to shell configuration
+echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
+echo 'command -v pyenv >/dev/null || export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
+echo 'eval "$(pyenv init -)"' >> ~/.bashrc
+
+# Reload shell
+exec $SHELL
 ```
 
-3. **Stop the service**:
+### 2. Setup Project
+
 ```bash
-make stop
+# Install Python and create virtualenv
+make python-env
+
+# Install dependencies in stages (recommended)
+make install-base
+make install-torch
+make install-dev
+
+# Verify installation
+python --version  # Should show 3.10.13
+make test
 ```
 
-## Commands
+## Available Commands
 
-| Command | Description |
-|---------|-------------|
-| `make download` | Download model |
-| `make download-clean` | Clean cache and download fresh |
-| `make fix-permissions` | Fix cache directory permissions |
-| `make start-cpu` | Start CPU service |
-| `make start-gpu` | Start GPU service |
-| `make stop` | Stop all services |
-| `make clean` | Clean all temporary files |
+| Command              | Description                     |
+| -------------------- | ------------------------------- |
+| `make help`          | Show available commands         |
+| `make python-env`    | Setup Python with pyenv         |
+| `make install-base`  | Install base requirements       |
+| `make install-torch` | Install PyTorch                 |
+| `make install-dev`   | Install development tools       |
+| `make install-all`   | Install everything              |
+| `make test`          | Run test suite                  |
+| `make fmt`           | Format code                     |
+| `make clean`         | Clean Python artifacts          |
+| `make clean-all`     | Clean everything including venv |
 
-## Documentation
+## Project Structure
 
-- [Full Service Documentation](docs/service-docs.md)
-- [Quick Start Guide](docs/quickstart.md)
-- [API Documentation](docs/api.md)
-- [Configuration Guide](docs/configuration.md)
-- [Monitoring Guide](docs/monitoring.md)
-- [Troubleshooting Guide](docs/troubleshooting.md)
-
-## Monitoring & Metrics
-
-Access the Grafana dashboard at `http://localhost:3000`:
-- Default username: admin
-- Default password: admin
+```plaintext
+services/ai/llm-service/
+├── cache/             # Cache management
+├── config/            # Configuration
+│   └── infra/        # Environment configs
+├── downloader/        # Model download
+├── requirements/      # Dependencies
+│   ├── base.txt      # Core requirements
+│   ├── torch.txt     # PyTorch requirements
+│   └── dev.txt       # Development tools
+├── scripts/          # CLI tools
+└── tests/           # Test suite
+```
 
 ## Testing
 
-Run the test suite:
 ```bash
-# Run with default configuration
-python tests/run_tests.py
+# Run all tests
+make test
 
-# Run with custom configuration
-python tests/run_tests.py --config tests/test_config.json
+# Run specific test file
+pytest tests/test_download.py -v
+
+# Run with coverage
+pytest --cov=. tests/
 ```
 
-## Alert System
+## Development Workflow
 
-Configure and start the alert system:
+1. Activate environment:
+
 ```bash
-# Configure alerts
-cp config/alerts.json.example config/alerts.json
-
-# Set up environment variables
-export SMTP_PASSWORD="your-smtp-password"
-export SLACK_WEBHOOK_URL="your-webhook-url"
-
-# Start alert system
-python alerts/alert_system.py
+source .venv/bin/activate
 ```
 
-## Project Status
+2. Install dependencies (if needed):
 
-⚠️ **Note**: This project is in pre-deployment phase. Final deployment steps are pending. See [Implementation Status](docs/implementation-status.md) for details.
-
-## Directory Structure
-
-```
-llm-service/
-├── Makefile           # Service management commands
-├── docker/            # Docker-related files
-│   ├── config/        # Configuration files
-│   ├── Dockerfile*    # Various Dockerfiles
-│   └── docker-compose*.yml
-├── .cache/           # Model cache directory
-└── README.md
-```
-
-## Configuration
-
-All configuration is managed through environment files in the `docker/config` directory:
-- `config/infra/` - Infrastructure settings
-- `config/models/` - Model-specific settings
-
-## Development
-
-To see all available commands:
 ```bash
-make help
+make install-all
 ```
 
-## License
+3. Run tests:
 
-[License details to be added]
+```bash
+make test
+```
 
-## Contributing
+4. Format code:
 
-[Contribution guidelines to be added]
-
-## Support
-
-For issues and support:
-1. Check the [Troubleshooting Guide](docs/troubleshooting.md)
-2. Open an issue in the repository
-3. Contact the development team
+```bash
+make fmt
+```

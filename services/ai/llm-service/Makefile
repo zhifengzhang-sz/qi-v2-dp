@@ -1,5 +1,5 @@
 # for format the tab spacing: use shell command: sed -i 's/^    /\t/' Makefile
-.PHONY: help clean test build run docs lint install dev fmt check setup python-env download-model download-tiny download clean-cache clean-models clean-python clean-all
+.PHONY: help clean test build run docs lint install install-base install-torch install-dev install-all dev fmt check setup python-env download-model download-tiny download clean-cache clean-models clean-python clean-all install-dev
 
 PYTHON_VERSION := 3.10.13
 VENV_DIR := .venv
@@ -41,12 +41,25 @@ clean-cache: ## Clean model cache
 
 clean: clean-python ## Clean Python artifacts
 	@echo "Clean completed"
+	@find . -type d -name "__pycache__" -exec rm -rf {} +
+	@find . -type f -name "*.pyc" -delete
+	@rm -rf .pytest_cache .mypy_cache .coverage
 
 clean-all: clean clean-cache ## Clean everything including models
 	@echo "All clean completed"
 
-install: ## Install production dependencies
-	$(VENV_DIR)/bin/pip install -r requirements.txt
+install-base:
+	pip install --timeout 1000 -r requirements/base.txt
+
+install-torch:
+	pip install --timeout 1000 -r requirements/torch.txt
+
+install-dev:
+	pip install --timeout 1000 -r requirements/dev.txt
+
+install: install-base install-torch
+
+install-all: install install-dev
 
 dev: clean ## Install development dependencies
 	$(VENV_DIR)/bin/pip install -r requirements/dev.txt
@@ -61,8 +74,9 @@ check: ## Run type checking with mypy
 lint: fmt check ## Run all linters and type checking
 	flake8 scripts tests
 
+# Update the test target
 test: lint ## Run tests with coverage
-	pytest tests/test_download_model.py -v --cov=scripts --cov-report=term-missing
+	pytest tests -v --cov=. --cov-report=term-missing
 
 build: test ## Build Docker image (requires tests to pass)
 	./scripts/build.sh
