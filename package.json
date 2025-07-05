@@ -1,0 +1,79 @@
+{
+  "name": "@qicore/crypto-data-platform",
+  "version": "0.1.0",
+  "description": "QiCore Crypto Data Platform - Agentized cryptocurrency data processing with MCP integration",
+  "type": "module",
+  "main": "./src/index.ts",
+  "scripts": {
+    "dev": "bun run src/index.ts",
+    "start": "bun run src/index.ts",
+    "build": "echo 'No build needed for development'",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "format": "biome check . --write",
+    "lint": "biome lint .",
+    "check": "bun run typecheck && bun run format && bun run test",
+    "lib:typecheck": "tsc --noEmit --project lib/tsconfig.build.json",
+    "lib:format": "biome check lib/ --write",
+    "lib:lint": "biome lint lib/",
+    "lib:test": "vitest run lib/tests/**/*.test.ts",
+    "lib:test:watch": "vitest lib/tests/**/*.test.ts",
+    "lib:build": "bun x tsc --project lib/tsconfig.build.json",
+    "lib:check": "bun run lib:typecheck && bun run lib:format && bun run lib:lint && bun run lib:test",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "services:start": "./services/scripts/start-services.sh",
+    "services:stop": "./services/scripts/stop-services.sh",
+    "services:status": "./services/scripts/service-status.sh",
+    "services:logs": "docker-compose -f ./services/docker/docker-compose.yml logs -f",
+    "services:restart": "./services/scripts/stop-services.sh && ./services/scripts/start-services.sh",
+    "data:stream": "bun run src/streaming/crypto-streamer.ts",
+    "agent:market": "bun run src/agents/market-monitoring-agent.ts",
+    "agent:analysis": "bun run src/agents/technical-analysis-agent.ts",
+    "pipeline:start": "bun run src/pipeline/data-pipeline.ts"
+  },
+  "keywords": [
+    "crypto",
+    "data-platform",
+    "mcp",
+    "ai-agents",
+    "streaming",
+    "timescaledb",
+    "redpanda",
+    "cryptocurrency",
+    "trading",
+    "qicore"
+  ],
+  "author": "QiCore Contributors",
+  "license": "MIT",
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "dependencies": {
+    "@clickhouse/client": "^1.6.0",
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "@qicore/agent-lib": "workspace:../qicore-v4/typescript/agent/lib",
+    "axios": "^1.6.2",
+    "drizzle-orm": "^0.29.0",
+    "fp-ts": "^2.16.9",
+    "kafkajs": "^2.2.4",
+    "kysely": "^0.27.0",
+    "node-fetch": "^3.3.2",
+    "pg": "^8.12.0",
+    "postgres": "^3.4.3",
+    "ws": "^8.18.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/pg": "^8.11.10",
+    "@types/ws": "^8.5.12",
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
+  },
+  "workspaces": [
+    "../qicore-v4/typescript/agent/lib"
+  ]
+}

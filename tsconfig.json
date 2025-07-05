@@ -1,0 +1,45 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true,
+    "declaration": true,
+    "outDir": "./dist",
+    "rootDir": "./",
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "preserve",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./lib/src/*"],
+      "@/agents/*": ["./lib/src/agents/*"],
+      "@/pipeline/*": ["./lib/src/pipeline/*"],
+      "@/streaming/*": ["./lib/src/streaming/*"],
+      "@/database/*": ["./lib/src/database/*"],
+      "@/config/*": ["./lib/src/config/*"],
+      "@/types/*": ["./lib/src/types/*"],
+      "@/utils/*": ["./lib/src/utils/*"],
+      "@qi/http": ["./lib/src/qihttp/index.ts"],
+      "@qi/mcp": ["@qicore/agent-lib/qimcp/client"]
+    }
+  },
+  "include": [
+    "lib/src/**/*",
+    "tests/**/*",
+    "app/**/*",
+    "*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "**/*.test.ts"
+  ]
+}
