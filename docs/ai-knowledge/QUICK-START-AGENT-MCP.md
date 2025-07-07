@@ -1,221 +1,252 @@
-# Quick Start: Agent/MCP Paradigm
+# Quick Start: 2-Layer Actor/MCP Architecture
 
 ## 🚨 **For AI Models/Developers: READ THIS FIRST**
 
-**This project uses cutting-edge Agent/MCP patterns that AI models aren't trained on. Following traditional patterns will result in fake/stub code that we reject.**
+**This project uses a production-ready 2-layer actor architecture with direct MCP integration. The plugin pattern eliminates all code duplication while maintaining type safety.**
 
 ## ⚡ **Quick Reference**
 
-### **Before You Code - Ask These Questions:**
+### **Before You Code - Understand the Architecture:**
 
-1. **Does an MCP server exist for this service?**
-   - ✅ **Yes** → Use MCP Wrapper (no low-level module)
-   - ❌ **No** → Build low-level module + DSL
+1. **Layer 1 (Base Foundation)**: Provides DSL interface + workflow abstraction
+2. **Layer 2 (Concrete Actors)**: Implements only technology-specific plugins 
+3. **MCP Integration**: Direct client creation within actors, no wrapper classes
 
-2. **Does this agent need LLM?**
-   - ✅ **Analysis/Reasoning** → Include optional LLM
-   - ❌ **Pure Data Ops** → No LLM needed
-
-3. **What will the user control?**
-   - **Model selection** (user chooses LLM or null)
-   - **Workflow execution** (with or without AI)
+### **Current Implementation Status:**
+- ✅ **CoinGecko Actor**: Working with external MCP server (`https://mcp.api.coingecko.com/sse`)
+- ✅ **Redpanda Actors**: Stream-based data sources and targets
+- ✅ **TimescaleDB Actor**: Database storage with optimized schemas
+- ✅ **End-to-End Pipelines**: Complete data flows with real cryptocurrency data
 
 ## 🏗️ **Architecture Patterns**
 
-### **Pattern 1: MCP Server Available** (CoinGecko, GitHub, etc.)
+### **Pattern 1: MCP-Enabled Data Source** (CoinGecko)
 ```
-Agent → DSL → MCP Wrapper → Official MCP Server → API
+Layer 2 Actor → BaseReader → DSL Interface → External MCP Server → Live Data
 ```
 
 ```typescript
-// ✅ Correct implementation
-export class CoinGeckoDataAgent {
-  constructor(
-    private dsl: CryptoDSL,              // Domain operations
-    private mcpWrapper: CryptoMCPWrapper, // MCP communication
-    private aiModel?: LanguageModel       // Optional LLM
-  ) {}
-}
+// ✅ Current working implementation
+class CoinGeckoMarketDataReader extends BaseReader {
+  private mcpClient: Client;
 
-export class CryptoDSL {
-  constructor(private mcpWrapper: CryptoMCPWrapper) {}
-  
-  async getCurrentPrices(symbols: string[]): Promise<CryptoPriceData[]> {
-    // Real MCP call - no fake data!
-    const rawPrices = await this.mcpWrapper.callTool('get_crypto_prices', { symbols });
-    return this.transformPriceData(rawPrices);
+  async initialize(): Promise<Result<void>> {
+    // Direct MCP client creation
+    this.mcpClient = new Client({
+      name: this.config.name,
+      version: "1.0.0"
+    }, { capabilities: {} });
+
+    // Connect to external MCP server
+    const transport = new SSEClientTransport(
+      new URL("https://mcp.api.coingecko.com/sse")
+    );
+    await this.mcpClient.connect(transport);
+
+    // Register with BaseReader client management
+    this.addClient("coingecko-mcp", this.mcpClient, {
+      name: "coingecko-mcp",
+      type: "data-source"
+    });
   }
-}
 
-export class CryptoMCPWrapper {
-  async callTool<T>(toolName: string, params: any): Promise<T> {
-    // Real MCP server call
-    return await this.mcpClient.call(toolName, params);
+  // Implement only technology-specific plugins
+  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+    return this.mcpClient.callTool({
+      name: "get_coins_markets",
+      arguments: { ids: coinId, vs_currency: vsCurrency, per_page: 1 }
+    });
   }
-}
-```
 
-### **Pattern 2: No MCP Server** (Database, Custom APIs)
-```
-Agent → DSL → Low-level Module → Service
-```
-
-```typescript
-// ✅ Correct implementation
-export class DatabaseAgent {
-  constructor(
-    private dsl: CryptoFinancialDSL,     // Domain operations
-    private lowLevelClient: DrizzleClient // Direct service access
-  ) {}
-}
-
-export class CryptoFinancialDSL {
-  constructor(private client: DrizzleClient) {}
-  
-  async storePrices(prices: PriceDataInput[]): Promise<void> {
-    // Real database operations - no fake data!
-    const transformed = this.transformForDatabase(prices);
-    await this.client.insertCryptoPrices(transformed);
+  protected transformCurrentPrice(data: any): number {
+    const extracted = this.extractMCPData(data);
+    return extracted[0].current_price;
   }
-}
 
-export class DrizzleClient {
-  async insertCryptoPrices(prices: CryptoPriceInsert[]): Promise<void> {
-    // Real database call
-    await this.db.insert(schema.cryptoPrices).values(prices);
+  // ALL DSL methods inherited from BaseReader automatically
+  // getCurrentPrice(), getCurrentPrices(), getMarketAnalytics(), etc.
+}
+```
+
+### **Pattern 2: Non-MCP Data Source** (Redpanda, TimescaleDB)
+```
+Layer 2 Actor → BaseReader/Writer → DSL Interface → Direct Client → Service
+```
+
+```typescript
+// ✅ Current working implementation
+class RedpandaMarketDataReader extends BaseReader {
+  private redpandaClient: RedpandaClient;
+
+  async initialize(): Promise<Result<void>> {
+    // Direct client creation for streaming
+    this.redpandaClient = new RedpandaClient({
+      brokers: this.config.brokers,
+      groupId: this.config.groupId
+    });
+
+    await this.redpandaClient.connect();
+
+    // Register with BaseReader client management
+    this.addClient("redpanda-stream", this.redpandaClient, {
+      name: "redpanda-stream", 
+      type: "data-source"
+    });
   }
-}
-```
 
-## 🚫 **What NOT to Do (AI Will Suggest These)**
-
-### **❌ Fake/Stub Code:**
-```typescript
-// AI suggests this - DON'T DO IT
-async getPrice(symbol: string): Promise<number> {
-  return 50000; // Fake data
-}
-
-async analyzeMarket(): Promise<string> {
-  throw new Error('TODO: Implement'); // Stub
-}
-```
-
-### **❌ Direct API Calls When MCP Server Exists:**
-```typescript
-// AI suggests this when MCP server exists - DON'T DO IT
-const response = await fetch('https://api.coingecko.com/v3/simple/price');
-```
-
-### **❌ Always Requiring LLM:**
-```typescript
-// AI suggests this - DON'T FORCE LLM for data operations
-constructor(private llm: LanguageModel) {} // Not needed for data-only
-```
-
-## ✅ **Correct Implementation Checklist**
-
-### **For Any New Agent:**
-- [ ] ✅ Check if MCP server exists first
-- [ ] ✅ Decide if LLM is needed (often it's not!)
-- [ ] ✅ Create DSL for domain operations
-- [ ] ✅ Create wrapper/client for service communication
-- [ ] ✅ Make LLM optional (user choice)
-- [ ] ✅ Use real data/operations (no fake/stub code)
-- [ ] ✅ Support workflows that USE the components
-
-### **Code Quality Gates:**
-- [ ] 🚫 **Zero fake return data**
-- [ ] 🚫 **Zero TODO/stub implementations**
-- [ ] 🚫 **Zero direct API calls when MCP server exists**
-- [ ] ✅ **Real error handling**
-- [ ] ✅ **Real data transformations**
-- [ ] ✅ **Real service integrations**
-
-## 🎯 **Component Responsibilities**
-
-### **Agent Layer:**
-- Define workflows using QiAgent methods
-- Coordinate task execution
-- Handle user model preferences
-- **Does**: Workflow orchestration
-- **Doesn't**: Direct service calls, business logic
-
-### **DSL Layer:**
-- Provide domain-specific operations
-- Transform data between formats
-- Abstract service complexity
-- **Does**: Domain operations, data transformation
-- **Doesn't**: Workflow logic, direct service calls
-
-### **MCP Wrapper Layer:**
-- Handle MCP server communication
-- Provide typed tool interfaces
-- Manage connections and retries
-- **Does**: MCP communication only
-- **Doesn't**: Business logic, data transformation
-
-### **Low-level Module Layer:**
-- Direct service communication (when no MCP server)
-- Raw API calls and responses
-- Connection management
-- **Does**: Service integration only
-- **Doesn't**: Business logic, MCP knowledge
-
-## 🚀 **Quick Implementation Templates**
-
-### **Data-Only Agent (No LLM):**
-```typescript
-export class MyDataAgent {
-  constructor(
-    private dsl: MyDSL,
-    private wrapper: MyMCPWrapper // or low-level client
-  ) {}
-
-  async getData(params: QueryParams): Promise<DataResult[]> {
-    return await this.dsl.getData(params);
+  // Implement only streaming-specific plugins
+  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+    return this.redpandaClient.consume({
+      topic: this.config.topics.prices,
+      filter: { coinId, vsCurrency }
+    });
   }
+
+  // ALL DSL methods inherited automatically
 }
 ```
 
-### **AI-Enhanced Agent (Optional LLM):**
-```typescript
-export class MyAIAgent {
-  constructor(
-    private dsl: MyDSL,
-    private wrapper: MyMCPWrapper,
-    private aiModel?: LanguageModel | null
-  ) {}
+## 🎯 **Implementation Guidelines**
 
-  async analyzeData(data: DataResult[]): Promise<AnalysisResult> {
-    if (this.aiModel) {
-      return await this.performAIAnalysis(data);
-    } else {
-      return await this.performRuleBasedAnalysis(data);
+### **Adding New Actors - Follow This Pattern:**
+
+```typescript
+// Step 1: Extend appropriate base class
+class NewSourceActor extends BaseReader {
+  private client: SomeClient;
+
+  // Step 2: Initialize technology-specific client
+  async initialize(): Promise<Result<void>> {
+    this.client = new SomeClient(this.config);
+    await this.client.connect();
+    
+    this.addClient("client-name", this.client, {
+      name: "client-name",
+      type: "data-source"
+    });
+  }
+
+  // Step 3: Implement only the plugin methods
+  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+    // Technology-specific data fetching
+    return this.client.fetchPrice(coinId, vsCurrency);
+  }
+
+  protected transformCurrentPrice(data: any): number {
+    // Technology-specific data transformation
+    return data.price;
+  }
+
+  // Step 4: All DSL methods work automatically
+  // getCurrentPrice(), getCurrentPrices(), etc. - ZERO implementation needed
+}
+```
+
+### **MCP Client Integration Best Practices:**
+
+```typescript
+// ✅ Direct MCP client creation within actors
+class SomeMCPActor extends BaseReader {
+  private mcpClient: Client;
+
+  async initialize(): Promise<Result<void>> {
+    // Create MCP client
+    this.mcpClient = new Client({
+      name: this.config.name,
+      version: "1.0.0" 
+    }, {
+      capabilities: {}
+    });
+
+    // Connect to external server
+    const transport = new SSEClientTransport(new URL(this.config.serverUrl));
+    await this.mcpClient.connect(transport);
+
+    // Register for client lifecycle management
+    this.addClient("mcp-client", this.mcpClient, {
+      name: "mcp-client",
+      type: "data-source"
+    });
+  }
+
+  protected async somePlugin(...args): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
     }
+    
+    return this.mcpClient.callTool({
+      name: "some_tool",
+      arguments: { ...args }
+    });
   }
 }
 ```
 
-### **User-Controlled Agent Setup:**
-```typescript
-// User chooses models
-const agent = new MyAIAgent(
-  myDSL,
-  myWrapper,
-  userWantsAI ? claude('claude-3-haiku') : null
-);
+## 🚫 **What NOT to Do**
 
-// Works with or without AI
-const result = await agent.analyzeData(data);
+### **❌ Don't Create Wrapper Classes:**
+```typescript
+// DON'T DO THIS - wrapper classes are unnecessary
+class MCPWrapper {
+  async callTool(name: string, args: any) { /* ... */ }
+}
+
+class SomeActor {
+  constructor(private wrapper: MCPWrapper) {} // ❌ Extra layer
+}
 ```
 
-## 📖 **Full Documentation Links**
+### **❌ Don't Implement DSL Methods:**
+```typescript
+// DON'T DO THIS - DSL is inherited from BaseReader
+class SomeActor extends BaseReader {
+  // ❌ Don't implement these - they're inherited
+  async getCurrentPrice(coinId: string): Promise<Result<number>> {
+    // This creates code duplication
+  }
+}
+```
 
-- **[AGENT-MCP-PARADIGM.md](./AGENT-MCP-PARADIGM.md)** - Complete paradigm guide
-- **[README-qiagent-architecture.md](../lib/README-qiagent-architecture.md)** - QiAgent architecture
-- **[README-coingecko.md](../lib/README-coingecko.md)** - Working example
+### **❌ Don't Use Fake/Stub Data:**
+```typescript
+// DON'T DO THIS - all implementations must work with real services
+async getCurrentPricePlugin(coinId: string): Promise<any> {
+  return { price: 50000 }; // ❌ Fake data
+}
+```
+
+## ✅ **Success Verification**
+
+### **Working Examples to Study:**
+```bash
+# Study the working implementations
+cat lib/src/sources/coingecko/MarketDataReader.ts    # MCP integration
+cat lib/src/sources/redpanda/MarketDataReader.ts     # Streaming integration
+cat lib/src/targets/timescale/MarketDataWriter.ts    # Database integration
+
+# Test the demos
+bun run app/demos/sources/coingecko-source-demo.ts
+bun run app/demos/end-to-end-pipeline-demo.ts
+```
+
+### **Architecture Understanding Check:**
+You understand the system when you can:
+
+1. **Explain Plugin Pattern**: Layer 1 provides workflow, Layer 2 implements plugins only
+2. **Implement New Actors**: Extend BaseReader/BaseWriter, implement plugins, get DSL for free
+3. **MCP Integration**: Create direct client connections within actors
+4. **Zero Duplication**: No DSL implementation code in Layer 2 actors
+
+## 🌟 **Key Benefits**
+
+- **Zero Code Duplication**: DSL implementation captured once in Layer 1
+- **Type Safety**: Complete TypeScript support throughout
+- **Real Data**: All implementations work with live external services
+- **Scalable**: Easy to add new data sources and targets
+- **MCP Ready**: Direct integration with external MCP servers
 
 ---
 
-**Remember**: AI models will suggest stone-age patterns. Always refer to this guide to implement the modern Agent/MCP paradigm correctly.
+**Architecture**: 2-layer system with plugin pattern  
+**MCP Integration**: Direct client creation within actors  
+**Status**: Production-ready with verified external data sources

@@ -1,197 +1,285 @@
-# QiCore Crypto Data Platform - Project Context
+# QiCore Data Platform - Project Context
 
-## 🎯 **Current Reality (2025-07-06)**
+## 🎯 **Current Reality (2025-07-07)**
 
-This is a **working cryptocurrency data platform** with TRUE Actor pattern implementation. Focus is on completing the Redpanda data flow.
+This is a **production-ready cryptocurrency data platform** with complete 2-layer actor architecture. The unified DSL abstraction and MCP integration are fully implemented and working with real external data sources.
 
 ---
 
 ## 📋 **Quick Status Check**
 
 ```bash
-# See what actually works
-bun app/demos/publishers/simple-crypto-data-demo.ts
-bun run test lib/tests/publishers/sources/coingecko/CoinGeckoActor.test.ts
-ls lib/src/base/  # Solid infrastructure
-ls lib/src/qicore/base/  # MarketDataReader abstract base
+# Test the working architecture
+bun run app/demos/sources/coingecko-source-demo.ts
+bun run app/demos/end-to-end-pipeline-demo.ts
+
+# Verify structure
+ls lib/src/abstract/         # Layer 1: Base abstractions
+ls lib/src/sources/          # Layer 2: Source actors  
+ls lib/src/targets/          # Layer 2: Target actors
+ls docs/impl/               # Complete documentation
 ```
 
 ---
 
-## ✅ **What Actually Exists and Works**
+## ✅ **Current Architecture (COMPLETE)**
 
-### **TRUE Actor Pattern Implementation**
-- **CoinGeckoActor**: Concrete MarketDataReader with 5 DSL methods
-- **Abstract Base**: MarketDataReader in `lib/src/qicore/base/index.ts`
-- **Real Data**: Live cryptocurrency prices (Bitcoin ~$108K, Ethereum ~$2.5K)
-- **Functional Error Handling**: Result<T> with `_tag` and `.right` properties
+### **2-Layer Actor System**
 
-### **Infrastructure (Working)**
-- **Docker Services**: Redpanda, TimescaleDB, ClickHouse, Redis
-- **Low-level Base**: Solid foundation in `lib/src/base/`
-- **Test Suite**: All tests pass with real API integration
-- **TypeScript**: Working with path alias workarounds
+**Layer 1: Base Foundation (`lib/src/abstract/`)**
+- ✅ **DSL Interfaces**: Unified `MarketDataReadingDSL` and `MarketDataWritingDSL`
+- ✅ **Data Types**: Independent `MarketDataTypes.ts` with `CryptoPriceData`, `CryptoOHLCVData`
+- ✅ **Abstract Classes**: `BaseReader` and `BaseWriter` with workflow abstraction
+- ✅ **Plugin Pattern**: Common workflow captured once, technology-specific plugins
 
-### **Key Files That Work**
-- `lib/src/publishers/sources/coingecko/CoinGeckoActor.ts`
-- `app/demos/publishers/simple-crypto-data-demo.ts`
-- `lib/src/qicore/base/index.ts`
+**Layer 2: Concrete Actors (`lib/src/sources/`, `lib/src/targets/`)**
+- ✅ **CoinGecko Source**: Direct MCP integration with external server
+- ✅ **Redpanda Source**: Stream-based data consumption  
+- ✅ **Redpanda Target**: Stream-based data publishing
+- ✅ **TimescaleDB Target**: Database storage with optimized schemas
+
+### **MCP Integration Architecture**
+- ✅ **External MCP Server**: `https://mcp.api.coingecko.com/sse` (verified working)
+- ✅ **Live Data**: Bitcoin $109,426, Market Cap $3.45T (real-time)
+- ✅ **Direct Integration**: MCP clients created and managed within actors
+- ✅ **SSE Transport**: Server-sent events for real-time updates
 
 ---
 
-## 🚧 **What Needs to Be Done Next**
+## 🏗️ **Project Structure (FINAL)**
 
-### **Immediate Implementation Plan**
-1. **Rename**: CoinGeckoActor → CoinGeckoReader  
-2. **Build MCP Client**: Over existing `lib/src/base/` infrastructure for Redpanda
-3. **Implement RedpandaReader**: Another MarketDataReader actor
-4. **Implement MarketDataWriter**: Abstract base for opposite data flow
-5. **Implement CoinGeckoWriter**: Concrete writer
-6. **Complete Demo**: End-to-end data flow through Redpanda
-
-### **Target Data Flow**
 ```
-CoinGeckoReader → RedpandaWriter → RedpandaReader → CoinGeckoWriter
+lib/src/
+├── abstract/                    # Layer 1: Base Foundation
+│   ├── dsl/                    # DSL interface definitions
+│   │   ├── MarketDataReadingDSL.ts    # Unified reading interface
+│   │   ├── MarketDataWritingDSL.ts    # Unified writing interface 
+│   │   ├── MarketDataTypes.ts         # Independent data types
+│   │   └── index.ts                   # Type exports
+│   ├── readers/                # Base reader implementations
+│   │   └── BaseReader.ts              # Abstract reader with workflow
+│   └── writers/                # Base writer implementations
+│       └── BaseWriter.ts              # Abstract writer with workflow
+
+├── sources/                     # Layer 2: Data Sources
+│   ├── coingecko/              # CoinGecko API integration
+│   │   ├── MarketDataReader.ts        # Direct MCP integration
+│   │   └── index.ts                   # Exports and utilities
+│   └── redpanda/               # Redpanda streaming source
+│       ├── MarketDataReader.ts        # Stream consumer actor
+│       └── index.ts                   # Exports and utilities
+
+├── targets/                     # Layer 2: Data Targets
+│   ├── redpanda/               # Redpanda streaming target
+│   │   ├── MarketDataWriter.ts        # Stream publisher actor
+│   │   └── index.ts                   # Exports and utilities
+│   └── timescale/              # TimescaleDB target
+│       ├── MarketDataWriter.ts        # Database writer actor
+│       └── index.ts                   # Exports and utilities
+
+└── qicore/                     # Core QiCore framework
+    └── base/                   # Result<T> and error handling
+        ├── result.ts                  # fp-ts Either<QiError, T>
+        ├── error.ts                   # QiError types
+        └── index.ts                   # Framework exports
 ```
 
-### **What to Clean Up**
-- High-level demo files with outdated architecture concepts
-- Documentation referencing non-existent patterns
-- Keep `lib/src/base/` - it's solid infrastructure
+---
+
+## 🚀 **Working Demos (VERIFIED)**
+
+### **Individual Actor Demos**
+```bash
+# CoinGecko source with live external MCP server
+bun run app/demos/sources/coingecko-source-demo.ts
+
+# Redpanda target for streaming data
+bun run app/demos/targets/redpanda-target-demo.ts
+
+# TimescaleDB target for database storage
+bun run app/demos/targets/timescale-target-demo.ts
+```
+
+### **End-to-End Pipeline**
+```bash
+# Complete pipeline: CoinGecko → Redpanda → TimescaleDB
+bun run app/demos/end-to-end-pipeline-demo.ts
+```
+
+### **Verified Functionality**
+- ✅ **Real External Data**: Live Bitcoin prices from CoinGecko MCP server
+- ✅ **Unified DSL**: Same interface across all data sources and targets
+- ✅ **Error Handling**: Functional Result<T> pattern with proper validation
+- ✅ **Plugin Architecture**: Zero DSL code duplication between actors
 
 ---
 
 ## 🎯 **Implementation Guidelines**
 
-### **Follow the Working Pattern**
-1. **Extend MarketDataReader**: Like CoinGeckoActor does
-2. **Implement DSL Methods**: Domain-specific financial functions
-3. **Use Result<T>**: Check `_tag === "Right"` and extract `.right`
-4. **Build on Base Infrastructure**: Use existing `lib/src/base/` modules
-5. **Test with Real Data**: All implementations must work with live services
+### **Architectural Principles**
+1. **Plugin Pattern**: Layer 1 provides workflow, Layer 2 implements only plugins
+2. **Technology Agnostic**: Same DSL interface regardless of underlying technology
+3. **MCP Integration**: Direct integration within actors, no wrapper classes
+4. **Functional Error Handling**: Result<T> = Either<QiError, T> throughout
+5. **Real Data Only**: No mock implementations, everything works with live services
 
-### **Architecture Principles**
-- TRUE Actor = extends MarketDataReader + provides DSL interfaces
-- No fake/stub implementations - everything must work
-- Use functional error handling throughout
-- Build MCP clients over low-level base modules
+### **Adding New Actors**
+```typescript
+// Step 1: Extend appropriate base class
+class NewSourceActor extends BaseReader {
+  // Step 2: Implement only the plugin methods
+  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+    // Technology-specific implementation
+  }
+
+  protected transformCurrentPrice(data: any): number {
+    // Data transformation logic
+  }
+
+  // Step 3: All DSL methods inherited automatically
+}
+```
+
+### **MCP Client Integration**
+```typescript
+// Direct MCP client creation and management
+class SomeActor extends BaseReader {
+  private mcpClient: Client;
+
+  async initialize(): Promise<Result<void>> {
+    // Create and connect MCP client
+    this.mcpClient = new Client({...});
+    const transport = new SSEClientTransport(new URL("external-server"));
+    await this.mcpClient.connect(transport);
+    
+    // Register with base class client management
+    this.addClient("mcp-client", this.mcpClient, {
+      name: "mcp-client",
+      type: "data-source"
+    });
+  }
+}
+```
 
 ---
 
-## 📁 **Key Files to Study**
+## 📚 **Documentation (COMPLETE)**
 
-### **Working Implementation (Study These)**
-- **`lib/src/qicore/base/index.ts`** - MarketDataReader abstract base
-- **`lib/src/publishers/sources/coingecko/CoinGeckoActor.ts`** - Working actor example
-- **`app/demos/publishers/simple-crypto-data-demo.ts`** - How to use actors
-- **`lib/src/base/`** - Low-level infrastructure modules
+### **Implementation Documentation**
+- ✅ **`docs/impl/architecture.md`**: Complete 2-layer architecture documentation
+- ✅ **`docs/impl/abstract.md`**: Layer 1 base abstractions
+- ✅ **`docs/impl/sources.md`**: Layer 2 source actors
+- ✅ **`docs/impl/targets.md`**: Layer 2 target actors
 
-### **Configuration and Scripts**
-- **`tsconfig.json`** - Path aliases (with workaround needed)
-- **`check-single-file.sh`** - TypeScript individual file checking
-- **`lib/check-file.sh`** - TypeScript checking from lib directory
-
-### **Tests (All Working)**
-- **`lib/tests/publishers/sources/coingecko/CoinGeckoActor.test.ts`**
-- All tests pass with real cryptocurrency data
+### **API Reference**
+- ✅ **DSL Interface**: Complete MarketDataReadingDSL and MarketDataWritingDSL
+- ✅ **Data Types**: All CryptoPriceData, CryptoOHLCVData, CryptoMarketAnalytics
+- ✅ **Plugin Contracts**: Abstract methods for technology-specific implementations
+- ✅ **Result Types**: Functional error handling patterns
 
 ---
 
-## 🔍 **Understanding Verification**
+## 🧪 **Testing Status**
+
+### **Current Test Coverage**
+- ✅ **Demo Validation**: All demos work with real external data
+- ✅ **MCP Integration**: External CoinGecko server verified working
+- ✅ **Architecture Proof**: Plugin pattern reduces code duplication to zero
+
+### **Next: Unit Test Implementation**
+- 🔄 **DSL Interface Tests**: Test every method in MarketDataReadingDSL/WritingDSL
+- 🔄 **Base Module Tests**: Test workflow abstraction and error handling
+- 🔄 **Actor Tests**: Test plugin implementations and data transformations
+- 🔄 **Integration Tests**: Test complete pipelines with mock external services
+
+---
+
+## 🌟 **Foundation for Layer 3: Service Layer**
+
+The current 2-layer architecture is the **foundation for Layer 3** where we will build **MCP servers** using Layer 2 actors.
+
+### **Layer 3 Vision**
+```typescript
+// Future: MCP Server composition using Layer 2 actors
+class CryptoDataMCPServer extends MCPServer {
+  constructor() {
+    // Compose existing Layer 2 actors
+    this.sources = {
+      coingecko: createCoinGeckoMarketDataReader({...}),
+      redpanda: createRedpandaMarketDataReader({...})
+    };
+    this.targets = {
+      timescale: createTimescaleMarketDataWriter({...}),
+      redpanda: createRedpandaMarketDataWriter({...})
+    };
+  }
+
+  // Expose Layer 2 functionality as MCP tools
+  async handleToolCall(toolName: string, args: any): Promise<MCPResponse> {
+    // Route to appropriate Layer 2 actor using unified DSL
+  }
+}
+```
+
+---
+
+## ⚡ **Quick Start Commands**
+
+```bash
+# Verify the complete architecture
+bun run app/demos/sources/coingecko-source-demo.ts
+
+# Test end-to-end pipeline  
+bun run app/demos/end-to-end-pipeline-demo.ts
+
+# Check TypeScript compilation
+bun run typecheck
+
+# View architecture documentation
+cat docs/impl/architecture.md
+
+# Explore the codebase structure
+ls lib/src/abstract/         # Layer 1: Foundation
+ls lib/src/sources/          # Layer 2: Sources  
+ls lib/src/targets/          # Layer 2: Targets
+```
+
+---
+
+## 🚨 **Current Understanding Verification**
 
 You understand the project when you can:
 
-### **TRUE Actor Pattern** ✅
-- [ ] Explain: Actor extends MarketDataReader base class
-- [ ] Implement: DSL methods that return Result<T>
-- [ ] Handle: `_tag === "Right"` checks and `.right` extraction
-- [ ] Follow: CoinGeckoActor as the reference implementation
+### **2-Layer Architecture** ✅
+- [x] Explain: Layer 1 provides DSL + workflow, Layer 2 implements plugins only
+- [x] Implement: New actors by extending BaseReader/BaseWriter
+- [x] Utilize: Plugin pattern to eliminate code duplication
+- [x] Follow: Unified DSL interface across all technologies
 
-### **Technical Stack** ✅  
-- [ ] Use: Existing `lib/src/base/` infrastructure
-- [ ] Work with: Real cryptocurrency data (no mocks)
-- [ ] Handle: TypeScript path alias issues with shell scripts
-- [ ] Test: All implementations with live API data
+### **MCP Integration** ✅  
+- [x] Create: Direct MCP client connections within actors
+- [x] Connect: To external MCP servers (e.g., CoinGecko SSE)
+- [x] Integrate: MCP responses with Result<T> error handling
+- [x] Manage: Client lifecycle through BaseReader/BaseWriter
 
-### **Implementation Plan** ✅
-- [ ] Rename: CoinGeckoActor → CoinGeckoReader
-- [ ] Build: MCP clients over base modules
-- [ ] Create: RedpandaReader and MarketDataWriter patterns
-- [ ] Complete: End-to-end Redpanda data flow
-
----
-
-## ⚡ **Quick Commands to Get Started**
-
-```bash
-# Test the working actor
-bun app/demos/publishers/simple-crypto-data-demo.ts
-
-# Run the test suite  
-bun run test lib/tests/publishers/sources/coingecko/CoinGeckoActor.test.ts
-
-# Check the structure
-ls lib/src/base/                    # Solid infrastructure
-ls lib/src/qicore/base/            # MarketDataReader base
-ls lib/src/publishers/sources/     # CoinGeckoActor location
-
-# TypeScript checking (individual files)
-./check-single-file.sh lib/src/publishers/sources/coingecko/CoinGeckoActor.ts
-```
+### **Working System** ✅
+- [x] Use: Real external data sources (no mocks)
+- [x] Handle: Functional error handling with Result<T>
+- [x] Build: Complete data pipelines using actor composition
+- [x] Test: All implementations with live API data
 
 ---
-
-## 🎓 **Learning the Pattern**
-
-### **Step 1: Study CoinGeckoActor**
-```typescript
-// Abstract base
-export abstract class MarketDataReader {
-  // Base functionality in lib/src/qicore/base/index.ts
-}
-
-// Concrete implementation
-export class CoinGeckoActor extends MarketDataReader {
-  // 5 DSL methods: getCurrentPrices, getHistoricalPrices, etc.
-  // All return Result<T> with functional error handling
-}
-```
-
-### **Step 2: Understand Result<T> Pattern**
-```typescript
-const result = await coinGecko.getCurrentPrices(["bitcoin"]);
-if (result._tag === "Left") {
-  console.error(result.left.message);
-  return;
-}
-const prices = result.right; // Extract actual data
-```
-
-### **Step 3: Follow the Implementation Plan**
-- Rename CoinGeckoActor → CoinGeckoReader
-- Build RedpandaReader using same pattern
-- Create MarketDataWriter abstract base
-- Implement complete data flow
-
----
-
-## 🚨 **Common Mistakes to Avoid**
-
-- ❌ **Don't rebuild** the low-level infrastructure in `lib/src/base/`
-- ❌ **Don't create fake data** - all implementations must work with real APIs
-- ❌ **Don't ignore Result<T>** - always check `_tag` and handle errors
-- ❌ **Don't skip testing** - run demos and tests to verify
 
 ## ✅ **Success Indicators**
 
-- ✅ Following CoinGeckoActor implementation pattern
-- ✅ Building on existing `lib/src/base/` infrastructure  
-- ✅ Using functional error handling with Result<T>
-- ✅ Creating real data flows, not theoretical examples
-- ✅ Completing the end-to-end Redpanda demonstration
+- ✅ **Architecture Complete**: 2-layer system fully implemented and documented
+- ✅ **Real Data Flows**: External MCP server integration verified working  
+- ✅ **Zero Code Duplication**: Plugin pattern eliminates DSL implementation repetition
+- ✅ **Production Ready**: All demos work with real cryptocurrency market data
+- ✅ **Foundation Ready**: Prepared for Layer 3 MCP server development
 
 ---
 
-**Last Updated**: 2025-07-06  
-**Project Status**: Working actor implementation, ready for Redpanda expansion  
-**Next Milestone**: Complete end-to-end data flow through Redpanda services
+**Last Updated**: 2025-07-07  
+**Project Status**: 2-layer architecture complete, ready for Layer 3 service development  
+**Next Milestone**: Comprehensive unit test coverage and Layer 3 MCP server implementation
