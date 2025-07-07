@@ -11,19 +11,19 @@ import type { CoinGeckoMCPConfig } from "./coingecko-mcp-launcher";
 import type { OfficialPostgresMCPLauncher } from "./postgres-mcp-launcher";
 import type { PostgresMCPConfig } from "./postgres-mcp-launcher";
 export interface MCPServerRegistry {
-    redpanda?: OfficialRedpandaMCPLauncher;
-    postgres?: OfficialPostgresMCPLauncher;
-    coingecko?: OfficialCoinGeckoMCPLauncher;
+  redpanda?: OfficialRedpandaMCPLauncher;
+  postgres?: OfficialPostgresMCPLauncher;
+  coingecko?: OfficialCoinGeckoMCPLauncher;
 }
 export declare class MCPServerManager {
-    private servers;
-    startAll(configs: {
-        redpanda?: RedpandaMCPConfig;
-        postgres?: PostgresMCPConfig;
-        coingecko?: CoinGeckoMCPConfig;
-    }): Promise<void>;
-    stopAll(): Promise<void>;
-    getServerStatus(): object;
-    getServerInfo(): object;
-    getAllAvailableTools(): Record<string, string[]>;
+  private servers;
+  startAll(configs: {
+    redpanda?: RedpandaMCPConfig;
+    postgres?: PostgresMCPConfig;
+    coingecko?: CoinGeckoMCPConfig;
+  }): Promise<void>;
+  stopAll(): Promise<void>;
+  getServerStatus(): object;
+  getServerInfo(): object;
+  getAllAvailableTools(): Record<string, string[]>;
 }

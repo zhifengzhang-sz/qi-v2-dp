@@ -2,17 +2,17 @@
 // Domain-Specific Language (DSL) for crypto financial operations
 // High-level interface that wraps the low-level Drizzle client
 
-import { DrizzleClient, type TimeSeriesQueryOptions } from './drizzle-client';
+import type { DrizzleClient, TimeSeriesQueryOptions } from "./drizzle-client";
 import type {
   CryptoPrice,
   CryptoPriceInsert,
-  OHLCVData,
-  OHLCVDataInsert,
-  MarketAnalytics,
-  Trade,
   Currency,
   Exchange,
-} from './schema';
+  MarketAnalytics,
+  OHLCVData,
+  OHLCVDataInsert,
+  Trade,
+} from "./schema";
 
 // =============================================================================
 // DSL TYPES - Domain-specific data structures
@@ -155,7 +155,7 @@ export class CryptoFinancialDSL {
    * Store price data from external APIs
    */
   async storePrices(prices: PriceDataInput[]): Promise<void> {
-    const transformedPrices: CryptoPriceInsert[] = prices.map(price => ({
+    const transformedPrices: CryptoPriceInsert[] = prices.map((price) => ({
       time: new Date(),
       coinId: price.coinId,
       symbol: price.symbol.toUpperCase(),
@@ -167,7 +167,7 @@ export class CryptoFinancialDSL {
       change24h: price.change24h?.toString(),
       change7d: price.change7d?.toString(),
       lastUpdated: price.lastUpdated,
-      source: 'api', // Default source
+      source: "api", // Default source
     }));
 
     await this.client.insertCryptoPrices(transformedPrices);
@@ -178,12 +178,14 @@ export class CryptoFinancialDSL {
    */
   async getLatestPrices(query: PriceQuery): Promise<CryptoPrice[]> {
     const options: TimeSeriesQueryOptions = {
-      symbols: query.symbols?.map(s => s.toUpperCase()),
+      symbols: query.symbols?.map((s) => s.toUpperCase()),
       coinIds: query.coinIds,
-      timeRange: query.timeRange ? {
-        start: new Date(query.timeRange.start),
-        end: new Date(query.timeRange.end),
-      } : undefined,
+      timeRange: query.timeRange
+        ? {
+            start: new Date(query.timeRange.start),
+            end: new Date(query.timeRange.end),
+          }
+        : undefined,
       limit: query.limit,
     };
 
@@ -199,15 +201,15 @@ export class CryptoFinancialDSL {
    */
   async getCurrentPrice(coinIdOrSymbol: string): Promise<number | null> {
     const isSymbol = coinIdOrSymbol.length <= 10 && coinIdOrSymbol === coinIdOrSymbol.toUpperCase();
-    
+
     const query: PriceQuery = {
-      [isSymbol ? 'symbols' : 'coinIds']: [coinIdOrSymbol],
+      [isSymbol ? "symbols" : "coinIds"]: [coinIdOrSymbol],
       latest: true,
       limit: 1,
     };
 
     const prices = await this.getLatestPrices(query);
-    return prices[0]?.usdPrice ? parseFloat(prices[0].usdPrice) : null;
+    return prices[0]?.usdPrice ? Number.parseFloat(prices[0].usdPrice) : null;
   }
 
   // =============================================================================
@@ -218,8 +220,8 @@ export class CryptoFinancialDSL {
    * Store OHLCV candlestick data
    */
   async storeOHLCV(data: OHLCVInput[]): Promise<void> {
-    const transformedData: OHLCVDataInsert[] = data.map(item => ({
-      time: typeof item.timestamp === 'number' ? new Date(item.timestamp) : item.timestamp,
+    const transformedData: OHLCVDataInsert[] = data.map((item) => ({
+      time: typeof item.timestamp === "number" ? new Date(item.timestamp) : item.timestamp,
       coinId: item.coinId,
       symbol: item.symbol.toUpperCase(),
       timeframe: item.timeframe,
@@ -229,7 +231,7 @@ export class CryptoFinancialDSL {
       close: item.close.toString(),
       volume: item.volume.toString(),
       trades: item.trades,
-      source: 'api',
+      source: "api",
     }));
 
     await this.client.insertOHLCVData(transformedData);
@@ -240,13 +242,15 @@ export class CryptoFinancialDSL {
    */
   async getOHLCV(query: OHLCVQuery): Promise<OHLCVData[]> {
     const options: TimeSeriesQueryOptions & { timeframe: string } = {
-      symbols: query.symbols?.map(s => s.toUpperCase()),
+      symbols: query.symbols?.map((s) => s.toUpperCase()),
       coinIds: query.coinIds,
       timeframe: query.timeframe,
-      timeRange: query.timeRange ? {
-        start: new Date(query.timeRange.start),
-        end: new Date(query.timeRange.end),
-      } : undefined,
+      timeRange: query.timeRange
+        ? {
+            start: new Date(query.timeRange.start),
+            end: new Date(query.timeRange.end),
+          }
+        : undefined,
       limit: query.limit,
     };
 
@@ -259,16 +263,12 @@ export class CryptoFinancialDSL {
   async getTimeBucketedOHLCV(
     coinId: string,
     bucketInterval: string,
-    timeRange: { start: Date | string; end: Date | string }
+    timeRange: { start: Date | string; end: Date | string },
   ): Promise<any[]> {
-    return await this.client.getTimeBucketedOHLCV(
-      coinId,
-      bucketInterval,
-      {
-        start: new Date(timeRange.start),
-        end: new Date(timeRange.end),
-      }
-    );
+    return await this.client.getTimeBucketedOHLCV(coinId, bucketInterval, {
+      start: new Date(timeRange.start),
+      end: new Date(timeRange.end),
+    });
   }
 
   // =============================================================================
@@ -290,7 +290,7 @@ export class CryptoFinancialDSL {
       activeCryptocurrencies: analytics.activeCryptocurrencies,
       activeExchanges: analytics.activeExchanges,
       fearGreedIndex: analytics.fearGreedIndex,
-      source: 'api',
+      source: "api",
     };
 
     await this.client.insertMarketAnalytics(transformedAnalytics);
@@ -313,18 +313,18 @@ export class CryptoFinancialDSL {
     });
 
     const sortedByChange = recentPrices
-      .filter(p => p.change24h)
-      .map(p => ({
+      .filter((p) => p.change24h)
+      .map((p) => ({
         symbol: p.symbol,
-        change24h: parseFloat(p.change24h!),
+        change24h: Number.parseFloat(p.change24h!),
       }))
       .sort((a, b) => b.change24h - a.change24h);
 
     return {
       timestamp: analytics.time,
-      totalMarketCap: parseFloat(analytics.totalMarketCap || '0'),
-      totalVolume: parseFloat(analytics.totalVolume || '0'),
-      btcDominance: parseFloat(analytics.btcDominance || '0'),
+      totalMarketCap: Number.parseFloat(analytics.totalMarketCap || "0"),
+      totalVolume: Number.parseFloat(analytics.totalVolume || "0"),
+      btcDominance: Number.parseFloat(analytics.btcDominance || "0"),
       activeCoins: analytics.activeCryptocurrencies || 0,
       topGainers: sortedByChange.slice(0, 10),
       topLosers: sortedByChange.slice(-10).reverse(),
@@ -339,7 +339,7 @@ export class CryptoFinancialDSL {
   /**
    * Detect price anomalies (significant price movements)
    */
-  async detectPriceAnomalies(threshold: number = 10): Promise<CryptoPrice[]> {
+  async detectPriceAnomalies(threshold = 10): Promise<CryptoPrice[]> {
     const query = `
       SELECT *
       FROM crypto_prices
@@ -355,11 +355,7 @@ export class CryptoFinancialDSL {
   /**
    * Calculate moving averages using TimescaleDB
    */
-  async calculateSMA(
-    coinId: string,
-    period: number,
-    window: number = 100
-  ): Promise<any[]> {
+  async calculateSMA(coinId: string, period: number, window = 100): Promise<any[]> {
     const query = `
       SELECT 
         time,
@@ -384,10 +380,7 @@ export class CryptoFinancialDSL {
   /**
    * Get volume-weighted average price (VWAP)
    */
-  async getVWAP(
-    coinId: string,
-    timeRange: { start: Date; end: Date }
-  ): Promise<number | null> {
+  async getVWAP(coinId: string, timeRange: { start: Date; end: Date }): Promise<number | null> {
     const query = `
       SELECT 
         SUM(usd_price::numeric * volume_24h::numeric) / SUM(volume_24h::numeric) as vwap
@@ -401,7 +394,7 @@ export class CryptoFinancialDSL {
     `;
 
     const result = await this.client.executeCustomQuery(query);
-    return result[0]?.vwap ? parseFloat(result[0].vwap) : null;
+    return result[0]?.vwap ? Number.parseFloat(result[0].vwap) : null;
   }
 
   // =============================================================================
@@ -413,7 +406,7 @@ export class CryptoFinancialDSL {
    */
   async getDataHealth(): Promise<any> {
     const hypertables = await this.client.getHypertableInfo();
-    
+
     // Get recent data counts
     const recentPrices = await this.getLatestPrices({
       timeRange: {

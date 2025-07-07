@@ -2,19 +2,19 @@
 // Complete example of QiAgent + AI Orchestra workflow orchestration
 // Demonstrates proper architecture: Agent = QiAgent + DSL + MCPWrapper
 
-import { 
-  createQiWorkflow,
-  type QiWorkflowContext,
-  type AgentWorkflow,
-  type OrchestrationPattern,
+import {
   type AgentCoordinator,
   type AgentMessage,
-  type AgentTask
-} from '@qicore/agent-lib/qiagent';
-import { MCPClient } from '@qicore/agent-lib/qimcp/client';
-import { CryptoMarketAgent } from '../agents/crypto-market-agent';
-import { CryptoDSL } from '../coingecko/crypto-dsl';
-import { CryptoMCPWrapper } from '../coingecko/crypto-mcp-wrapper';
+  type AgentTask,
+  type AgentWorkflow,
+  type OrchestrationPattern,
+  type QiWorkflowContext,
+  createQiWorkflow,
+} from "@qicore/agent-lib/qiagent";
+import { MCPClient } from "@qicore/agent-lib/qimcp/client";
+import { CryptoMarketAgent } from "../agents/crypto-market-agent";
+import { CryptoDSL } from "../coingecko/crypto-dsl";
+import { CryptoMCPWrapper } from "../coingecko/crypto-mcp-wrapper";
 
 // =============================================================================
 // ORCHESTRATION CONFIGURATION
@@ -22,7 +22,7 @@ import { CryptoMCPWrapper } from '../coingecko/crypto-mcp-wrapper';
 
 export interface CryptoOrchestrationConfig {
   apiKey?: string;
-  environment?: 'free' | 'demo' | 'pro';
+  environment?: "free" | "demo" | "pro";
   rateLimit?: number;
   debug?: boolean;
   agents?: {
@@ -39,7 +39,7 @@ export interface CryptoOrchestrationConfig {
 
 export interface OrchestrationResult {
   workflowId: string;
-  status: 'completed' | 'failed' | 'partial';
+  status: "completed" | "failed" | "partial";
   duration: number;
   results: {
     marketData?: any;
@@ -63,7 +63,7 @@ export interface OrchestrationResult {
 
 /**
  * CryptoAgentOrchestrator - Complete QiAgent + AI Orchestra example
- * 
+ *
  * Demonstrates:
  * 1. Agent = QiAgent + DSL + MCPWrapper
  * 2. Workflows USE DSL and MCP wrappers
@@ -78,7 +78,7 @@ export class CryptoAgentOrchestrator {
 
   constructor(config: CryptoOrchestrationConfig = {}) {
     this.config = {
-      environment: 'free',
+      environment: "free",
       rateLimit: 10,
       debug: false,
       agents: {
@@ -91,8 +91,8 @@ export class CryptoAgentOrchestrator {
     };
 
     // Initialize MCP client
-    this.mcpClient = new MCPClient('stdio://coingecko-mcp-server');
-    
+    this.mcpClient = new MCPClient("stdio://coingecko-mcp-server");
+
     // Initialize agent coordinator
     this.coordinator = this.createAgentCoordinator();
   }
@@ -105,25 +105,24 @@ export class CryptoAgentOrchestrator {
    * Initialize the orchestration system
    */
   async initialize(): Promise<void> {
-    console.log('🚀 Initializing Crypto Agent Orchestration System...');
+    console.log("🚀 Initializing Crypto Agent Orchestration System...");
 
     try {
       // Create and initialize agents
       await this.createAgents();
-      
+
       // Register agents with coordinator
       await this.registerAgents();
-      
+
       // Start coordinator
       await this.coordinator.start();
 
-      console.log('✅ Crypto Agent Orchestration System initialized successfully');
+      console.log("✅ Crypto Agent Orchestration System initialized successfully");
       console.log(`   - Agents: ${this.agents.size}`);
       console.log(`   - Environment: ${this.config.environment}`);
       console.log(`   - Rate Limit: ${this.config.rateLimit} req/min`);
-
     } catch (error) {
-      console.error('❌ Failed to initialize orchestration system:', error);
+      console.error("❌ Failed to initialize orchestration system:", error);
       throw error;
     }
   }
@@ -135,16 +134,22 @@ export class CryptoAgentOrchestrator {
     // This would use the actual AgentCoordinator from qiagent
     // For now, we'll create a simplified version
     return {
-      async start() { console.log('🎯 Agent coordinator started'); },
-      async stop() { console.log('🛑 Agent coordinator stopped'); },
-      async registerAgent(agent: any) { console.log(`📝 Registered agent: ${agent.config.id}`); },
-      async executeWorkflow(workflowId: string, context: any) { 
+      async start() {
+        console.log("🎯 Agent coordinator started");
+      },
+      async stop() {
+        console.log("🛑 Agent coordinator stopped");
+      },
+      async registerAgent(agent: any) {
+        console.log(`📝 Registered agent: ${agent.config.id}`);
+      },
+      async executeWorkflow(workflowId: string, context: any) {
         console.log(`▶️ Executing workflow: ${workflowId}`);
         return context;
       },
       async submitTaskToAgent(agentType: string, task: any) {
         console.log(`📋 Submitting task to ${agentType}: ${task.type}`);
-        return 'task-id-' + Date.now();
+        return "task-id-" + Date.now();
       },
       async relayMessage(message: AgentMessage) {
         console.log(`💬 Relaying message from ${message.from} to ${message.to}`);
@@ -156,31 +161,31 @@ export class CryptoAgentOrchestrator {
    * Create specialized agents
    */
   private async createAgents(): Promise<void> {
-    console.log('🤖 Creating specialized crypto agents...');
+    console.log("🤖 Creating specialized crypto agents...");
 
     const agentConfigs = [
       {
-        id: 'market-monitor-agent',
-        name: 'Market Monitor',
-        specialization: 'market_monitoring',
+        id: "market-monitor-agent",
+        name: "Market Monitor",
+        specialization: "market_monitoring",
         enabled: this.config.agents?.marketMonitor,
       },
       {
-        id: 'technical-analyst-agent',
-        name: 'Technical Analyst',
-        specialization: 'technical_analysis',
+        id: "technical-analyst-agent",
+        name: "Technical Analyst",
+        specialization: "technical_analysis",
         enabled: this.config.agents?.technicalAnalyst,
       },
       {
-        id: 'risk-assessor-agent',
-        name: 'Risk Assessor',
-        specialization: 'risk_assessment',
+        id: "risk-assessor-agent",
+        name: "Risk Assessor",
+        specialization: "risk_assessment",
         enabled: this.config.agents?.riskAssessor,
       },
       {
-        id: 'alert-manager-agent',
-        name: 'Alert Manager',
-        specialization: 'alerting',
+        id: "alert-manager-agent",
+        name: "Alert Manager",
+        specialization: "alerting",
         enabled: this.config.agents?.alertManager,
       },
     ];
@@ -204,14 +209,14 @@ export class CryptoAgentOrchestrator {
       name: agentConfig.name,
       specialization: agentConfig.specialization,
       capabilities: this.getAgentCapabilities(agentConfig.specialization),
-      mcpServers: ['coingecko'],
+      mcpServers: ["coingecko"],
     };
 
     // Create agent with QiAgent + DSL + MCPWrapper
     const agent = new CryptoMarketAgent(
       config,
       this.mcpClient,
-      console // Simple logger
+      console, // Simple logger
     );
 
     // Initialize agent
@@ -225,10 +230,10 @@ export class CryptoAgentOrchestrator {
    */
   private getAgentCapabilities(specialization: string): string[] {
     const capabilityMap: Record<string, string[]> = {
-      market_monitoring: ['price_tracking', 'volume_analysis', 'market_cap_monitoring'],
-      technical_analysis: ['trend_analysis', 'indicator_calculation', 'pattern_recognition'],
-      risk_assessment: ['volatility_analysis', 'anomaly_detection', 'risk_scoring'],
-      alerting: ['threshold_monitoring', 'notification_generation', 'alert_prioritization'],
+      market_monitoring: ["price_tracking", "volume_analysis", "market_cap_monitoring"],
+      technical_analysis: ["trend_analysis", "indicator_calculation", "pattern_recognition"],
+      risk_assessment: ["volatility_analysis", "anomaly_detection", "risk_scoring"],
+      alerting: ["threshold_monitoring", "notification_generation", "alert_prioritization"],
     };
 
     return capabilityMap[specialization] || [];
@@ -238,7 +243,7 @@ export class CryptoAgentOrchestrator {
    * Register agents with coordinator
    */
   private async registerAgents(): Promise<void> {
-    console.log('📝 Registering agents with coordinator...');
+    console.log("📝 Registering agents with coordinator...");
 
     for (const [agentId, agent] of this.agents) {
       await this.coordinator.registerAgent(agent);
@@ -254,8 +259,8 @@ export class CryptoAgentOrchestrator {
    * Demonstrates PIPELINE orchestration pattern
    */
   async executeMarketAnalysisWorkflow(symbols: string[]): Promise<OrchestrationResult> {
-    console.log('📊 Starting comprehensive market analysis workflow...');
-    console.log(`   Symbols: ${symbols.join(', ')}`);
+    console.log("📊 Starting comprehensive market analysis workflow...");
+    console.log(`   Symbols: ${symbols.join(", ")}`);
 
     const workflowId = `market-analysis-${Date.now()}`;
     const startTime = Date.now();
@@ -265,8 +270,8 @@ export class CryptoAgentOrchestrator {
       // Create workflow context
       const context: QiWorkflowContext = {
         messages: [],
-        currentAgent: 'orchestrator',
-        workflowStep: 'initialization',
+        currentAgent: "orchestrator",
+        workflowStep: "initialization",
         data: {
           symbols,
           workflowId,
@@ -280,84 +285,84 @@ export class CryptoAgentOrchestrator {
       };
 
       // Step 1: Market Data Collection (Market Monitor Agent)
-      console.log('📈 Step 1: Market data collection...');
-      const marketAgent = this.agents.get('market-monitor-agent');
+      console.log("📈 Step 1: Market data collection...");
+      const marketAgent = this.agents.get("market-monitor-agent");
       if (marketAgent) {
         const marketDataTask = {
           id: `market-data-${Date.now()}`,
-          type: 'get_market_data' as const,
+          type: "get_market_data" as const,
           params: {
             symbols,
             includeMarketCap: true,
             includePriceChange: true,
           },
-          priority: 'high' as const,
+          priority: "high" as const,
           createdAt: new Date(),
-          createdBy: 'orchestrator',
+          createdBy: "orchestrator",
         };
 
         const marketResult = await marketAgent.executeTask(marketDataTask);
         taskResults.push(marketResult);
         context.data.marketData = marketResult.data;
-        
+
         console.log(`   ✓ Market data collected: ${symbols.length} symbols`);
       }
 
       // Step 2: Technical Analysis (Technical Analyst Agent)
-      console.log('📊 Step 2: Technical analysis...');
-      const analystAgent = this.agents.get('technical-analyst-agent');
+      console.log("📊 Step 2: Technical analysis...");
+      const analystAgent = this.agents.get("technical-analyst-agent");
       if (analystAgent && context.data.marketData) {
         const analysisTask = {
           id: `analysis-${Date.now()}`,
-          type: 'analyze_market' as const,
+          type: "analyze_market" as const,
           params: {
             symbols,
-            timeframe: '1d' as const,
-            indicators: ['sma', 'rsi', 'macd'],
+            timeframe: "1d" as const,
+            indicators: ["sma", "rsi", "macd"],
           },
-          priority: 'high' as const,
+          priority: "high" as const,
           createdAt: new Date(),
-          createdBy: 'orchestrator',
+          createdBy: "orchestrator",
         };
 
         const analysisResult = await analystAgent.executeTask(analysisTask);
         taskResults.push(analysisResult);
         context.data.technicalAnalysis = analysisResult.data;
-        
+
         console.log(`   ✓ Technical analysis completed`);
       }
 
       // Step 3: Risk Assessment (Risk Assessor Agent)
-      console.log('⚠️ Step 3: Risk assessment...');
-      const riskAgent = this.agents.get('risk-assessor-agent');
+      console.log("⚠️ Step 3: Risk assessment...");
+      const riskAgent = this.agents.get("risk-assessor-agent");
       if (riskAgent) {
         const riskTask = {
           id: `risk-${Date.now()}`,
-          type: 'detect_anomalies' as const,
+          type: "detect_anomalies" as const,
           params: {
             threshold: 10,
-            timeWindow: '24h',
+            timeWindow: "24h",
           },
-          priority: 'medium' as const,
+          priority: "medium" as const,
           createdAt: new Date(),
-          createdBy: 'orchestrator',
+          createdBy: "orchestrator",
         };
 
         const riskResult = await riskAgent.executeTask(riskTask);
         taskResults.push(riskResult);
         context.data.riskAssessment = riskResult.data;
-        
+
         console.log(`   ✓ Risk assessment completed`);
       }
 
       // Step 4: Alert Generation (Alert Manager Agent)
-      console.log('🚨 Step 4: Alert generation...');
-      const alertAgent = this.agents.get('alert-manager-agent');
+      console.log("🚨 Step 4: Alert generation...");
+      const alertAgent = this.agents.get("alert-manager-agent");
       if (alertAgent && context.data.riskAssessment) {
         // Generate alerts based on risk assessment
         const alerts = this.generateAlerts(context.data);
         context.data.alerts = alerts;
-        
+
         console.log(`   ✓ Generated ${alerts.length} alerts`);
       }
 
@@ -365,11 +370,11 @@ export class CryptoAgentOrchestrator {
       const recommendations = this.generateRecommendations(context.data);
 
       const duration = Date.now() - startTime;
-      const successfulTasks = taskResults.filter(r => r.success).length;
+      const successfulTasks = taskResults.filter((r) => r.success).length;
 
       const result: OrchestrationResult = {
         workflowId,
-        status: successfulTasks === taskResults.length ? 'completed' : 'partial',
+        status: successfulTasks === taskResults.length ? "completed" : "partial",
         duration,
         results: {
           marketData: context.data.marketData,
@@ -382,30 +387,30 @@ export class CryptoAgentOrchestrator {
           totalTasks: taskResults.length,
           successfulTasks,
           failedTasks: taskResults.length - successfulTasks,
-          averageTaskDuration: taskResults.reduce((sum, r) => sum + (r.duration || 0), 0) / taskResults.length,
+          averageTaskDuration:
+            taskResults.reduce((sum, r) => sum + (r.duration || 0), 0) / taskResults.length,
         },
         timestamp: new Date(),
       };
 
-      console.log('✅ Market analysis workflow completed');
+      console.log("✅ Market analysis workflow completed");
       console.log(`   Duration: ${duration}ms`);
       console.log(`   Tasks: ${successfulTasks}/${taskResults.length} successful`);
       console.log(`   Recommendations: ${recommendations.length}`);
 
       return result;
-
     } catch (error) {
-      console.error('❌ Market analysis workflow failed:', error);
-      
+      console.error("❌ Market analysis workflow failed:", error);
+
       return {
         workflowId,
-        status: 'failed',
+        status: "failed",
         duration: Date.now() - startTime,
         results: {},
         metrics: {
           totalTasks: taskResults.length,
-          successfulTasks: taskResults.filter(r => r.success).length,
-          failedTasks: taskResults.filter(r => !r.success).length,
+          successfulTasks: taskResults.filter((r) => r.success).length,
+          failedTasks: taskResults.filter((r) => !r.success).length,
           averageTaskDuration: 0,
         },
         timestamp: new Date(),
@@ -417,9 +422,9 @@ export class CryptoAgentOrchestrator {
    * Execute real-time monitoring workflow
    * Demonstrates COLLABORATIVE orchestration pattern
    */
-  async executeRealTimeMonitoringWorkflow(symbols: string[], duration: number = 60000): Promise<void> {
-    console.log('📡 Starting real-time monitoring workflow...');
-    console.log(`   Symbols: ${symbols.join(', ')}`);
+  async executeRealTimeMonitoringWorkflow(symbols: string[], duration = 60000): Promise<void> {
+    console.log("📡 Starting real-time monitoring workflow...");
+    console.log(`   Symbols: ${symbols.join(", ")}`);
     console.log(`   Duration: ${duration / 1000}s`);
 
     const monitoringTasks: Promise<void>[] = [];
@@ -433,7 +438,7 @@ export class CryptoAgentOrchestrator {
     // Execute all monitoring tasks in parallel (COLLABORATIVE pattern)
     await Promise.allSettled(monitoringTasks);
 
-    console.log('✅ Real-time monitoring workflow completed');
+    console.log("✅ Real-time monitoring workflow completed");
   }
 
   /**
@@ -441,8 +446,8 @@ export class CryptoAgentOrchestrator {
    */
   private async createMonitoringTask(symbol: string, duration: number): Promise<void> {
     const endTime = Date.now() + duration;
-    const marketAgent = this.agents.get('market-monitor-agent');
-    
+    const marketAgent = this.agents.get("market-monitor-agent");
+
     if (!marketAgent) {
       console.warn(`⚠️ No market agent available for monitoring ${symbol}`);
       return;
@@ -455,23 +460,25 @@ export class CryptoAgentOrchestrator {
         // Use agent to get current price (Workflow USES DSL via agent)
         const priceTask = {
           id: `price-${symbol}-${Date.now()}`,
-          type: 'get_market_data' as const,
+          type: "get_market_data" as const,
           params: {
             symbols: [symbol],
             includeMarketCap: false,
             includePriceChange: true,
           },
-          priority: 'low' as const,
+          priority: "low" as const,
           createdAt: new Date(),
-          createdBy: 'monitoring-workflow',
+          createdBy: "monitoring-workflow",
         };
 
         const result = await marketAgent.executeTask(priceTask);
-        
+
         if (result.success && result.data?.prices?.length > 0) {
           const price = result.data.prices[0];
-          console.log(`💰 ${symbol}: $${price.usdPrice} (${price.change24h > 0 ? '+' : ''}${price.change24h?.toFixed(2)}%)`);
-          
+          console.log(
+            `💰 ${symbol}: $${price.usdPrice} (${price.change24h > 0 ? "+" : ""}${price.change24h?.toFixed(2)}%)`,
+          );
+
           // Check for significant price movements
           if (Math.abs(price.change24h || 0) > 5) {
             console.log(`🚨 Alert: ${symbol} moved ${price.change24h?.toFixed(2)}% in 24h`);
@@ -479,11 +486,10 @@ export class CryptoAgentOrchestrator {
         }
 
         // Wait before next check
-        await new Promise(resolve => setTimeout(resolve, 5000));
-
+        await new Promise((resolve) => setTimeout(resolve, 5000));
       } catch (error) {
         console.error(`❌ Error monitoring ${symbol}:`, error);
-        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait longer on error
+        await new Promise((resolve) => setTimeout(resolve, 10000)); // Wait longer on error
       }
     }
 
@@ -503,7 +509,7 @@ export class CryptoAgentOrchestrator {
     // Price anomaly alerts
     if (data.riskAssessment?.anomalies?.length > 0) {
       alerts.push({
-        type: 'price_anomaly',
+        type: "price_anomaly",
         severity: data.riskAssessment.severity,
         count: data.riskAssessment.anomalies.length,
         message: `${data.riskAssessment.anomalies.length} price anomalies detected`,
@@ -514,10 +520,10 @@ export class CryptoAgentOrchestrator {
     // Market trend alerts
     if (data.technicalAnalysis?.sentiment) {
       const sentiment = data.technicalAnalysis.sentiment;
-      if (sentiment !== 'neutral') {
+      if (sentiment !== "neutral") {
         alerts.push({
-          type: 'market_trend',
-          severity: sentiment === 'bearish' ? 'high' : 'medium',
+          type: "market_trend",
+          severity: sentiment === "bearish" ? "high" : "medium",
           trend: sentiment,
           message: `Market showing ${sentiment} trend`,
           timestamp: new Date(),
@@ -535,21 +541,23 @@ export class CryptoAgentOrchestrator {
     const recommendations: string[] = [];
 
     // Risk-based recommendations
-    if (data.riskAssessment?.severity === 'high') {
-      recommendations.push('Consider reducing position sizes due to high market volatility');
+    if (data.riskAssessment?.severity === "high") {
+      recommendations.push("Consider reducing position sizes due to high market volatility");
     }
 
     // Trend-based recommendations
-    if (data.technicalAnalysis?.sentiment === 'bullish') {
-      recommendations.push('Market conditions favor long positions');
-    } else if (data.technicalAnalysis?.sentiment === 'bearish') {
-      recommendations.push('Consider defensive positioning or short opportunities');
+    if (data.technicalAnalysis?.sentiment === "bullish") {
+      recommendations.push("Market conditions favor long positions");
+    } else if (data.technicalAnalysis?.sentiment === "bearish") {
+      recommendations.push("Consider defensive positioning or short opportunities");
     }
 
     // Performance-based recommendations
     if (data.technicalAnalysis?.topPerformers?.gainers?.length > 0) {
       const topGainer = data.technicalAnalysis.topPerformers.gainers[0];
-      recommendations.push(`Monitor ${topGainer.symbol} - showing strong performance (+${topGainer.change24h.toFixed(2)}%)`);
+      recommendations.push(
+        `Monitor ${topGainer.symbol} - showing strong performance (+${topGainer.change24h.toFixed(2)}%)`,
+      );
     }
 
     return recommendations;
@@ -563,7 +571,7 @@ export class CryptoAgentOrchestrator {
    * Shutdown orchestration system
    */
   async shutdown(): Promise<void> {
-    console.log('🛑 Shutting down Crypto Agent Orchestration System...');
+    console.log("🛑 Shutting down Crypto Agent Orchestration System...");
 
     try {
       // Shutdown all agents
@@ -575,10 +583,9 @@ export class CryptoAgentOrchestrator {
       // Stop coordinator
       await this.coordinator.stop();
 
-      console.log('✅ Crypto Agent Orchestration System shutdown completed');
-
+      console.log("✅ Crypto Agent Orchestration System shutdown completed");
     } catch (error) {
-      console.error('❌ Error during shutdown:', error);
+      console.error("❌ Error during shutdown:", error);
       throw error;
     }
   }
@@ -594,7 +601,7 @@ export class CryptoAgentOrchestrator {
     return {
       agents: Array.from(this.agents.entries()).map(([id, agent]) => ({
         id,
-        status: 'running', // In real implementation, get from agent
+        status: "running", // In real implementation, get from agent
         specialization: agent.config.specialization,
       })),
       coordinator: {
@@ -613,11 +620,11 @@ export class CryptoAgentOrchestrator {
  * Example usage of the complete orchestration system
  */
 export async function runCryptoOrchestrationExample(): Promise<void> {
-  console.log('🚀 Running Complete Crypto Agent Orchestration Example');
-  console.log('=' .repeat(60));
+  console.log("🚀 Running Complete Crypto Agent Orchestration Example");
+  console.log("=".repeat(60));
 
   const orchestrator = new CryptoAgentOrchestrator({
-    environment: 'free',
+    environment: "free",
     rateLimit: 10,
     debug: true,
     agents: {
@@ -633,33 +640,34 @@ export async function runCryptoOrchestrationExample(): Promise<void> {
     await orchestrator.initialize();
 
     // Execute comprehensive market analysis
-    console.log('\n📊 Executing Market Analysis Workflow...');
-    const analysisResult = await orchestrator.executeMarketAnalysisWorkflow(['BTC', 'ETH', 'BNB']);
-    
-    console.log('\n📋 Analysis Results:');
+    console.log("\n📊 Executing Market Analysis Workflow...");
+    const analysisResult = await orchestrator.executeMarketAnalysisWorkflow(["BTC", "ETH", "BNB"]);
+
+    console.log("\n📋 Analysis Results:");
     console.log(`   Status: ${analysisResult.status}`);
     console.log(`   Duration: ${analysisResult.duration}ms`);
-    console.log(`   Tasks: ${analysisResult.metrics.successfulTasks}/${analysisResult.metrics.totalTasks}`);
+    console.log(
+      `   Tasks: ${analysisResult.metrics.successfulTasks}/${analysisResult.metrics.totalTasks}`,
+    );
     console.log(`   Recommendations: ${analysisResult.results.recommendations?.length || 0}`);
 
     // Execute real-time monitoring (for 30 seconds)
-    console.log('\n📡 Executing Real-time Monitoring Workflow...');
-    await orchestrator.executeRealTimeMonitoringWorkflow(['BTC', 'ETH'], 30000);
+    console.log("\n📡 Executing Real-time Monitoring Workflow...");
+    await orchestrator.executeRealTimeMonitoringWorkflow(["BTC", "ETH"], 30000);
 
     // Show final status
-    console.log('\n📊 Final System Status:');
+    console.log("\n📊 Final System Status:");
     const status = orchestrator.getStatus();
     console.log(`   Active Agents: ${status.agents.length}`);
-    console.log(`   Coordinator: ${status.coordinator.running ? 'Running' : 'Stopped'}`);
-
+    console.log(`   Coordinator: ${status.coordinator.running ? "Running" : "Stopped"}`);
   } catch (error) {
-    console.error('❌ Orchestration example failed:', error);
+    console.error("❌ Orchestration example failed:", error);
   } finally {
     // Cleanup
     await orchestrator.shutdown();
   }
 
-  console.log('\n✅ Crypto Agent Orchestration Example Completed');
+  console.log("\n✅ Crypto Agent Orchestration Example Completed");
 }
 
 // Run example if executed directly
@@ -667,7 +675,7 @@ if (require.main === module) {
   runCryptoOrchestrationExample()
     .then(() => process.exit(0))
     .catch((error) => {
-      console.error('Example failed:', error);
+      console.error("Example failed:", error);
       process.exit(1);
     });
 }

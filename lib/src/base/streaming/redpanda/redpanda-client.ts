@@ -111,14 +111,16 @@ export class RedpandaClient {
     }
   }
 
-  async createTopics(configs: Array<{ topic: string; numPartitions: number; replicationFactor: number }>): Promise<void> {
+  async createTopics(
+    configs: Array<{ topic: string; numPartitions: number; replicationFactor: number }>,
+  ): Promise<void> {
     if (!this.admin) {
       throw new Error("Admin client not connected");
     }
 
     try {
       await this.admin.createTopics({
-        topics: configs.map(config => ({
+        topics: configs.map((config) => ({
           topic: config.topic,
           numPartitions: config.numPartitions,
           replicationFactor: config.replicationFactor,
@@ -227,7 +229,9 @@ export class RedpandaClient {
     }
   }
 
-  async sendMessages(messages: Array<{ topic: string; messages: Array<{ key: string; value: string }> }>): Promise<any[]> {
+  async sendMessages(
+    messages: Array<{ topic: string; messages: Array<{ key: string; value: string }> }>,
+  ): Promise<any[]> {
     if (!this.producer) {
       throw new Error("Producer not connected");
     }
@@ -237,7 +241,7 @@ export class RedpandaClient {
       for (const batch of messages) {
         const result = await this.producer.send({
           topic: batch.topic,
-          messages: batch.messages.map(msg => ({
+          messages: batch.messages.map((msg) => ({
             key: msg.key,
             value: msg.value,
           })),

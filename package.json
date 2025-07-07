@@ -11,10 +11,12 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "typecheck:file": "./lib/scripts/check-single-file.sh",
     "format": "biome check . --write",
     "lint": "biome lint .",
     "check": "bun run typecheck && bun run format && bun run test",
     "lib:typecheck": "tsc --noEmit --project lib/tsconfig.build.json",
+    "lib:typecheck:file": "cd lib && ./scripts/check-file.sh",
     "lib:format": "biome check lib/ --write",
     "lib:lint": "biome lint lib/",
     "lib:test": "vitest run lib/tests/**/*.test.ts",
@@ -52,9 +54,9 @@
     "bun": ">=1.2.0"
   },
   "dependencies": {
+    "@biomejs/biome": "^1.9.4",
     "@clickhouse/client": "^1.6.0",
-    "@modelcontextprotocol/sdk": "^1.0.0",
-    "@qicore/agent-lib": "workspace:../qicore-v4/typescript/agent/lib",
+    "@modelcontextprotocol/sdk": "^1.15.0",
     "axios": "^1.6.2",
     "drizzle-orm": "^0.29.0",
     "fp-ts": "^2.16.9",
@@ -72,8 +74,5 @@
     "@types/ws": "^8.5.12",
     "typescript": "^5.7.2",
     "vitest": "^3.2.4"
-  },
-  "workspaces": [
-    "../qicore-v4/typescript/agent/lib"
-  ]
+  }
 }

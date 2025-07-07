@@ -1,16 +1,16 @@
 // lib/src/database/index.ts
-export { TimescaleClient } from './timescale-client';
+export { TimescaleClient } from "./timescale-client";
 
 // Drizzle ORM exports
-export { DrizzleClient } from './drizzle-client';
-export { CryptoFinancialDSL } from './crypto-dsl';
-export * from './schema';
+export { DrizzleClient } from "./drizzle-client";
+export { CryptoFinancialDSL } from "./crypto-dsl";
+export * from "./schema";
 
 // Re-export types for convenience
 export type {
   TimeSeriesQueryOptions,
   DrizzleClientConfig,
-} from './drizzle-client';
+} from "./drizzle-client";
 
 export type {
   PriceDataInput,
@@ -20,4 +20,4 @@ export type {
   OHLCVQuery,
   TechnicalAnalysis,
   MarketSummary,
-} from './crypto-dsl';
+} from "./crypto-dsl";

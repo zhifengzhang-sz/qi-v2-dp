@@ -384,3 +384,5 @@ temp/
 .tmp/
 .temp/
 
+temp-typecheck/
+!lib

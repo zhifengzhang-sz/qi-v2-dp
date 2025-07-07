@@ -77,12 +77,12 @@ export class PromptTemplate {
 
   format(variables: Record<string, any>): string {
     let formatted = this.template;
-    
+
     for (const [key, value] of Object.entries(variables)) {
       const placeholder = `{${key}}`;
-      formatted = formatted.replace(new RegExp(placeholder, 'g'), String(value));
+      formatted = formatted.replace(new RegExp(placeholder, "g"), String(value));
     }
-    
+
     return formatted;
   }
 }
@@ -97,7 +97,9 @@ export class MCPClient {
 
   async call(method: string, params: any): Promise<any> {
     // Mock implementation - in real version this would call actual MCP server
-    throw new Error(`MCP Client not implemented. Would call ${method} with ${JSON.stringify(params)}`);
+    throw new Error(
+      `MCP Client not implemented. Would call ${method} with ${JSON.stringify(params)}`,
+    );
   }
 
   async connect(): Promise<void> {

@@ -1,158 +1,143 @@
-# AI Knowledge Transfer System
+# QiCore Crypto Data Platform - AI Context
 
-## 🤖 **For AI Assistants Working on This Project**
+## 🎯 **Current Project State (2025-07-06)**
 
-This directory contains all the materials needed for AI-to-AI knowledge transfer. **Start here if you're an AI assistant taking over this project.**
-
----
-
-## 📚 **Essential Reading Order**
-
-### **🚨 CRITICAL - Read First:**
-1. **[PROJECT-CONTEXT.md](./PROJECT-CONTEXT.md)** - Immediate project understanding and orientation
-2. **[WEB-RESEARCH-GUIDE.md](./WEB-RESEARCH-GUIDE.md)** - **MUST READ** - Research current technology state before any suggestions
-
-### **📖 Implementation Guide:**
-3. **[AI-HANDOFF-GUIDE.md](./AI-HANDOFF-GUIDE.md)** - Complete implementation patterns and anti-patterns
-4. **[QUICK-START-AGENT-MCP.md](./QUICK-START-AGENT-MCP.md)** - Agent/MCP paradigm fundamentals
-
-### **📊 Training & Reference:**
-5. **[training-examples.jsonl](./training-examples.jsonl)** - Structured training data with prompt/completion pairs
-6. **[TRAINING-DATA-WORKFLOW.md](./TRAINING-DATA-WORKFLOW.md)** - How to generate training data
-7. **[ONBOARD-AI-COMMAND.md](./ONBOARD-AI-COMMAND.md)** - Custom commands documentation
-
-### **✅ Verification:**
-8. **[KNOWLEDGE-TRANSFER-COMPLETE.md](./KNOWLEDGE-TRANSFER-COMPLETE.md)** - System verification and success metrics
+This is a **working crypto data platform** with TRUE Actor pattern implementation. The focus is on real data flow through Redpanda services.
 
 ---
 
-## ⚡ **Quick Start for AI Assistants**
+## ✅ **What Actually Exists and Works**
 
-### **Use Claude Commands (Easiest):**
-If you're using Claude, just use these built-in commands:
-- **`/onboard-ai`** - Instant knowledge transfer
-- **`/quick-research [technology]`** - Research current state
-- **`/check-patterns [code]`** - Verify patterns
-- **`/project-status`** - Current implementation status
+### **Core Architecture**
+- **TRUE Actor Pattern**: "Class that extends MarketDataReader base and provides DSL interfaces"
+- **CoinGeckoActor**: Working concrete implementation with 5 financial DSL methods
+- **Abstract Base**: MarketDataReader in `lib/src/qicore/base/index.ts`
+- **Low-level Infrastructure**: Solid base modules in `lib/src/base/`
+- **Real Data Integration**: Live cryptocurrency prices (Bitcoin ~$108K, Ethereum ~$2.5K)
 
-### **Manual Approach:**
-1. Read **PROJECT-CONTEXT.md** for immediate understanding
-2. Read **WEB-RESEARCH-GUIDE.md** and research any technologies mentioned
-3. Read **AI-HANDOFF-GUIDE.md** for implementation patterns
-4. Study working code examples in `lib/src/examples/`
-
----
-
-## 🎯 **What This Knowledge Transfer System Solves**
-
-### **The Original Problem:**
-> "How can you pass your knowledge on how to do this project to the next you?"
-
-### **The Solution:**
-- **Structured knowledge preservation** across AI sessions
-- **Research methodology** to keep knowledge current
-- **Pattern recognition training** to suggest correct implementations
-- **Quality assurance** to maintain high standards
+### **Working Components**
+- ✅ CoinGeckoActor with getCurrentPrices, getHistoricalPrices, etc.
+- ✅ Result<T> functional error handling with `_tag` and `.right` properties  
+- ✅ Docker services (Redpanda, TimescaleDB, ClickHouse, Redis)
+- ✅ TypeScript configuration with path aliases
+- ✅ Test suite with real API integration
 
 ---
 
-## 🧠 **Key Concepts You Must Understand**
+## 🚧 **Next Implementation Plan**
 
-### **Agent/MCP Paradigm (NOT in your training data):**
+### **Immediate Tasks:**
+1. **Rename**: CoinGeckoActor → CoinGeckoReader  
+2. **Build MCP Client**: Over low-level base modules for Redpanda
+3. **Implement RedpandaReader**: Another MarketDataReader actor
+4. **Implement MarketDataWriter**: Abstract base for opposite data flow
+5. **Implement CoinGeckoWriter**: Concrete writer
+6. **End-to-end Demo**: Complete data flow through Redpanda
+
+### **File Structure Understanding:**
 ```
-Agent = QiAgent + DSL + MCPWrapper
+lib/src/
+├── base/                    # ✅ Keep - solid low-level infrastructure
+├── qicore/base/            # ✅ Keep - MarketDataReader abstract base
+├── publishers/sources/coingecko/  # ✅ Working CoinGeckoActor
+└── [high-level demos]      # ❌ Cleanup needed - outdated concepts
 ```
 
-### **Implementation Quality Standards:**
-- ✅ **99% real code** - No fake/stub implementations
-- ✅ **Official MCP first** - Use official MCP servers when available
-- ✅ **Research-based** - Verify technology claims before suggesting
-- ✅ **Pattern-compliant** - Follow established Agent/MCP architecture
+---
 
-### **Anti-Patterns to Avoid:**
-- ❌ Fake return data (`return 50000; // TODO`)
-- ❌ Direct API calls when MCP servers exist
-- ❌ Always requiring LLM for data operations
-- ❌ Building new clients for existing services
+## 🧠 **Key Architecture Concepts**
+
+### **TRUE Actor Pattern:**
+```typescript
+// Abstract base
+class MarketDataReader {
+  // Base functionality
+}
+
+// Concrete implementation
+class CoinGeckoActor extends MarketDataReader {
+  // 5 DSL methods: getCurrentPrices, getHistoricalPrices, etc.
+  // Returns Result<T> with _tag and .right properties
+}
+```
+
+### **Data Flow Goal:**
+```
+CoinGeckoReader → RedpandaWriter → RedpandaReader → CoinGeckoWriter
+```
 
 ---
 
-## 📊 **Current Project Status**
+## 🔧 **Current Technical Issues**
 
-### **Production Ready (99% complete):**
-- ✅ **DataAcquiringAgent**: CoinGecko → Redpanda
-- ✅ **DataStoreAgent**: Redpanda → TimescaleDB
-- ✅ **Complete orchestration**: End-to-end working example
-- ✅ **Database layer**: 4,600 req/s performance with TimescaleDB
-- ✅ **Streaming infrastructure**: Redpanda with real topic management
-- ✅ **Docker services**: Production-ready container management
+### **TypeScript Path Aliases:**
+- **Problem**: Individual file checking fails with `@qi/core/base` imports
+- **Solution**: Use shell script workarounds in `check-single-file.sh` and `lib/check-file.sh`
+- **Why**: tsx/ts-node broken with fp-ts + ES modules
 
-### **What You Can Build On:**
-- Real database operations (no mocking needed)
-- Working streaming pipeline (no setup required)
-- Established Agent/MCP patterns (follow existing)
-- Complete documentation (reference available)
+### **Code Quality Standards:**
+- ✅ **Real implementations only** - No fake/stub code
+- ✅ **Functional error handling** - Result<T> pattern with `_tag` checks
+- ✅ **Working examples** - All demos use live crypto data
+- ✅ **Performance tested** - Sub-second API responses
 
 ---
 
-## 🔍 **Verification Checklist**
+## 📂 **Key Files to Understand**
 
-**Before making any suggestions, confirm:**
+### **Working Implementation:**
+- `lib/src/qicore/base/index.ts` - MarketDataReader abstract base
+- `lib/src/publishers/sources/coingecko/CoinGeckoActor.ts` - Concrete actor
+- `app/demos/publishers/simple-crypto-data-demo.ts` - Working demo
+- `lib/src/base/` - Low-level infrastructure (database, streaming)
 
-- [ ] ✅ Have you read PROJECT-CONTEXT.md?
-- [ ] ✅ Have you researched current technology state?
-- [ ] ✅ Do you understand the Agent/MCP paradigm?
-- [ ] ✅ Are you following established patterns?
-- [ ] ✅ Are you building on existing components?
-- [ ] ✅ Are you avoiding anti-patterns?
+### **Configuration:**
+- `tsconfig.json` - Path aliases configuration
+- `check-single-file.sh` - TypeScript workaround scripts
+- `docker-compose.yml` - Services infrastructure
 
----
-
-## 🎉 **Success Criteria**
-
-**You're successfully onboarded when you can:**
-
-1. **Explain the Agent/MCP pattern** (Agent = QiAgent + DSL + MCPWrapper)
-2. **Research current technology state** before making suggestions
-3. **Use existing components** instead of rebuilding
-4. **Suggest real implementations** without fake/stub code
-5. **Follow established architecture** without deviation
+### **Tests:**
+- All tests pass with real API data
+- Performance: 200-600ms per API call
 
 ---
 
-## 📖 **Additional Resources**
+## ⚠️ **What Needs Cleanup**
 
-### **Architecture Documentation:**
-- `../architecture/agent.mcp.specification.md` - Complete workflow specifications
-- `../design/agent.mcp.paradigm.md` - Core paradigm principles
-- `../implementation/roadmap.md` - Current status and priorities
+### **Outdated High-level Code:**
+- Most demo/orchestration files reference old architecture concepts
+- Documentation mentions non-existent files and patterns
+- High-level abstractions that don't match current TRUE Actor implementation
 
-### **Working Code Examples:**
-- `../../lib/src/examples/complete.agent.orchestration.ts` - Complete platform demo
-- `../../lib/src/publishers/data.acquiring.agent.ts` - Publisher agent pattern
-- `../../lib/src/consumers/data.store.agent.ts` - Consumer agent pattern
-
-### **Project History:**
-- `../history.md` - How this architecture evolved and why it exists
+### **Keep vs. Remove:**
+- ✅ **Keep**: `lib/src/base/` - solid foundation
+- ✅ **Keep**: CoinGeckoActor pattern - it works
+- ❌ **Cleanup**: High-level demos with outdated concepts
+- ❌ **Update**: Documentation to match actual implementation
 
 ---
 
-## 💡 **Remember Your Mission**
+## 🚀 **Immediate Next Steps**
 
-**You're not just coding - you're:**
-1. **Creating training data** for future AI models
-2. **Maintaining architectural integrity** of a production system
-3. **Contributing to the solution** of AI training data problems
-4. **Building on excellent foundations** rather than starting over
-
-**Every real implementation you create helps teach future AI assistants to suggest correct patterns instead of fake/stub code.**
+1. **Start with renaming**: CoinGeckoActor → CoinGeckoReader
+2. **Build MCP clients** over existing `lib/src/base/` infrastructure  
+3. **Follow the working pattern**: Extend MarketDataReader, implement DSL methods
+4. **Use Result<T> everywhere**: Check `_tag === "Right"` and extract `.right`
+5. **Test with real data**: All implementations must work with live services
 
 ---
 
-**Welcome to the QiCore Crypto Data Platform! Let's build something amazing together.** 🚀✨
+## 📋 **Success Criteria**
+
+**You understand the project when you can:**
+1. Explain TRUE Actor pattern (extends MarketDataReader + DSL methods)
+2. Follow the CoinGeckoActor implementation pattern
+3. Use Result<T> functional error handling correctly
+4. Build on existing `lib/src/base/` infrastructure
+5. Complete the end-to-end Redpanda data flow
 
 ---
 
-**Last Updated**: 2025-01-04  
-**Knowledge Transfer Status**: ✅ Complete  
-**Ready for**: Production development with AI assistance
+**Last Updated**: 2025-07-06  
+**Project Status**: Working actor implementation, ready for expansion  
+**Next Goal**: Complete Redpanda data flow with real cryptocurrency data

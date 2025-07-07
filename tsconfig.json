@@ -17,29 +17,24 @@
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
-    "baseUrl": ".",
+    "baseUrl": "./",
     "paths": {
-      "@/*": ["./lib/src/*"],
-      "@/agents/*": ["./lib/src/agents/*"],
-      "@/pipeline/*": ["./lib/src/pipeline/*"],
-      "@/streaming/*": ["./lib/src/streaming/*"],
-      "@/database/*": ["./lib/src/database/*"],
-      "@/config/*": ["./lib/src/config/*"],
-      "@/types/*": ["./lib/src/types/*"],
-      "@/utils/*": ["./lib/src/utils/*"],
-      "@qi/http": ["./lib/src/qihttp/index.ts"],
-      "@qi/mcp": ["@qicore/agent-lib/qimcp/client"]
+      "@/*": ["lib/src/*"],
+      "@/agents/*": ["lib/src/agents/*"],
+      "@/pipeline/*": ["lib/src/pipeline/*"],
+      "@/streaming/*": ["lib/src/streaming/*"],
+      "@/database/*": ["lib/src/database/*"],
+      "@/config/*": ["lib/src/config/*"],
+      "@/types/*": ["lib/src/types/*"],
+      "@/utils/*": ["lib/src/utils/*"],
+      "@qi/core/base": ["lib/src/qicore/base/index.ts"],
+      "@qi/core/*": ["lib/src/qicore/*"],
+      "@qi/agent": ["lib/src/qiagent"],
+      "@qi/mcp": ["lib/src/qimcp/client"],
+      "@qi/prompt": ["lib/src/qiprompt"],
+      "@qi/dp/abstract/*": ["lib/src/abstract/*"]
     }
   },
-  "include": [
-    "lib/src/**/*",
-    "tests/**/*",
-    "app/**/*",
-    "*.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "**/*.test.ts"
-  ]
+  "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts"]
 }

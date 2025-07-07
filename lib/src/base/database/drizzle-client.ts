@@ -2,24 +2,24 @@
 // Drizzle ORM client for crypto financial time-series data
 // High-performance low-level module with TimescaleDB integration
 
-import { drizzle } from 'drizzle-orm/postgres-js';
-import { migrate } from 'drizzle-orm/postgres-js/migrator';
-import postgres from 'postgres';
-import { sql, eq, and, gte, lte, desc, asc, inArray } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, inArray, lte, sql } from "drizzle-orm";
+import { drizzle } from "drizzle-orm/postgres-js";
+import { migrate } from "drizzle-orm/postgres-js/migrator";
+import postgres from "postgres";
 import {
-  schema,
   type CryptoPrice,
   type CryptoPriceInsert,
-  type OHLCVData,
-  type OHLCVDataInsert,
-  type MarketAnalytics,
-  type MarketAnalyticsInsert,
-  type Trade,
-  type TradeInsert,
   type Currency,
   type Exchange,
+  type MarketAnalytics,
+  type MarketAnalyticsInsert,
+  type OHLCVData,
+  type OHLCVDataInsert,
+  type Trade,
+  type TradeInsert,
   type TradingPair,
-} from './schema';
+  schema,
+} from "./schema";
 
 /**
  * Configuration for the Drizzle client
@@ -43,7 +43,7 @@ export interface TimeSeriesQueryOptions {
   timeRange?: { start: Date; end: Date };
   timeframe?: string;
   limit?: number;
-  orderBy?: 'asc' | 'desc';
+  orderBy?: "asc" | "desc";
   exchanges?: string[];
 }
 
@@ -128,10 +128,10 @@ export class DrizzleClient {
    */
   private async setupCompressionPolicies(): Promise<void> {
     const policies = [
-      { table: 'crypto_prices', interval: '7 days' },
-      { table: 'ohlcv_data', interval: '7 days' },
-      { table: 'trades', interval: '3 days' },
-      { table: 'market_analytics', interval: '3 days' },
+      { table: "crypto_prices", interval: "7 days" },
+      { table: "ohlcv_data", interval: "7 days" },
+      { table: "trades", interval: "3 days" },
+      { table: "market_analytics", interval: "3 days" },
     ];
 
     for (const policy of policies) {
@@ -147,10 +147,10 @@ export class DrizzleClient {
    */
   private async setupRetentionPolicies(): Promise<void> {
     const policies = [
-      { table: 'crypto_prices', retention: '2 years' },
-      { table: 'ohlcv_data', retention: '2 years' },
-      { table: 'trades', retention: '1 year' },
-      { table: 'market_analytics', retention: '1 year' },
+      { table: "crypto_prices", retention: "2 years" },
+      { table: "ohlcv_data", retention: "2 years" },
+      { table: "trades", retention: "1 year" },
+      { table: "market_analytics", retention: "1 year" },
     ];
 
     for (const policy of policies) {
@@ -208,22 +208,21 @@ export class DrizzleClient {
     if (options.timeRange) {
       conditions.push(
         gte(schema.cryptoPrices.time, options.timeRange.start),
-        lte(schema.cryptoPrices.time, options.timeRange.end)
+        lte(schema.cryptoPrices.time, options.timeRange.end),
       );
     }
 
     // Build the query step by step
     const baseQuery = this.db.select().from(schema.cryptoPrices);
-    
-    const withWhere = conditions.length > 0 
-      ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      : baseQuery;
-    
+
+    const withWhere =
+      conditions.length > 0
+        ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
+        : baseQuery;
+
     const withOrder = withWhere.orderBy(desc(schema.cryptoPrices.time));
-    
-    const finalQuery = options.limit 
-      ? withOrder.limit(options.limit)
-      : withOrder;
+
+    const finalQuery = options.limit ? withOrder.limit(options.limit) : withOrder;
 
     return await finalQuery;
   }
@@ -232,9 +231,7 @@ export class DrizzleClient {
    * Get distinct latest price for each coin (one per coin)
    */
   async getDistinctLatestPrices(coinIds?: string[]): Promise<CryptoPrice[]> {
-    const whereClause = coinIds?.length 
-      ? sql`WHERE coin_id = ANY(${coinIds})`
-      : sql``;
+    const whereClause = coinIds?.length ? sql`WHERE coin_id = ANY(${coinIds})` : sql``;
 
     const result = await this.db.execute(sql`
       SELECT DISTINCT ON (coin_id) *
@@ -277,7 +274,9 @@ export class DrizzleClient {
   /**
    * Get OHLCV data with time bucketing for aggregation
    */
-  async getOHLCVRange(options: TimeSeriesQueryOptions & { timeframe: string }): Promise<OHLCVData[]> {
+  async getOHLCVRange(
+    options: TimeSeriesQueryOptions & { timeframe: string },
+  ): Promise<OHLCVData[]> {
     const conditions = [eq(schema.ohlcvData.timeframe, options.timeframe)];
 
     // Build additional where conditions
@@ -292,21 +291,19 @@ export class DrizzleClient {
     if (options.timeRange) {
       conditions.push(
         gte(schema.ohlcvData.time, options.timeRange.start),
-        lte(schema.ohlcvData.time, options.timeRange.end)
+        lte(schema.ohlcvData.time, options.timeRange.end),
       );
     }
 
     // Build query step by step
     const baseQuery = this.db.select().from(schema.ohlcvData);
     const withWhere = baseQuery.where(and(...conditions));
-    
+
     // Order by time
-    const orderDirection = options.orderBy === 'asc' ? asc : desc;
+    const orderDirection = options.orderBy === "asc" ? asc : desc;
     const withOrder = withWhere.orderBy(orderDirection(schema.ohlcvData.time));
-    
-    const finalQuery = options.limit 
-      ? withOrder.limit(options.limit)
-      : withOrder;
+
+    const finalQuery = options.limit ? withOrder.limit(options.limit) : withOrder;
 
     return await finalQuery;
   }
@@ -317,7 +314,7 @@ export class DrizzleClient {
   async getTimeBucketedOHLCV(
     coinId: string,
     bucketInterval: string,
-    timeRange: { start: Date; end: Date }
+    timeRange: { start: Date; end: Date },
   ): Promise<any[]> {
     const result = await this.db.execute(sql`
       SELECT 
@@ -373,19 +370,17 @@ export class DrizzleClient {
    */
   async getMarketSummary(timeRange?: { start: Date; end: Date }): Promise<MarketAnalytics | null> {
     const baseQuery = this.db.select().from(schema.marketAnalytics);
-    
-    const withWhere = timeRange 
+
+    const withWhere = timeRange
       ? baseQuery.where(
           and(
             gte(schema.marketAnalytics.time, timeRange.start),
-            lte(schema.marketAnalytics.time, timeRange.end)
-          )
+            lte(schema.marketAnalytics.time, timeRange.end),
+          ),
         )
       : baseQuery;
-    
-    const finalQuery = withWhere
-      .orderBy(desc(schema.marketAnalytics.time))
-      .limit(1);
+
+    const finalQuery = withWhere.orderBy(desc(schema.marketAnalytics.time)).limit(1);
 
     const result = await finalQuery;
     return result[0] || null;
@@ -422,22 +417,21 @@ export class DrizzleClient {
     if (options.timeRange) {
       conditions.push(
         gte(schema.trades.time, options.timeRange.start),
-        lte(schema.trades.time, options.timeRange.end)
+        lte(schema.trades.time, options.timeRange.end),
       );
     }
 
     // Build query step by step
     const baseQuery = this.db.select().from(schema.trades);
-    
-    const withWhere = conditions.length > 0 
-      ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
-      : baseQuery;
-    
+
+    const withWhere =
+      conditions.length > 0
+        ? baseQuery.where(conditions.length === 1 ? conditions[0] : and(...conditions))
+        : baseQuery;
+
     const withOrder = withWhere.orderBy(desc(schema.trades.time));
-    
-    const finalQuery = options.limit 
-      ? withOrder.limit(options.limit)
-      : withOrder;
+
+    const finalQuery = options.limit ? withOrder.limit(options.limit) : withOrder;
 
     return await finalQuery;
   }
@@ -488,8 +482,8 @@ export class DrizzleClient {
    */
   async executeCustomQuery(sqlQuery: string): Promise<any[]> {
     // Security: Only allow SELECT queries
-    if (!sqlQuery.trim().toLowerCase().startsWith('select')) {
-      throw new Error('Only SELECT queries are allowed for custom SQL execution');
+    if (!sqlQuery.trim().toLowerCase().startsWith("select")) {
+      throw new Error("Only SELECT queries are allowed for custom SQL execution");
     }
 
     const result = await this.db.execute(sql.raw(sqlQuery));
