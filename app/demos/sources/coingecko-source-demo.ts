@@ -4,13 +4,14 @@
  * CoinGecko Source Demo
  * 
  * Demonstrates the CoinGecko Market Data Reader actor.
- * Shows both Actor (composition) and MCP Actor (inheritance) patterns.
+ * Shows the unified DSL architecture with direct MCP integration.
  */
 
 import { createCoinGeckoMarketDataReader } from "../../../lib/src/sources/coingecko";
+import { isSuccess, isFailure, getData, getError } from "../../../lib/src/qicore/base";
 
 console.log("🪙 CoinGecko Source Demo");
-console.log("=" * 50);
+console.log("=".repeat(50));
 
 async function demonstrateCoinGeckoSource() {
   console.log("\n📊 Creating CoinGecko Market Data Reader...");
@@ -26,10 +27,10 @@ async function demonstrateCoinGeckoSource() {
     console.log("\n🚀 Initializing CoinGecko reader...");
     const initResult = await coinGeckoReader.initialize();
     
-    if (initResult.success) {
+    if (isSuccess(initResult)) {
       console.log("✅ CoinGecko reader initialized successfully");
     } else {
-      console.log("❌ Initialization failed:", initResult.error);
+      console.log("❌ Initialization failed:", getError(initResult));
       return;
     }
 
@@ -39,10 +40,14 @@ async function demonstrateCoinGeckoSource() {
     console.log("\n1️⃣ Getting current Bitcoin price...");
     const priceResult = await coinGeckoReader.getCurrentPrice("bitcoin", "usd");
     
-    if (priceResult.success) {
-      console.log(`   💰 Bitcoin price: $${priceResult.data.toFixed(2)}`);
+    if (isSuccess(priceResult)) {
+      const data = getData(priceResult);
+      if (data !== null) {
+        console.log(`   💰 Bitcoin price: $${data.toFixed(2)}`);
+      }
     } else {
-      console.log(`   ❌ Price fetch failed: ${priceResult.error.message}`);
+      const error = getError(priceResult);
+      console.log(`   ❌ Price fetch failed: ${error?.message || 'Unknown error'}`);
     }
 
     // Test 2: Get multiple prices
@@ -52,48 +57,58 @@ async function demonstrateCoinGeckoSource() {
       { vsCurrency: "usd", includeMarketCap: true }
     );
     
-    if (pricesResult.success) {
-      console.log(`   📊 Retrieved ${pricesResult.data.length} cryptocurrency prices:`);
-      pricesResult.data.forEach((crypto) => {
-        console.log(`     💎 ${crypto.name} (${crypto.symbol.toUpperCase()}): $${crypto.usdPrice.toFixed(2)}`);
-        if (crypto.marketCap) {
-          console.log(`       📈 Market Cap: $${(crypto.marketCap / 1e9).toFixed(2)}B`);
-        }
-      });
+    if (isSuccess(pricesResult)) {
+      const data = getData(pricesResult);
+      if (data !== null) {
+        console.log(`   📊 Retrieved ${data.length} cryptocurrency prices:`);
+        data.forEach((crypto) => {
+          console.log(`     💎 ${crypto.name} (${crypto.symbol.toUpperCase()}): $${crypto.usdPrice.toFixed(2)}`);
+          if (crypto.marketCap) {
+            console.log(`       📈 Market Cap: $${(crypto.marketCap / 1e9).toFixed(2)}B`);
+          }
+        });
+      }
     } else {
-      console.log(`   ❌ Prices fetch failed: ${pricesResult.error.message}`);
+      const error = getError(pricesResult);
+      console.log(`   ❌ Prices fetch failed: ${error?.message || 'Unknown error'}`);
     }
 
     // Test 3: Get OHLCV data
     console.log("\n3️⃣ Getting Bitcoin OHLCV data...");
     const ohlcvResult = await coinGeckoReader.getCurrentOHLCV("bitcoin");
     
-    if (ohlcvResult.success) {
-      const ohlcv = ohlcvResult.data;
+    if (isSuccess(ohlcvResult)) {
+      const ohlcv = getData(ohlcvResult);
+      if (ohlcv !== null) {
       console.log(`   📊 Bitcoin OHLCV:`);
       console.log(`     🔓 Open: $${ohlcv.open.toFixed(2)}`);
       console.log(`     🔺 High: $${ohlcv.high.toFixed(2)}`);
       console.log(`     🔻 Low: $${ohlcv.low.toFixed(2)}`);
       console.log(`     🔒 Close: $${ohlcv.close.toFixed(2)}`);
       console.log(`     📦 Volume: ${ohlcv.volume.toFixed(0)}`);
+      }
     } else {
-      console.log(`   ❌ OHLCV fetch failed: ${ohlcvResult.error.message}`);
+      const error = getError(ohlcvResult);
+      console.log(`   ❌ OHLCV fetch failed: ${error?.message || 'Unknown error'}`);
     }
 
     // Test 4: Get market analytics
     console.log("\n4️⃣ Getting market analytics...");
     const analyticsResult = await coinGeckoReader.getMarketAnalytics();
     
-    if (analyticsResult.success) {
-      const analytics = analyticsResult.data;
+    if (isSuccess(analyticsResult)) {
+      const analytics = getData(analyticsResult);
+      if (analytics !== null) {
       console.log(`   🌍 Global Market Analytics:`);
       console.log(`     💰 Total Market Cap: $${(analytics.totalMarketCap / 1e12).toFixed(2)}T`);
       console.log(`     📊 Total Volume (24h): $${(analytics.totalVolume / 1e9).toFixed(2)}B`);
       console.log(`     ₿ Bitcoin Dominance: ${analytics.btcDominance.toFixed(1)}%`);
       console.log(`     ⟠ Ethereum Dominance: ${analytics.ethDominance.toFixed(1)}%`);
       console.log(`     🪙 Active Cryptocurrencies: ${analytics.activeCryptocurrencies}`);
+      }
     } else {
-      console.log(`   ❌ Analytics fetch failed: ${analyticsResult.error.message}`);
+      const error = getError(analyticsResult);
+      console.log(`   ❌ Analytics fetch failed: ${error?.message || 'Unknown error'}`);
     }
 
     // Test 5: Actor status
@@ -112,10 +127,11 @@ async function demonstrateCoinGeckoSource() {
     console.log("\n🧹 Cleaning up...");
     const cleanupResult = await coinGeckoReader.cleanup();
     
-    if (cleanupResult.success) {
+    if (isSuccess(cleanupResult)) {
       console.log("✅ Cleanup completed successfully");
     } else {
-      console.log("❌ Cleanup failed:", cleanupResult.error);
+      const error = getError(cleanupResult);
+      console.log("❌ Cleanup failed:", error);
     }
   }
 

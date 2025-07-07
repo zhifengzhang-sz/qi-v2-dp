@@ -15,7 +15,7 @@ import { createRedpandaMarketDataReader } from "../../lib/src/sources/redpanda";
 import { createTimescaleMarketDataWriter } from "../../lib/src/targets/timescale";
 
 console.log("🌊 End-to-End Data Pipeline Demo");
-console.log("=" * 60);
+console.log("=".repeat(60));
 console.log("📊 Pipeline: CoinGecko → Redpanda → TimescaleDB");
 console.log("🔄 Real-time cryptocurrency data processing");
 
@@ -27,7 +27,7 @@ async function demonstrateEndToEndPipeline() {
     name: "pipeline-coingecko-source",
     debug: false,
     useRemoteServer: true,
-    environment: "free"
+    timeout: 30000
   });
 
   const redpandaTarget = createRedpandaMarketDataWriter({
@@ -102,7 +102,7 @@ async function demonstrateEndToEndPipeline() {
     
     const cryptoIds = ["bitcoin", "ethereum", "cardano", "polkadot", "chainlink"];
     const pricesResult = await coinGeckoSource.getCurrentPrices(cryptoIds, {
-      vsCurrency: "usd",
+      vsCurrencies: ["usd"],
       includeMarketCap: true,
       includeVolume: true,
       includeChange: true

@@ -97,6 +97,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
 
           // Add MCP client to BaseReader's client management  
           this.addClient("coingecko-mcp", this.mcpClient, {
+            name: "coingecko-mcp",
             type: "data-source"
           });
           
@@ -163,6 +164,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   // =============================================================================
 
   protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     return this.mcpClient.callTool({
       name: "get_coins_markets",
       arguments: { ids: coinId, vs_currency: vsCurrency, per_page: 1 },
@@ -173,6 +177,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     coinIds: string[],
     options?: CurrentPricesOptions,
   ): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     return this.mcpClient.callTool({
       name: "get_coins_markets",
       arguments: {
@@ -189,6 +196,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     coinId: string,
     interval: "hourly" | "daily",
   ): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     return this.mcpClient.callTool({
       name: "get_range_coins_ohlc",
       arguments: {
@@ -206,6 +216,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     count: number,
     interval: "hourly" | "daily",
   ): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     const { startTime, endTime } = this.calculateOHLCVTimeRange(count, interval);
     return this.mcpClient.callTool({
       name: "get_range_coins_ohlc",
@@ -224,6 +237,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     dateStart: Date,
     dateEnd: Date,
   ): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     const result = await this.mcpClient.callTool({
       name: "get_range_coins_market_chart",
       arguments: {
@@ -240,6 +256,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   }
 
   protected async getOHLCVByDateRangePlugin(query: DateRangeOHLCVQuery): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     return this.mcpClient.callTool({
       name: "get_range_coins_ohlc",
       arguments: {
@@ -253,6 +272,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   }
 
   protected async getAvailableTickersPlugin(limit: number): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     const result = await this.mcpClient.callTool({
       name: "get_coins_list",
       arguments: { include_platform: false },
@@ -266,6 +288,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   }
 
   protected async getLevel1DataPlugin(query: Level1Query): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     // CoinGecko doesn't provide real Level1 data, so we get current price and approximate
     return this.mcpClient.callTool({
       name: "get_coins_markets",
@@ -274,6 +299,9 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   }
 
   protected async getMarketAnalyticsPlugin(): Promise<any> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
     return this.mcpClient.callTool({
       name: "get_global",
       arguments: {},
@@ -451,27 +479,11 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       isInitialized: this.isInitialized,
       mcpClientInitialized: this.mcpClientInitialized,
       hasMCPClient: !!this.mcpClient,
-      fallbackEnabled: this.config.fallbackToAPI,
       lastActivity: this.lastActivity,
       totalQueries: this.totalQueries,
       errorCount: this.errorCount,
       dataSource: this.mcpClientInitialized ? "mcp+api" : "api-only",
     };
-  }
-
-  // =============================================================================
-  // UTILITY METHODS
-  // =============================================================================
-
-  private extractMCPData<T>(result: any): T {
-    if (result?.content?.[0]?.text) {
-      try {
-        return JSON.parse(result.content[0].text);
-      } catch (error) {
-        throw new Error(`Failed to parse MCP response: ${error}`);
-      }
-    }
-    return result?.data || result;
   }
 }
 

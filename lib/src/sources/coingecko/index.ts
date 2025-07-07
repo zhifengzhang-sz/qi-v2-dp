@@ -33,12 +33,8 @@ export type {
   CurrentPricesOptions,
 } from "../../abstract/dsl";
 
-// MCP Actor Pattern (inheritance) - IS an MCP client
-export {
-  CoinGeckoMarketDataReaderWithMCP,
-  createCoinGeckoMarketDataReaderWithMCP,
-} from "./MarketDataReaderWithMCP";
-export type { CoinGeckoReaderConfig } from "./MarketDataReaderWithMCP";
+// Note: MCP integration is now handled directly in MarketDataReader
+// The unified architecture eliminates the need for separate MCP classes
 
 // =============================================================================
 // CONSTANTS

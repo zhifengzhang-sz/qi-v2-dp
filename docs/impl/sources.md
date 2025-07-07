@@ -15,8 +15,7 @@ Current sources:
 ```
 sources/
 ├── coingecko/              # CoinGecko API Source
-│   ├── MarketDataReader.ts       # Actor pattern (composition)
-│   ├── MarketDataReaderWithMCP.ts # MCP Actor pattern (inheritance)
+│   ├── MarketDataReader.ts       # Unified actor with direct MCP integration
 │   └── index.ts                  # Exports and utilities
 └── redpanda/               # Redpanda Streaming Source  
     ├── MarketDataReader.ts       # Stream consumer actor
@@ -32,22 +31,23 @@ Each source actor:
 3. **Transforms data**: Converts to unified DSL data types
 4. **Zero DSL code**: All DSL complexity handled by BaseReader
 
-### Actor Pattern Support
-Sources support both actor patterns:
-- **Actor Pattern (Composition)**: Can associate with ≥0 MCP clients
-- **MCP Actor Pattern (Inheritance)**: IS an MCP client directly
+### Unified Architecture
+Sources use a unified architecture that combines the best of both patterns:
+- **Direct MCP Integration**: MCP clients are created and managed directly within actors
+- **Flexible Client Management**: BaseReader supports multiple client associations when needed
+- **Clean Plugin Pattern**: Actors implement only the technology-specific logic
 
 ## Core Components
 
 ### 1. CoinGecko Source (`coingecko/`)
 
-#### MarketDataReader.ts (Actor Pattern)
-CoinGecko market data reader using composition pattern with MCP client association.
+#### MarketDataReader.ts (Unified Implementation)
+CoinGecko market data reader with direct MCP integration and plugin architecture.
 
 **Key Features:**
-- **MCP Integration**: Associates with CoinGecko MCP server via composition
-- **API Fallback**: Falls back to direct API calls if MCP unavailable
-- **Rate Limiting**: Respects CoinGecko API rate limits
+- **Direct MCP Integration**: Creates and manages MCP client connection to external CoinGecko server
+- **Real Data Sources**: Connects to https://mcp.api.coingecko.com/sse for live cryptocurrency data
+- **Plugin Architecture**: Implements only CoinGecko-specific logic, inherits all DSL functionality
 - **Error Recovery**: Robust error handling with fallback strategies
 
 **Plugin Implementation:**
