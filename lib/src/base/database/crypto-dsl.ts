@@ -24,6 +24,7 @@ import type {
 export interface PriceDataInput {
   coinId: string;
   symbol: string;
+  name?: string;
   usdPrice?: number;
   btcPrice?: number;
   ethPrice?: number;
@@ -33,6 +34,7 @@ export interface PriceDataInput {
   change7d?: number;
   lastUpdated?: Date;
   exchange?: string;
+  attribution?: string;
 }
 
 /**
@@ -48,8 +50,8 @@ export interface OHLCVInput {
   low: number;
   close: number;
   volume: number;
-  trades?: number;
   exchange?: string;
+  attribution?: string;
 }
 
 /**
@@ -64,8 +66,11 @@ export interface MarketAnalyticsInput {
   defiMarketCap?: number;
   nftVolume?: number;
   activeCryptocurrencies?: number;
+  markets?: number;
+  marketCapChange24h?: number;
   activeExchanges?: number;
   fearGreedIndex?: number;
+  attribution?: string;
 }
 
 /**
@@ -159,6 +164,7 @@ export class CryptoFinancialDSL {
       time: new Date(),
       coinId: price.coinId,
       symbol: price.symbol.toUpperCase(),
+      name: price.name,
       usdPrice: price.usdPrice?.toString(),
       btcPrice: price.btcPrice?.toString(),
       ethPrice: price.ethPrice?.toString(),
@@ -166,8 +172,9 @@ export class CryptoFinancialDSL {
       volume24h: price.volume24h?.toString(),
       change24h: price.change24h?.toString(),
       change7d: price.change7d?.toString(),
-      lastUpdated: price.lastUpdated,
+      lastUpdated: price.lastUpdated || new Date(),
       source: "api", // Default source
+      attribution: price.attribution || "QiCore Crypto DSL",
     }));
 
     await this.client.insertCryptoPrices(transformedPrices);
@@ -230,8 +237,8 @@ export class CryptoFinancialDSL {
       low: item.low.toString(),
       close: item.close.toString(),
       volume: item.volume.toString(),
-      trades: item.trades,
       source: "api",
+      attribution: item.attribution || "QiCore Crypto DSL",
     }));
 
     await this.client.insertOHLCVData(transformedData);
@@ -285,12 +292,11 @@ export class CryptoFinancialDSL {
       totalVolume: analytics.totalVolume?.toString(),
       btcDominance: analytics.btcDominance?.toString(),
       ethDominance: analytics.ethDominance?.toString(),
-      defiMarketCap: analytics.defiMarketCap?.toString(),
-      nftVolume: analytics.nftVolume?.toString(),
       activeCryptocurrencies: analytics.activeCryptocurrencies,
-      activeExchanges: analytics.activeExchanges,
-      fearGreedIndex: analytics.fearGreedIndex,
+      markets: analytics.markets,
+      marketCapChange24h: analytics.marketCapChange24h?.toString(),
       source: "api",
+      attribution: analytics.attribution || "QiCore Crypto DSL",
     };
 
     await this.client.insertMarketAnalytics(transformedAnalytics);
@@ -328,7 +334,7 @@ export class CryptoFinancialDSL {
       activeCoins: analytics.activeCryptocurrencies || 0,
       topGainers: sortedByChange.slice(0, 10),
       topLosers: sortedByChange.slice(-10).reverse(),
-      fearGreedIndex: analytics.fearGreedIndex || undefined,
+      fearGreedIndex: undefined, // Not available in DSL - would need separate data source
     };
   }
 

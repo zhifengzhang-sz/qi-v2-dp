@@ -56,33 +56,11 @@ services:
       - "5432:5432"
     volumes:
       - timescaledb_data:/var/lib/postgresql/data
-      - ./database/init-timescale.sql:/docker-entrypoint-initdb.d/01-init-timescale.sql
+      - ./database/init-timescale-generated.sql:/docker-entrypoint-initdb.d/01-init-timescale.sql
     networks:
       - qicore-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres -d cryptodb"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ClickHouse (Analytics database for historical analysis)
-  clickhouse:
-    image: clickhouse/clickhouse-server:latest
-    container_name: qicore-clickhouse
-    environment:
-      CLICKHOUSE_DB: crypto_analytics
-      CLICKHOUSE_USER: default
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
-    ports:
-      - "8123:8123"   # HTTP interface
-      - "9000:9000"   # Native interface
-    volumes:
-      - clickhouse_data:/var/lib/clickhouse
-      - ./database/init-clickhouse.sql:/docker-entrypoint-initdb.d/01-init-clickhouse.sql
-    networks:
-      - qicore-network
-    healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8123/ping"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -125,7 +103,6 @@ services:
 volumes:
   redpanda_data:
   timescaledb_data:
-  clickhouse_data:
   redis_data:
 
 networks:

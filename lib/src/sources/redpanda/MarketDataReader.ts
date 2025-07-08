@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 /**
- * Redpanda Market Data Reader - Clean Plugin Implementation
+ * Redpanda Market Data Reader - Clean Handler Implementation
  *
  * This Reader:
  * - Extends BaseReader for unified DSL foundation
- * - Implements only the plugin functions for Redpanda-specific logic
+ * - Implements only the handler functions for Redpanda-specific logic
  * - BaseReader handles all DSL interface + workflow complexity
  * - Reads from Redpanda topics using real RedpandaClient
  */
@@ -44,7 +44,7 @@ export interface RedpandaReaderConfig {
 }
 
 // =============================================================================
-// REDPANDA MARKET DATA READER - CLEAN PLUGIN IMPLEMENTATION
+// REDPANDA MARKET DATA READER - CLEAN HANDLER IMPLEMENTATION
 // =============================================================================
 
 export class RedpandaMarketDataReader extends BaseReader {
@@ -109,6 +109,19 @@ export class RedpandaMarketDataReader extends BaseReader {
       // Connect to Redpanda using real client
       await this.redpandaClient.connect();
       this.isConnected = true;
+
+      // Register client with BaseReader's client management
+      this.addClient("redpanda-kafka", this.redpandaClient, {
+        name: "redpanda-kafka",
+        type: "data-source",
+      });
+
+      // Mark client as connected
+      const clientAssoc = this.getClient("redpanda-kafka");
+      if (clientAssoc) {
+        clientAssoc.isConnected = true;
+      }
+
       this.isInitialized = true;
 
       if (this.config.debug) {
@@ -157,10 +170,10 @@ export class RedpandaMarketDataReader extends BaseReader {
   }
 
   // =============================================================================
-  // PLUGIN IMPLEMENTATIONS - REDPANDA-SPECIFIC DATA CONSUMPTION
+  // HANDLER IMPLEMENTATIONS - REDPANDA-SPECIFIC DATA CONSUMPTION
   // =============================================================================
 
-  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+  protected async getCurrentPriceHandler(coinId: string, vsCurrency: string): Promise<number> {
     // Read latest price messages for the coin from prices topic
     const topic = this.config.topics?.prices || "crypto-prices";
 
@@ -175,7 +188,7 @@ export class RedpandaMarketDataReader extends BaseReader {
             const data = this.parseMessage(message) as CryptoPriceData;
             if (data.coinId === coinId) {
               clearTimeout(timeout);
-              resolve(data);
+              resolve(data.usdPrice);
             }
           } catch (error) {
             // Skip invalid messages
@@ -185,10 +198,10 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getCurrentPricesPlugin(
+  protected async getCurrentPricesHandler(
     coinIds: string[],
     options?: CurrentPricesOptions,
-  ): Promise<any> {
+  ): Promise<CryptoPriceData[]> {
     const topic = this.config.topics?.prices || "crypto-prices";
     const results: CryptoPriceData[] = [];
     const foundCoins = new Set<string>();
@@ -219,10 +232,10 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getCurrentOHLCVPlugin(
+  protected async getCurrentOHLCVHandler(
     coinId: string,
     interval: "hourly" | "daily",
-  ): Promise<any> {
+  ): Promise<CryptoOHLCVData> {
     const topic = this.config.topics?.ohlcv || "crypto-ohlcv";
 
     return new Promise((resolve, reject) => {
@@ -246,33 +259,34 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getLatestOHLCVPlugin(
-    coinId: string,
-    count: number,
-    interval: "hourly" | "daily",
-  ): Promise<any> {
+  protected async getLatestOHLCVHandler(
+    coinIds: string[],
+    timeframe?: string,
+  ): Promise<CryptoOHLCVData[]> {
     const topic = this.config.topics?.ohlcv || "crypto-ohlcv";
     const results: CryptoOHLCVData[] = [];
+    const targetCount = 10; // Default count per coin
+    const targetItems = coinIds.length * targetCount;
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
-        resolve(results.slice(-count)); // Return latest count items
+        resolve(results.slice(-targetItems)); // Return latest items
       }, 15000);
 
       this.redpandaClient
         .consumeMessages([topic], this.config.groupId, async (message: ConsumerMessage) => {
           try {
             const data = this.parseMessage(message) as CryptoOHLCVData;
-            if (data.coinId === coinId) {
+            if (coinIds.includes(data.coinId)) {
               results.push(data);
               // Keep only latest items in memory
-              if (results.length > count * 2) {
-                results.splice(0, results.length - count);
+              if (results.length > targetItems * 2) {
+                results.splice(0, results.length - targetItems);
               }
 
-              if (results.length >= count) {
+              if (results.length >= targetItems) {
                 clearTimeout(timeout);
-                resolve(results.slice(-count));
+                resolve(results.slice(-targetItems));
               }
             }
           } catch (error) {
@@ -283,13 +297,17 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getPriceHistoryPlugin(
+  protected async getPriceHistoryHandler(
     coinId: string,
-    dateStart: Date,
-    dateEnd: Date,
-  ): Promise<any> {
+    days: number,
+    vsCurrency?: string,
+  ): Promise<CryptoPriceData[]> {
     const topic = this.config.topics?.prices || "crypto-prices";
-    const results: Array<{ date: Date; price: number }> = [];
+    const results: CryptoPriceData[] = [];
+
+    // Calculate date range from days
+    const dateEnd = new Date();
+    const dateStart = new Date(dateEnd.getTime() - days * 24 * 60 * 60 * 1000);
 
     return new Promise((resolve, reject) => {
       const timeout = setTimeout(() => {
@@ -304,8 +322,8 @@ export class RedpandaMarketDataReader extends BaseReader {
 
             if (data.coinId === coinId && messageTime >= dateStart && messageTime <= dateEnd) {
               results.push({
-                date: messageTime,
-                price: data.usdPrice,
+                ...data,
+                lastUpdated: messageTime,
               });
             }
           } catch (error) {
@@ -316,7 +334,9 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getOHLCVByDateRangePlugin(query: DateRangeOHLCVQuery): Promise<any> {
+  protected async getOHLCVByDateRangeHandler(
+    query: DateRangeOHLCVQuery,
+  ): Promise<CryptoOHLCVData[]> {
     const topic = this.config.topics?.ohlcv || "crypto-ohlcv";
     const results: CryptoOHLCVData[] = [];
 
@@ -346,7 +366,7 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getAvailableTickersPlugin(limit: number): Promise<any> {
+  protected async getAvailableTickersHandler(limit: number): Promise<CryptoPriceData[]> {
     const topic = this.config.topics?.prices || "crypto-prices";
     const tickers = new Set<CryptoPriceData>();
 
@@ -373,7 +393,7 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getLevel1DataPlugin(query: Level1Query): Promise<any> {
+  protected async getLevel1DataHandler(query: Level1Query): Promise<Level1Data> {
     const topic = this.config.topics?.level1 || "level1-data";
 
     return new Promise((resolve, reject) => {
@@ -397,7 +417,7 @@ export class RedpandaMarketDataReader extends BaseReader {
     });
   }
 
-  protected async getMarketAnalyticsPlugin(): Promise<any> {
+  protected async getMarketAnalyticsHandler(): Promise<CryptoMarketAnalytics> {
     const topic = this.config.topics?.analytics || "market-analytics";
 
     return new Promise((resolve, reject) => {

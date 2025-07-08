@@ -25,6 +25,7 @@ import type {
   CryptoOHLCVData,
   CryptoPriceData,
   Level1Data,
+  MarketDataWritingDSL,
   PublishOptions,
   PublishResult,
 } from "../dsl";
@@ -59,7 +60,7 @@ export type {
  * - Single client (MCP, Kafka, Database)
  * - Multiple clients (multi-destination publishing)
  */
-export abstract class BaseWriter {
+export abstract class BaseWriter implements MarketDataWritingDSL {
   protected clients: Map<string, ClientAssociation> = new Map();
   protected isInitialized = false;
   protected totalPublishes = 0;
@@ -132,7 +133,7 @@ export abstract class BaseWriter {
   abstract cleanup(): Promise<Result<void>>;
 
   // =============================================================================
-  // MARKET DATA PUBLISHING DSL - IMPLEMENTATION USING WORKFLOW + PLUGINS
+  // MARKET DATA PUBLISHING DSL - IMPLEMENTATION USING WORKFLOW + HANDLERS
   // =============================================================================
 
   /**
@@ -142,12 +143,7 @@ export abstract class BaseWriter {
     data: CryptoPriceData,
     options?: PublishOptions,
   ): Promise<Result<PublishResult>> {
-    return this.workflow(
-      () => this.publishPricePlugin(data, options),
-      (result) => this.transformPublishResult(result),
-      "PRICE_PUBLISH_ERROR",
-      (result) => this.validatePublishResult(result),
-    );
+    return this.workflow(() => this.publishPriceHandler(data, options), "PRICE_PUBLISH_ERROR");
   }
 
   /**
@@ -157,12 +153,7 @@ export abstract class BaseWriter {
     data: CryptoPriceData[],
     options?: BatchPublishOptions,
   ): Promise<Result<BatchPublishResult>> {
-    return this.workflow(
-      () => this.publishPricesPlugin(data, options),
-      (result) => this.transformBatchPublishResult(result),
-      "PRICES_PUBLISH_ERROR",
-      (result) => this.validateBatchPublishResult(result),
-    );
+    return this.workflow(() => this.publishPricesHandler(data, options), "PRICES_PUBLISH_ERROR");
   }
 
   /**
@@ -172,12 +163,7 @@ export abstract class BaseWriter {
     data: CryptoOHLCVData,
     options?: PublishOptions,
   ): Promise<Result<PublishResult>> {
-    return this.workflow(
-      () => this.publishOHLCVPlugin(data, options),
-      (result) => this.transformPublishResult(result),
-      "OHLCV_PUBLISH_ERROR",
-      (result) => this.validatePublishResult(result),
-    );
+    return this.workflow(() => this.publishOHLCVHandler(data, options), "OHLCV_PUBLISH_ERROR");
   }
 
   /**
@@ -188,10 +174,8 @@ export abstract class BaseWriter {
     options?: BatchPublishOptions,
   ): Promise<Result<BatchPublishResult>> {
     return this.workflow(
-      () => this.publishOHLCVBatchPlugin(data, options),
-      (result) => this.transformBatchPublishResult(result),
+      () => this.publishOHLCVBatchHandler(data, options),
       "OHLCV_BATCH_PUBLISH_ERROR",
-      (result) => this.validateBatchPublishResult(result),
     );
   }
 
@@ -203,10 +187,8 @@ export abstract class BaseWriter {
     options?: PublishOptions,
   ): Promise<Result<PublishResult>> {
     return this.workflow(
-      () => this.publishAnalyticsPlugin(data, options),
-      (result) => this.transformPublishResult(result),
+      () => this.publishAnalyticsHandler(data, options),
       "ANALYTICS_PUBLISH_ERROR",
-      (result) => this.validatePublishResult(result),
     );
   }
 
@@ -214,24 +196,14 @@ export abstract class BaseWriter {
    * DSL Function 4: Publish Level 1 data
    */
   async publishLevel1(data: Level1Data, options?: PublishOptions): Promise<Result<PublishResult>> {
-    return this.workflow(
-      () => this.publishLevel1Plugin(data, options),
-      (result) => this.transformPublishResult(result),
-      "LEVEL1_PUBLISH_ERROR",
-      (result) => this.validatePublishResult(result),
-    );
+    return this.workflow(() => this.publishLevel1Handler(data, options), "LEVEL1_PUBLISH_ERROR");
   }
 
   /**
    * DSL Function 5: Flush pending messages
    */
   async flush(timeoutMs?: number): Promise<Result<void>> {
-    return this.workflow(
-      () => this.flushPlugin(timeoutMs),
-      () => undefined,
-      "FLUSH_ERROR",
-      () => true,
-    );
+    return this.workflow(() => this.flushHandler(timeoutMs), "FLUSH_ERROR");
   }
 
   /**
@@ -239,10 +211,8 @@ export abstract class BaseWriter {
    */
   async createDestination(name: string, config?: Record<string, any>): Promise<Result<void>> {
     return this.workflow(
-      () => this.createDestinationPlugin(name, config),
-      () => undefined,
+      () => this.createDestinationHandler(name, config),
       "CREATE_DESTINATION_ERROR",
-      () => true,
     );
   }
 
@@ -257,74 +227,48 @@ export abstract class BaseWriter {
       errorRate: number;
     }>
   > {
-    return this.workflow(
-      () => this.getPublishingMetricsPlugin(),
-      (data) => this.transformPublishingMetrics(data),
-      "METRICS_FETCH_ERROR",
-      (data) => this.validateMetricsData(data),
-    );
+    return this.workflow(() => this.getPublishingMetricsHandler(), "METRICS_FETCH_ERROR");
   }
 
   // =============================================================================
-  // ABSTRACT PLUGIN METHODS - CONCRETE CLASSES MUST IMPLEMENT
+  // ABSTRACT HANDLER METHODS - CONCRETE CLASSES MUST IMPLEMENT
   // =============================================================================
 
-  protected abstract publishPricePlugin(
+  protected abstract publishPriceHandler(
     data: CryptoPriceData,
     options?: PublishOptions,
-  ): Promise<any>;
-  protected abstract publishPricesPlugin(
+  ): Promise<PublishResult>;
+  protected abstract publishPricesHandler(
     data: CryptoPriceData[],
     options?: BatchPublishOptions,
-  ): Promise<any>;
-  protected abstract publishOHLCVPlugin(
+  ): Promise<BatchPublishResult>;
+  protected abstract publishOHLCVHandler(
     data: CryptoOHLCVData,
     options?: PublishOptions,
-  ): Promise<any>;
-  protected abstract publishOHLCVBatchPlugin(
+  ): Promise<PublishResult>;
+  protected abstract publishOHLCVBatchHandler(
     data: CryptoOHLCVData[],
     options?: BatchPublishOptions,
-  ): Promise<any>;
-  protected abstract publishAnalyticsPlugin(
+  ): Promise<BatchPublishResult>;
+  protected abstract publishAnalyticsHandler(
     data: CryptoMarketAnalytics,
     options?: PublishOptions,
-  ): Promise<any>;
-  protected abstract publishLevel1Plugin(data: Level1Data, options?: PublishOptions): Promise<any>;
-  protected abstract flushPlugin(timeoutMs?: number): Promise<any>;
-  protected abstract createDestinationPlugin(
+  ): Promise<PublishResult>;
+  protected abstract publishLevel1Handler(
+    data: Level1Data,
+    options?: PublishOptions,
+  ): Promise<PublishResult>;
+  protected abstract flushHandler(timeoutMs?: number): Promise<void>;
+  protected abstract createDestinationHandler(
     name: string,
     config?: Record<string, any>,
-  ): Promise<any>;
-  protected abstract getPublishingMetricsPlugin(): Promise<any>;
-
-  // =============================================================================
-  // ABSTRACT TRANSFORM METHODS - CONCRETE CLASSES MUST IMPLEMENT
-  // =============================================================================
-
-  protected abstract transformPublishResult(data: any): PublishResult;
-  protected abstract transformBatchPublishResult(data: any): BatchPublishResult;
-  protected abstract transformPublishingMetrics(data: any): {
+  ): Promise<void>;
+  protected abstract getPublishingMetricsHandler(): Promise<{
     totalMessages: number;
     successRate: number;
     averageLatency: number;
     errorRate: number;
-  };
-
-  // =============================================================================
-  // ABSTRACT VALIDATION METHODS - CONCRETE CLASSES CAN OVERRIDE
-  // =============================================================================
-
-  protected validatePublishResult(data: any): boolean {
-    return data && typeof data === "object";
-  }
-
-  protected validateBatchPublishResult(data: any): boolean {
-    return data && typeof data === "object";
-  }
-
-  protected validateMetricsData(data: any): boolean {
-    return data && typeof data === "object";
-  }
+  }>;
 
   // =============================================================================
   // ACTOR STATUS - REQUIRED IMPLEMENTATION
@@ -337,13 +281,11 @@ export abstract class BaseWriter {
   // =============================================================================
 
   /**
-   * DSL workflow executor - captures repetitive pattern
+   * Simplified DSL workflow: Handler call → result
    */
   protected async workflow<TResult>(
-    pluginFn: () => Promise<any>,
-    transform: (data: any) => TResult,
+    handlerFn: () => Promise<TResult>,
     errorCode: string,
-    validator?: (data: any) => boolean,
   ): Promise<Result<TResult>> {
     try {
       this.updateActivity();
@@ -357,19 +299,7 @@ export abstract class BaseWriter {
         );
       }
 
-      const response = await pluginFn();
-      const data = this.extractData ? this.extractData(response) : response;
-
-      if (validator && !validator(data)) {
-        return failure(
-          createQiError("INVALID_DATA", "Data validation failed", "BUSINESS", {
-            errorCode,
-            data,
-          }),
-        );
-      }
-
-      const result = transform(data);
+      const result = await handlerFn();
       return success(result);
     } catch (error) {
       this.incrementErrors();
@@ -399,8 +329,6 @@ export abstract class BaseWriter {
     const anyConnected = this.getAllClients().find((assoc) => assoc.isConnected);
     return anyConnected?.client;
   }
-
-  protected extractData?(response: any): any;
 
   /**
    * Check if this is inheritance pattern (MCP Actor) vs composition pattern (Actor)

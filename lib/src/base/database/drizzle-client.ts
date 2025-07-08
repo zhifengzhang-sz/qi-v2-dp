@@ -88,39 +88,42 @@ export class DrizzleClient {
 
   /**
    * Create TimescaleDB hypertables for time-series tables
+   * Only creates hypertables for tables that exist in our DSL schema
    */
   private async createHypertables(): Promise<void> {
-    // Create hypertable for crypto_prices
-    await this.db.execute(sql`
-      SELECT create_hypertable('crypto_prices', 'time',
-        chunk_time_interval => INTERVAL '1 day',
-        if_not_exists => TRUE
-      );
-    `);
+    // Check which tables exist and only create hypertables for those
+    const tablesToCheck = [
+      { name: 'crypto_prices', interval: '1 day' },
+      { name: 'ohlcv_data', interval: '1 day' },
+      { name: 'market_analytics', interval: '1 hour' },
+      { name: 'level1_data', interval: '1 hour' }
+    ];
 
-    // Create hypertable for ohlcv_data
-    await this.db.execute(sql`
-      SELECT create_hypertable('ohlcv_data', 'time',
-        chunk_time_interval => INTERVAL '1 day', 
-        if_not_exists => TRUE
-      );
-    `);
+    for (const table of tablesToCheck) {
+      try {
+        // Check if table exists first
+        const tableExists = await this.db.execute(sql`
+          SELECT EXISTS (
+            SELECT FROM information_schema.tables 
+            WHERE table_schema = 'public' 
+            AND table_name = ${table.name}
+          );
+        `);
 
-    // Create hypertable for trades
-    await this.db.execute(sql`
-      SELECT create_hypertable('trades', 'time',
-        chunk_time_interval => INTERVAL '1 hour',
-        if_not_exists => TRUE
-      );
-    `);
-
-    // Create hypertable for market_analytics
-    await this.db.execute(sql`
-      SELECT create_hypertable('market_analytics', 'time',
-        chunk_time_interval => INTERVAL '1 hour',
-        if_not_exists => TRUE
-      );
-    `);
+        if (tableExists[0]?.exists) {
+          await this.db.execute(sql`
+            SELECT create_hypertable(${table.name}, 'time',
+              chunk_time_interval => INTERVAL ${table.interval},
+              if_not_exists => TRUE
+            );
+          `);
+        }
+      } catch (error: any) {
+        if (!error.message?.includes('already a hypertable')) {
+          console.warn(`⚠️ Could not create hypertable for ${table.name}:`, error.message);
+        }
+      }
+    }
   }
 
   /**
@@ -135,10 +138,16 @@ export class DrizzleClient {
     ];
 
     for (const policy of policies) {
-      await this.db.execute(sql`
-        SELECT add_compression_policy(${policy.table}, INTERVAL ${policy.interval})
-        ON CONFLICT (hypertable_id) DO NOTHING;
-      `);
+      try {
+        await this.db.execute(sql.raw(`
+          SELECT add_compression_policy('${policy.table}', INTERVAL '${policy.interval}');
+        `));
+      } catch (error: any) {
+        // Ignore if policy already exists
+        if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
+          console.warn(`Warning: Could not add compression policy for ${policy.table}:`, error.message);
+        }
+      }
     }
   }
 
@@ -154,10 +163,16 @@ export class DrizzleClient {
     ];
 
     for (const policy of policies) {
-      await this.db.execute(sql`
-        SELECT add_retention_policy(${policy.table}, INTERVAL ${policy.retention})
-        ON CONFLICT (hypertable_id) DO NOTHING;
-      `);
+      try {
+        await this.db.execute(sql.raw(`
+          SELECT add_retention_policy('${policy.table}', INTERVAL '${policy.retention}');
+        `));
+      } catch (error: any) {
+        // Ignore if policy already exists
+        if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
+          console.warn(`Warning: Could not add retention policy for ${policy.table}:`, error.message);
+        }
+      }
     }
   }
 
@@ -264,8 +279,6 @@ export class DrizzleClient {
           low: sql`excluded.low`,
           close: sql`excluded.close`,
           volume: sql`excluded.volume`,
-          trades: sql`excluded.trades`,
-          vwap: sql`excluded.vwap`,
           updatedAt: sql`NOW()`,
         },
       });
@@ -355,11 +368,9 @@ export class DrizzleClient {
           totalVolume: sql`excluded.total_volume`,
           btcDominance: sql`excluded.btc_dominance`,
           ethDominance: sql`excluded.eth_dominance`,
-          defiMarketCap: sql`excluded.defi_market_cap`,
-          nftVolume: sql`excluded.nft_volume`,
           activeCryptocurrencies: sql`excluded.active_cryptocurrencies`,
-          activeExchanges: sql`excluded.active_exchanges`,
-          fearGreedIndex: sql`excluded.fear_greed_index`,
+          markets: sql`excluded.markets`,
+          marketCapChange24h: sql`excluded.market_cap_change_24h`,
           updatedAt: sql`NOW()`,
         },
       });

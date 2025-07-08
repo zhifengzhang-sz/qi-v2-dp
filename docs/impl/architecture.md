@@ -1,51 +1,188 @@
-# Data Platform Actor System - Architecture
+# QiCore Crypto Data Platform - Architecture
 
 ## Overview
 
-The **Data Platform Actor System** is one of two core subprojects within the broader Data Platform project. This actor system implements a **2-layer architecture** designed for building scalable, type-safe cryptocurrency data processing actors. The system operates in parallel with the **Data Platform MCP Server** subproject, together forming the complete data platform infrastructure.
+The **QiCore Crypto Data Platform** implements a **DSL-driven 2-layer architecture** for scalable, type-safe cryptocurrency data processing. The core innovation is using **DSL types as single source of truth** that automatically generates all database schemas, topic configurations, and data mappings.
 
-### Project Relationship
+### Core Architectural Principle
 
 ```
-Data Platform Project (App-level focus)
-├── Data Platform Actor System (this project)
-│   └── 2-layer actor architecture
-└── Data Platform MCP Server (parallel project)
-    └── MCP server implementations
+DSL Schema (source of truth) → Auto-generates → Database + Topic schemas + Type mappings
 ```
 
-The actor system provides reusable data processing components, while the MCP server project exposes these capabilities through standardized interfaces.
+This eliminates manual schema synchronization and ensures DSL changes automatically propagate through the entire system.
+
+## DSL-Driven Schema Management Architecture
+
+### Schema Flow Diagram
+```
+┌─────────────────────────────────────────────────────────────────┐
+│ DSL Types (Single Source of Truth)                             │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────┐ │
+│ │ CryptoPriceData │ │ CryptoOHLCVData │ │ CryptoMarketAnalytics│ │
+│ │ - coinId        │ │ - open/high/low │ │ - totalMarketCap    │ │
+│ │ - usdPrice      │ │ - close/volume  │ │ - btcDominance      │ │
+│ │ - marketCap     │ │ - timeframe     │ │ - activeCryptos     │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                                    ↓
+                        Schema Generation Process
+                                    ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Auto-Generated Schemas                                          │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────┐ │
+│ │ TimescaleDB SQL │ │ Redpanda Topics │ │ JSON Schemas        │ │
+│ │ - Tables        │ │ - Configuration │ │ - Validation        │ │
+│ │ - Hypertables   │ │ - Partitions    │ │ - Serialization     │ │
+│ │ - Indexes       │ │ - Retention     │ │ - Type Safety       │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+                                    ↓
+                          Layer 2 Actor Usage
+                                    ↓
+┌─────────────────────────────────────────────────────────────────┐
+│ Technology-Specific Actors (Auto-Use Generated Schemas)        │
+│ ┌─────────────────┐ ┌─────────────────┐ ┌─────────────────────┐ │
+│ │ Sources         │ │ Targets         │ │ Infrastructure      │ │
+│ │ - CoinGecko MCP │ │ - TimescaleDB   │ │ - BaseReader        │ │
+│ │ - Redpanda Read │ │ - Redpanda Write│ │ - BaseWriter        │ │
+│ │ - Stream Decode │ │ - Schema Encode │ │ - DSL Workflows     │ │
+│ └─────────────────┘ └─────────────────┘ └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────────┘
+```
 
 ## 2-Layer Actor Architecture
 
-### ASCII Representation
+### Layer Overview
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Layer 2: DSL Layer (Complete)                          │
+│ Layer 2: Technology-Specific Actors                    │
 │ ┌──────────────┐ ┌─────────────┐ ┌─────────────────────┐ │
-│ │ Abstract DSL │ │ Sources     │ │ Targets             │ │
-│ │ - Interfaces │ │ - CoinGecko │ │ - TimescaleDB       │ │
-│ │ - Base Classes│ │ - Redpanda  │ │ - Redpanda          │ │
-│ │ - Data Types │ │ (Readers)   │ │ (Writers)           │ │
+│ │ Sources      │ │ Targets     │ │ Handler Pattern     │ │
+│ │ - CoinGecko  │ │ - TimescaleDB│ │ - Technology logic  │ │
+│ │ - Redpanda   │ │ - Redpanda  │ │ - Schema mapping    │ │
+│ │ (Readers)    │ │ (Writers)   │ │ - Data transforms   │ │
 │ └──────────────┘ └─────────────┘ └─────────────────────┘ │
 └─────────────────────────────────────────────────────────┘
                            ↑
                     Uses infrastructure from
                            ↓
 ┌─────────────────────────────────────────────────────────┐
-│ Layer 1: Base Infrastructure (Complete)                │
+│ Layer 1: Generic Infrastructure                        │
 │ ┌─────────────────┐ ┌─────────────────────────────────┐ │
-│ │ Database        │ │ Streaming                       │ │
-│ │ - TimescaleDB   │ │ - Redpanda/Kafka                │ │
-│ │ - Drizzle ORM   │ │ - Message Types                 │ │
-│ │ - Schemas       │ │ - Configuration                 │ │
+│ │ Database Clients│ │ Streaming Clients               │ │
+│ │ - DrizzleClient │ │ - RedpandaClient                │ │
+│ │ - Connection Mgmt│ │ - Message Handling              │ │
+│ │ - Generic Ops   │ │ - Generic Configuration         │ │
 │ └─────────────────┘ └─────────────────────────────────┘ │
 │ ┌─────────────────────────────────────────────────────┐ │
-│ │ Base Agent Framework                                │ │
+│ │ Base Actor Framework (Business-Agnostic)           │ │
+│ │ - BaseReader/BaseWriter (DSL + Workflow)           │ │
 │ │ - Lifecycle Management                              │ │
-│ │ - Error Handling (Result<T>)                       │ │
+│ │ - Result<T> Error Handling                         │ │
+│ │ - MCP Client Management                             │ │
 │ └─────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────┘
+
+## Schema Management System
+
+### DSL as Single Source of Truth
+
+The platform uses **DSL types** defined in `lib/src/abstract/dsl/MarketDataTypes.ts` as the authoritative schema definition. All database tables, Redpanda topics, and data transformations are automatically generated from these types.
+
+**Core DSL Types**:
+```typescript
+interface CryptoPriceData {
+  coinId: string;          // → TimescaleDB: coin_id VARCHAR(50)
+  symbol: string;          // → Redpanda: key partitioning
+  usdPrice: number;        // → TimescaleDB: usd_price NUMERIC(20,8)
+  marketCap?: number;      // → Optional fields handled automatically
+  lastUpdated: Date;       // → TimescaleDB: time TIMESTAMPTZ (hypertable key)
+  source: string;          // → Metadata for lineage tracking
+  attribution: string;     // → Required compliance field
+}
+```
+
+### Schema Generation Process
+
+**1. TimescaleDB Schema Generation** (`lib/src/generators/schema-generator.ts`):
+```typescript
+export function generateTimescaleSchema(): string {
+  // Automatically generates:
+  // - CREATE TABLE statements with proper types
+  // - TimescaleDB hypertable configuration  
+  // - Indexes optimized for time-series queries
+  // - Primary key constraints for data integrity
+  return sqlSchema;
+}
+```
+
+**Generated TimescaleDB Features**:
+- **Hypertables**: Automatic time-based partitioning for performance
+- **Type Mapping**: DSL `number` → SQL `NUMERIC(20,8)` for financial precision
+- **Constraints**: Composite primary keys for time-series optimization
+- **Indexes**: Time-series specific indexes for fast queries
+
+**2. Redpanda Topic Generation** (`lib/src/generators/redpanda-schema-generator.ts`):
+```typescript
+export function generateTopicMappings(): DSLToTopicMapping[] {
+  // Automatically generates:
+  // - Topic configurations with optimal partitioning
+  // - JSON Schema validation for message integrity
+  // - Serialization/deserialization functions
+  // - Key strategies for data distribution
+  return mappings;
+}
+```
+
+**Generated Redpanda Features**:
+- **Smart Partitioning**: Hash-based distribution for load balancing
+- **JSON Schema Validation**: Runtime type checking for message integrity
+- **Key Strategies**: Optimal message keys for ordering and deduplication
+- **Retention Policies**: Data lifecycle management per topic type
+
+### Schema Evolution Workflow
+
+**Standard Development Workflow**:
+```bash
+# 1. Modify DSL types (single source of truth)
+vim lib/src/abstract/dsl/MarketDataTypes.ts
+
+# 2. Regenerate all schemas automatically
+bun run scripts/generate-schema.ts
+
+# 3. Apply changes to running services
+cd services && docker-compose down && docker-compose up -d
+
+# 4. All actors automatically use updated schemas
+bun run app/demos/layer2/end-to-end-pipeline-demo.ts
+```
+
+**Benefits of DSL-Driven Approach**:
+- ✅ **Single Source of Truth**: No manual schema synchronization
+- ✅ **Type Safety**: Compile-time validation across entire system  
+- ✅ **Automatic Migration**: Schema changes propagate automatically
+- ✅ **Zero Duplication**: Same types drive database, streaming, and application logic
+- ✅ **Production Safety**: Generated schemas include constraints and optimizations
+
+### Schema Artifacts
+
+**File Structure**:
+```
+services/
+├── database/
+│   └── init-timescale-generated.sql    # Auto-generated TimescaleDB schema
+└── redpanda/
+    ├── topics.yml                      # Auto-generated topic configuration
+    ├── schemas.json                    # Auto-generated JSON Schema validation
+    └── generated-mappings.ts           # Auto-generated TypeScript serialization
+```
+
+**Integration Points**:
+- **Docker Compose**: Uses generated SQL for database initialization
+- **Layer 2 Actors**: Import generated mappings for type-safe operations
+- **Runtime Validation**: JSON Schema validates messages in Redpanda topics
+- **Development Tools**: TypeScript provides compile-time schema validation
 
 External Integration:
 ┌─────────────────────────────────────────────────────────┐

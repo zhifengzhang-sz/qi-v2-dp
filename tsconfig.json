@@ -29,10 +29,11 @@
       "@/utils/*": ["lib/src/utils/*"],
       "@qi/core/base": ["lib/src/qicore/base/index.ts"],
       "@qi/core/*": ["lib/src/qicore/*"],
-      "@qi/agent": ["lib/src/qiagent"],
       "@qi/mcp": ["lib/src/qimcp/client"],
-      "@qi/prompt": ["lib/src/qiprompt"],
-      "@qi/dp/abstract/*": ["lib/src/abstract/*"]
+      "@qi/dp/abstract/*": ["lib/src/abstract/*"],
+      "@qi/dp/base/*": ["lib/src/*"],
+      "@qi/dp/actor/source/*": ["lib/src/sources/*"],
+      "@qi/dp/actor/target/*": ["lib/src/targets/*"]
     }
   },
   "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],

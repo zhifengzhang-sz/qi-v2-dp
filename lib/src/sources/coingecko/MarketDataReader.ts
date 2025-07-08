@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 /**
- * CoinGecko Market Data Reader - Clean Plugin Implementation
+ * CoinGecko Market Data Reader - Clean Handler Implementation
  *
  * This Reader:
  * - Extends BaseReader for unified DSL foundation
- * - Implements only the plugin functions for CoinGecko-specific logic
+ * - Implements only the handler functions for CoinGecko-specific logic
  * - BaseReader handles all DSL interface + workflow complexity
  */
 
@@ -37,7 +37,7 @@ export interface CoinGeckoActorConfig {
 }
 
 // =============================================================================
-// COINGECKO MARKET DATA READER - CLEAN PLUGIN IMPLEMENTATION
+// COINGECKO MARKET DATA READER - CLEAN HANDLER IMPLEMENTATION
 // =============================================================================
 
 export class CoinGeckoMarketDataReader extends BaseReader {
@@ -55,7 +55,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       useRemoteServer: true,
       timeout: 30000,
       debug: false,
-      ...config
+      ...config,
     };
 
     // Create MCP client directly
@@ -66,7 +66,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       },
       {
         capabilities: {},
-      }
+      },
     );
   }
 
@@ -95,12 +95,12 @@ export class CoinGeckoMarketDataReader extends BaseReader {
           await this.mcpClient.connect(transport);
           this.mcpClientInitialized = true;
 
-          // Add MCP client to BaseReader's client management  
+          // Add MCP client to BaseReader's client management
           this.addClient("coingecko-mcp", this.mcpClient, {
             name: "coingecko-mcp",
-            type: "data-source"
+            type: "data-source",
           });
-          
+
           // Mark client as connected
           const clientAssoc = this.getClient("coingecko-mcp");
           if (clientAssoc) {
@@ -160,27 +160,29 @@ export class CoinGeckoMarketDataReader extends BaseReader {
   }
 
   // =============================================================================
-  // PLUGIN IMPLEMENTATIONS - COINGECKO-SPECIFIC API CALLS
+  // RESPONSE HANDLERS - COINGECKO API CALL + TRANSFORMATION IN ONE STEP
   // =============================================================================
 
-  protected async getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any> {
+  protected async getCurrentPriceHandler(coinId: string, vsCurrency: string): Promise<number> {
     if (!this.mcpClient) {
       throw new Error("MCP client not initialized");
     }
-    return this.mcpClient.callTool({
+    const result = await this.mcpClient.callTool({
       name: "get_coins_markets",
       arguments: { ids: coinId, vs_currency: vsCurrency, per_page: 1 },
     });
+    const data = this.extractMCPData(result) as Array<{ current_price: number }>;
+    return data[0].current_price;
   }
 
-  protected async getCurrentPricesPlugin(
+  protected async getCurrentPricesHandler(
     coinIds: string[],
     options?: CurrentPricesOptions,
-  ): Promise<any> {
+  ): Promise<CryptoPriceData[]> {
     if (!this.mcpClient) {
       throw new Error("MCP client not initialized");
     }
-    return this.mcpClient.callTool({
+    const result = await this.mcpClient.callTool({
       name: "get_coins_markets",
       arguments: {
         ids: coinIds.join(","),
@@ -190,138 +192,8 @@ export class CoinGeckoMarketDataReader extends BaseReader {
         per_page: 250,
       },
     });
-  }
-
-  protected async getCurrentOHLCVPlugin(
-    coinId: string,
-    interval: "hourly" | "daily",
-  ): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    return this.mcpClient.callTool({
-      name: "get_range_coins_ohlc",
-      arguments: {
-        id: coinId,
-        from: Math.floor((Date.now() - 86400000) / 1000),
-        to: Math.floor(Date.now() / 1000),
-        vs_currency: "usd",
-        interval: interval,
-      },
-    });
-  }
-
-  protected async getLatestOHLCVPlugin(
-    coinId: string,
-    count: number,
-    interval: "hourly" | "daily",
-  ): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    const { startTime, endTime } = this.calculateOHLCVTimeRange(count, interval);
-    return this.mcpClient.callTool({
-      name: "get_range_coins_ohlc",
-      arguments: {
-        id: coinId,
-        from: startTime,
-        to: endTime,
-        vs_currency: "usd",
-        interval: interval,
-      },
-    });
-  }
-
-  protected async getPriceHistoryPlugin(
-    coinId: string,
-    dateStart: Date,
-    dateEnd: Date,
-  ): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    const result = await this.mcpClient.callTool({
-      name: "get_range_coins_market_chart",
-      arguments: {
-        id: coinId,
-        from: Math.floor(dateStart.getTime() / 1000),
-        to: Math.floor(dateEnd.getTime() / 1000),
-        vs_currency: "usd",
-      },
-    });
-    const data = this.extractMCPData(result) as {
-      prices: Array<[number, number]>;
-    };
-    return data.prices;
-  }
-
-  protected async getOHLCVByDateRangePlugin(query: DateRangeOHLCVQuery): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    return this.mcpClient.callTool({
-      name: "get_range_coins_ohlc",
-      arguments: {
-        id: query.ticker,
-        from: Math.floor(query.dateStart.getTime() / 1000),
-        to: Math.floor(query.dateEnd.getTime() / 1000),
-        vs_currency: "usd",
-        interval: query.interval === "1d" ? "daily" : "hourly",
-      },
-    });
-  }
-
-  protected async getAvailableTickersPlugin(limit: number): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    const result = await this.mcpClient.callTool({
-      name: "get_coins_list",
-      arguments: { include_platform: false },
-    });
-    const data = this.extractMCPData(result) as Array<{
-      id: string;
-      symbol: string;
-      name: string;
-    }>;
-    return data.slice(0, limit);
-  }
-
-  protected async getLevel1DataPlugin(query: Level1Query): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    // CoinGecko doesn't provide real Level1 data, so we get current price and approximate
-    return this.mcpClient.callTool({
-      name: "get_coins_markets",
-      arguments: { ids: query.ticker, vs_currency: "usd", per_page: 1 },
-    });
-  }
-
-  protected async getMarketAnalyticsPlugin(): Promise<any> {
-    if (!this.mcpClient) {
-      throw new Error("MCP client not initialized");
-    }
-    return this.mcpClient.callTool({
-      name: "get_global",
-      arguments: {},
-    });
-  }
-
-  // =============================================================================
-  // TRANSFORM IMPLEMENTATIONS - COINGECKO-SPECIFIC DATA TRANSFORMATION
-  // =============================================================================
-
-  protected transformCurrentPrice(data: any): number {
-    const extracted = this.extractMCPData(data) as Array<{
-      current_price: number;
-    }>;
-    return extracted[0].current_price;
-  }
-
-  protected transformCurrentPrices(data: any): CryptoPriceData[] {
-    const extracted = this.extractMCPData(data) as Array<any>;
-    return extracted.map((coin) => ({
+    const data = this.extractMCPData(result) as Array<any>;
+    return data.map((coin) => ({
       coinId: coin.id,
       symbol: coin.symbol,
       name: coin.name,
@@ -338,9 +210,25 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     }));
   }
 
-  protected transformCurrentOHLCV(coinId: string, data: any): CryptoOHLCVData {
-    const extracted = this.extractMCPData(data) as Array<[number, number, number, number, number]>;
-    const latest = extracted[extracted.length - 1];
+  protected async getCurrentOHLCVHandler(
+    coinId: string,
+    interval: "hourly" | "daily",
+  ): Promise<CryptoOHLCVData> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+    const result = await this.mcpClient.callTool({
+      name: "get_range_coins_ohlc",
+      arguments: {
+        id: coinId,
+        from: Math.floor((Date.now() - 86400000) / 1000),
+        to: Math.floor(Date.now() / 1000),
+        vs_currency: "usd",
+        interval: interval,
+      },
+    });
+    const data = this.extractMCPData(result) as Array<[number, number, number, number, number]>;
+    const latest = data[data.length - 1];
     const [timestamp, open, high, low, close] = latest;
 
     return {
@@ -357,10 +245,107 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     };
   }
 
-  protected transformLatestOHLCV(coinId: string, data: any): CryptoOHLCVData[] {
-    const extracted = this.extractMCPData(data) as Array<[number, number, number, number, number]>;
-    return extracted.map(([timestamp, open, high, low, close]) => ({
+  protected async getLatestOHLCVHandler(
+    coinIds: string[],
+    timeframe?: string,
+  ): Promise<CryptoOHLCVData[]> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+
+    // Convert timeframe to interval and count
+    const count = 10; // Default
+    const interval = timeframe === "1h" ? "hourly" : "daily";
+
+    const results: CryptoOHLCVData[] = [];
+
+    // Fetch OHLCV data for each coin
+    for (const coinId of coinIds) {
+      const { startTime, endTime } = this.calculateOHLCVTimeRange(count, interval);
+      const result = await this.mcpClient.callTool({
+        name: "get_range_coins_ohlc",
+        arguments: {
+          id: coinId,
+          from: startTime,
+          to: endTime,
+          vs_currency: "usd",
+          interval: interval,
+        },
+      });
+      const data = this.extractMCPData(result) as Array<[number, number, number, number, number]>;
+      const ohlcvData = data.map(([timestamp, open, high, low, close]) => ({
+        coinId,
+        timestamp: new Date(timestamp),
+        open,
+        high,
+        low,
+        close,
+        volume: 0,
+        timeframe: timeframe || "daily",
+        source: "coingecko-mcp",
+        attribution: "Data provided by CoinGecko API via MCP",
+      }));
+      results.push(...ohlcvData);
+    }
+
+    return results;
+  }
+
+  protected async getPriceHistoryHandler(
+    coinId: string,
+    days: number,
+    vsCurrency?: string,
+  ): Promise<CryptoPriceData[]> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+
+    // Calculate date range from days
+    const dateEnd = new Date();
+    const dateStart = new Date(dateEnd.getTime() - days * 24 * 60 * 60 * 1000);
+
+    const result = await this.mcpClient.callTool({
+      name: "get_range_coins_market_chart",
+      arguments: {
+        id: coinId,
+        from: Math.floor(dateStart.getTime() / 1000),
+        to: Math.floor(dateEnd.getTime() / 1000),
+        vs_currency: vsCurrency || "usd",
+      },
+    });
+    const data = this.extractMCPData(result) as {
+      prices: Array<[number, number]>;
+    };
+    return data.prices.map(([timestamp, price]: [number, number]) => ({
       coinId,
+      symbol: coinId.toUpperCase(),
+      name: coinId,
+      usdPrice: price,
+      lastUpdated: new Date(timestamp),
+      source: "coingecko-mcp",
+      attribution: "Data provided by CoinGecko API via MCP",
+    }));
+  }
+
+  protected async getOHLCVByDateRangeHandler(
+    query: DateRangeOHLCVQuery,
+  ): Promise<CryptoOHLCVData[]> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+    const result = await this.mcpClient.callTool({
+      name: "get_range_coins_ohlc",
+      arguments: {
+        id: query.ticker,
+        from: Math.floor(query.dateStart.getTime() / 1000),
+        to: Math.floor(query.dateEnd.getTime() / 1000),
+        vs_currency: "usd",
+        interval: query.interval === "1d" ? "daily" : "hourly",
+      },
+    });
+    const data = this.extractMCPData(result) as Array<[number, number, number, number, number]>;
+    return data.map(([timestamp, open, high, low, close]) => ({
+      coinId: query.ticker,
       timestamp: new Date(timestamp),
       open,
       high,
@@ -373,31 +358,20 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     }));
   }
 
-  protected transformPriceHistory(data: any): Array<{ date: Date; price: number }> {
-    return data.map(([timestamp, price]: [number, number]) => ({
-      date: new Date(timestamp),
-      price,
-    }));
-  }
-
-  protected transformOHLCVByDateRange(ticker: string, data: any): CryptoOHLCVData[] {
-    const extracted = this.extractMCPData(data) as Array<[number, number, number, number, number]>;
-    return extracted.map(([timestamp, open, high, low, close]) => ({
-      coinId: ticker,
-      timestamp: new Date(timestamp),
-      open,
-      high,
-      low,
-      close,
-      volume: 0,
-      timeframe: "daily",
-      source: "coingecko-mcp",
-      attribution: "Data provided by CoinGecko API via MCP",
-    }));
-  }
-
-  protected transformAvailableTickers(data: any, limit: number): CryptoPriceData[] {
-    return data.map((coin: { id: string; symbol: string; name: string }) => ({
+  protected async getAvailableTickersHandler(limit: number): Promise<CryptoPriceData[]> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+    const result = await this.mcpClient.callTool({
+      name: "get_coins_list",
+      arguments: { include_platform: false },
+    });
+    const data = this.extractMCPData(result) as Array<{
+      id: string;
+      symbol: string;
+      name: string;
+    }>;
+    return data.slice(0, limit).map((coin) => ({
       coinId: coin.id,
       symbol: coin.symbol,
       name: coin.name,
@@ -408,11 +382,17 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     }));
   }
 
-  protected transformLevel1Data(query: Level1Query, data: any): Level1Data {
-    const extracted = this.extractMCPData(data) as Array<{
-      current_price: number;
-    }>;
-    const price = extracted[0].current_price;
+  protected async getLevel1DataHandler(query: Level1Query): Promise<Level1Data> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+    // CoinGecko doesn't provide real Level1 data, so we get current price and approximate
+    const result = await this.mcpClient.callTool({
+      name: "get_coins_markets",
+      arguments: { ids: query.ticker, vs_currency: "usd", per_page: 1 },
+    });
+    const data = this.extractMCPData(result) as Array<{ current_price: number }>;
+    const price = data[0].current_price;
     const spread = price * 0.001;
 
     return {
@@ -428,8 +408,15 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     };
   }
 
-  protected transformMarketAnalytics(data: any): CryptoMarketAnalytics {
-    const globalData = this.extractMCPData(data) as any;
+  protected async getMarketAnalyticsHandler(): Promise<CryptoMarketAnalytics> {
+    if (!this.mcpClient) {
+      throw new Error("MCP client not initialized");
+    }
+    const result = await this.mcpClient.callTool({
+      name: "get_global",
+      arguments: {},
+    });
+    const globalData = this.extractMCPData(result) as any;
 
     return {
       timestamp: new Date(),
@@ -458,20 +445,6 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       }
     }
     return result?.data || result;
-  }
-
-  // =============================================================================
-  // VALIDATION OVERRIDES - CONCRETE CLASS KNOWS MCP RESPONSE FORMAT
-  // =============================================================================
-
-  protected validateCurrentPrice(data: any): boolean {
-    // After transformation, data should be a number
-    return typeof data === "number" && data > 0;
-  }
-
-  protected validateCurrentPrices(data: any): boolean {
-    // After transformation, data should be an array of CryptoPriceData
-    return Array.isArray(data) && data.length > 0;
   }
 
   getStatus() {

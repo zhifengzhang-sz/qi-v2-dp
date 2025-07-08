@@ -26,6 +26,7 @@ import type {
   DateRangeOHLCVQuery,
   Level1Data,
   Level1Query,
+  MarketDataReadingDSL,
 } from "../dsl";
 
 // Re-export types from DSL for backward compatibility
@@ -57,7 +58,7 @@ export type {
  * - Single client (MCP, Database, Kafka)
  * - Multiple clients (aggregated data sources)
  */
-export abstract class BaseReader {
+export abstract class BaseReader implements MarketDataReadingDSL {
   protected clients: Map<string, ClientAssociation> = new Map();
   protected isInitialized = false;
   protected totalQueries = 0;
@@ -130,7 +131,7 @@ export abstract class BaseReader {
   abstract cleanup(): Promise<Result<void>>;
 
   // =============================================================================
-  // FINANCIAL MARKET DATA ACQUISITION DSL - IMPLEMENTATION USING WORKFLOW + PLUGINS
+  // FINANCIAL MARKET DATA ACQUISITION DSL - IMPLEMENTATION USING WORKFLOW + HANDLERS
   // =============================================================================
 
   /**
@@ -138,10 +139,8 @@ export abstract class BaseReader {
    */
   async getCurrentPrice(coinId: string, vsCurrency = "usd"): Promise<Result<number>> {
     return this.workflow(
-      () => this.getCurrentPricePlugin(coinId, vsCurrency),
-      (data) => this.transformCurrentPrice(data),
+      () => this.getCurrentPriceHandler(coinId, vsCurrency),
       "PRICE_FETCH_ERROR",
-      (data) => this.validateCurrentPrice(data),
     );
   }
 
@@ -153,10 +152,8 @@ export abstract class BaseReader {
     options?: CurrentPricesOptions,
   ): Promise<Result<CryptoPriceData[]>> {
     return this.workflow(
-      () => this.getCurrentPricesPlugin(coinIds, options),
-      (data) => this.transformCurrentPrices(data),
+      () => this.getCurrentPricesHandler(coinIds, options),
       "PRICES_FETCH_ERROR",
-      (data) => this.validateCurrentPrices(data),
     );
   }
 
@@ -167,43 +164,30 @@ export abstract class BaseReader {
     coinId: string,
     interval: "hourly" | "daily" = "daily",
   ): Promise<Result<CryptoOHLCVData>> {
-    return this.workflow(
-      () => this.getCurrentOHLCVPlugin(coinId, interval),
-      (data) => this.transformCurrentOHLCV(coinId, data),
-      "OHLCV_FETCH_ERROR",
-      (data) => this.validateOHLCVData(data),
-    );
+    return this.workflow(() => this.getCurrentOHLCVHandler(coinId, interval), "OHLCV_FETCH_ERROR");
   }
 
   /**
-   * DSL Function 2 (Extended): Get latest OHLCV candles
+   * DSL Function 4: Get latest OHLCV data for multiple coins
    */
-  async getLatestOHLCV(
-    coinId: string,
-    count = 10,
-    interval: "hourly" | "daily" = "daily",
-  ): Promise<Result<CryptoOHLCVData[]>> {
+  async getLatestOHLCV(coinIds: string[], timeframe?: string): Promise<Result<CryptoOHLCVData[]>> {
     return this.workflow(
-      () => this.getLatestOHLCVPlugin(coinId, count, interval),
-      (data) => this.transformLatestOHLCV(coinId, data),
+      () => this.getLatestOHLCVHandler(coinIds, timeframe),
       "LATEST_OHLCV_FETCH_ERROR",
-      (data) => this.validateOHLCVData(data),
     );
   }
 
   /**
-   * DSL Function 3: Get price from date_start to date_end
+   * DSL Function 5: Get price history
    */
   async getPriceHistory(
     coinId: string,
-    dateStart: Date,
-    dateEnd: Date,
-  ): Promise<Result<Array<{ date: Date; price: number }>>> {
+    days: number,
+    vsCurrency?: string,
+  ): Promise<Result<CryptoPriceData[]>> {
     return this.workflow(
-      () => this.getPriceHistoryPlugin(coinId, dateStart, dateEnd),
-      (data) => this.transformPriceHistory(data),
+      () => this.getPriceHistoryHandler(coinId, days, vsCurrency),
       "PRICE_HISTORY_FETCH_ERROR",
-      (data) => this.validatePriceHistory(data),
     );
   }
 
@@ -211,123 +195,63 @@ export abstract class BaseReader {
    * DSL Function 4: Get OHLCV from date_start to date_end
    */
   async getOHLCVByDateRange(query: DateRangeOHLCVQuery): Promise<Result<CryptoOHLCVData[]>> {
-    return this.workflow(
-      () => this.getOHLCVByDateRangePlugin(query),
-      (data) => this.transformOHLCVByDateRange(query.ticker, data),
-      "OHLCV_RANGE_FETCH_ERROR",
-      (data) => this.validateOHLCVData(data),
-    );
+    return this.workflow(() => this.getOHLCVByDateRangeHandler(query), "OHLCV_RANGE_FETCH_ERROR");
   }
 
   /**
    * DSL Function 5: Get all available tickers for market
    */
   async getAvailableTickers(limit = 100): Promise<Result<CryptoPriceData[]>> {
-    return this.workflow(
-      () => this.getAvailableTickersPlugin(limit),
-      (data) => this.transformAvailableTickers(data, limit),
-      "TICKERS_FETCH_ERROR",
-      (data) => this.validateTickersData(data),
-    );
+    return this.workflow(() => this.getAvailableTickersHandler(limit), "TICKERS_FETCH_ERROR");
   }
 
   /**
    * Get Level 1 data (best bid/ask approximation)
    */
   async getLevel1Data(query: Level1Query): Promise<Result<Level1Data>> {
-    return this.workflow(
-      () => this.getLevel1DataPlugin(query),
-      (data) => this.transformLevel1Data(query, data),
-      "LEVEL1_FETCH_ERROR",
-      (data) => this.validateLevel1Data(data),
-    );
+    return this.workflow(() => this.getLevel1DataHandler(query), "LEVEL1_FETCH_ERROR");
   }
 
   /**
    * Get global market analytics
    */
   async getMarketAnalytics(): Promise<Result<CryptoMarketAnalytics>> {
-    return this.workflow(
-      () => this.getMarketAnalyticsPlugin(),
-      (data) => this.transformMarketAnalytics(data),
-      "ANALYTICS_FETCH_ERROR",
-      (data) => this.validateAnalyticsData(data),
-    );
+    return this.workflow(() => this.getMarketAnalyticsHandler(), "ANALYTICS_FETCH_ERROR");
   }
 
   // =============================================================================
-  // ABSTRACT PLUGIN METHODS - CONCRETE CLASSES MUST IMPLEMENT
+  // ABSTRACT HANDLER METHODS - CONCRETE CLASSES MUST IMPLEMENT
   // =============================================================================
 
-  protected abstract getCurrentPricePlugin(coinId: string, vsCurrency: string): Promise<any>;
-  protected abstract getCurrentPricesPlugin(
+  protected abstract getCurrentPriceHandler(coinId: string, vsCurrency: string): Promise<number>;
+  protected abstract getCurrentPricesHandler(
     coinIds: string[],
     options?: CurrentPricesOptions,
-  ): Promise<any>;
-  protected abstract getCurrentOHLCVPlugin(
+  ): Promise<CryptoPriceData[]>;
+  protected abstract getCurrentOHLCVHandler(
     coinId: string,
     interval: "hourly" | "daily",
-  ): Promise<any>;
-  protected abstract getLatestOHLCVPlugin(
+  ): Promise<CryptoOHLCVData>;
+  protected abstract getLatestOHLCVHandler(
+    coinIds: string[],
+    timeframe?: string,
+  ): Promise<CryptoOHLCVData[]>;
+  protected abstract getPriceHistoryHandler(
     coinId: string,
-    count: number,
-    interval: "hourly" | "daily",
-  ): Promise<any>;
-  protected abstract getPriceHistoryPlugin(
-    coinId: string,
-    dateStart: Date,
-    dateEnd: Date,
-  ): Promise<any>;
-  protected abstract getOHLCVByDateRangePlugin(query: DateRangeOHLCVQuery): Promise<any>;
-  protected abstract getAvailableTickersPlugin(limit: number): Promise<any>;
-  protected abstract getLevel1DataPlugin(query: Level1Query): Promise<any>;
-  protected abstract getMarketAnalyticsPlugin(): Promise<any>;
+    days: number,
+    vsCurrency?: string,
+  ): Promise<CryptoPriceData[]>;
+  protected abstract getOHLCVByDateRangeHandler(
+    query: DateRangeOHLCVQuery,
+  ): Promise<CryptoOHLCVData[]>;
+  protected abstract getAvailableTickersHandler(limit: number): Promise<CryptoPriceData[]>;
+  protected abstract getLevel1DataHandler(query: Level1Query): Promise<Level1Data>;
+  protected abstract getMarketAnalyticsHandler(): Promise<CryptoMarketAnalytics>;
 
   // =============================================================================
-  // ABSTRACT TRANSFORM METHODS - CONCRETE CLASSES MUST IMPLEMENT
+  // ABSTRACT RESPONSE HANDLERS - CONCRETE CLASSES MUST IMPLEMENT
+  // These methods handle: API call + data extraction + transformation in one step
   // =============================================================================
-
-  protected abstract transformCurrentPrice(data: any): number;
-  protected abstract transformCurrentPrices(data: any): CryptoPriceData[];
-  protected abstract transformCurrentOHLCV(coinId: string, data: any): CryptoOHLCVData;
-  protected abstract transformLatestOHLCV(coinId: string, data: any): CryptoOHLCVData[];
-  protected abstract transformPriceHistory(data: any): Array<{ date: Date; price: number }>;
-  protected abstract transformOHLCVByDateRange(ticker: string, data: any): CryptoOHLCVData[];
-  protected abstract transformAvailableTickers(data: any, limit: number): CryptoPriceData[];
-  protected abstract transformLevel1Data(query: Level1Query, data: any): Level1Data;
-  protected abstract transformMarketAnalytics(data: any): CryptoMarketAnalytics;
-
-  // =============================================================================
-  // ABSTRACT VALIDATION METHODS - CONCRETE CLASSES CAN OVERRIDE
-  // =============================================================================
-
-  protected validateCurrentPrice(data: any): boolean {
-    return data && typeof data === "object" && Array.isArray(data) && data.length > 0;
-  }
-
-  protected validateCurrentPrices(data: any): boolean {
-    return data && Array.isArray(data) && data.length > 0;
-  }
-
-  protected validateOHLCVData(data: any): boolean {
-    return data && Array.isArray(data) && data.length > 0;
-  }
-
-  protected validatePriceHistory(data: any): boolean {
-    return data && Array.isArray(data) && data.length > 0;
-  }
-
-  protected validateTickersData(data: any): boolean {
-    return data && Array.isArray(data) && data.length > 0;
-  }
-
-  protected validateLevel1Data(data: any): boolean {
-    return data && typeof data === "object";
-  }
-
-  protected validateAnalyticsData(data: any): boolean {
-    return data && typeof data === "object";
-  }
 
   // =============================================================================
   // ACTOR STATUS - REQUIRED IMPLEMENTATION
@@ -340,13 +264,11 @@ export abstract class BaseReader {
   // =============================================================================
 
   /**
-   * DSL workflow executor - captures repetitive pattern
+   * Simplified DSL workflow: API call → response handler → result
    */
   protected async workflow<TResult>(
-    pluginFn: () => Promise<any>,
-    transform: (data: any) => TResult,
+    responseHandlerFn: () => Promise<TResult>,
     errorCode: string,
-    validator?: (data: any) => boolean,
   ): Promise<Result<TResult>> {
     try {
       this.updateActivity();
@@ -360,19 +282,7 @@ export abstract class BaseReader {
         );
       }
 
-      const response = await pluginFn();
-      const data = this.extractData ? this.extractData(response) : response;
-
-      if (validator && !validator(data)) {
-        return failure(
-          createQiError("INVALID_DATA", "Data validation failed", "BUSINESS", {
-            errorCode,
-            data,
-          }),
-        );
-      }
-
-      const result = transform(data);
+      const result = await responseHandlerFn();
       return success(result);
     } catch (error) {
       this.incrementErrors();
@@ -402,8 +312,6 @@ export abstract class BaseReader {
     const anyConnected = this.getAllClients().find((assoc) => assoc.isConnected);
     return anyConnected?.client;
   }
-
-  protected extractData?(response: any): any;
 
   /**
    * Universal batch operation factory

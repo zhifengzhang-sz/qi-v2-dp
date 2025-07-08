@@ -36,8 +36,9 @@ export interface Database {
     total_volume: number | null;
     btc_dominance: number | null;
     eth_dominance: number | null;
-    defi_market_cap: number | null;
     active_cryptocurrencies: number | null;
+    markets: number | null;
+    market_cap_change_24h: number | null;
   };
 }
 
@@ -62,7 +63,7 @@ export interface TimescaleOHLCV {
   low: number;
   close: number;
   volume: number;
-  interval?: string;
+  interval: string;
 }
 
 export interface TimescaleMarketAnalytics {
@@ -71,8 +72,10 @@ export interface TimescaleMarketAnalytics {
   total_volume?: number;
   btc_dominance?: number;
   eth_dominance?: number;
-  defi_market_cap?: number;
   active_cryptocurrencies?: number;
+  markets?: number;
+  market_cap_change_24h?: number;
+  source?: string;
 }
 
 export interface TimescaleQueryOptions {
@@ -195,20 +198,24 @@ export class TimescaleClient {
    */
   private async setupCompressionPolicies(): Promise<void> {
     // Compress data older than 7 days
-    await sql`
-      SELECT add_compression_policy('crypto_prices', INTERVAL '7 days')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    // Add compression policies with error handling
+    try {
+      await sql`SELECT add_compression_policy('crypto_prices', INTERVAL '7 days')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
 
-    await sql`
-      SELECT add_compression_policy('ohlcv_data', INTERVAL '7 days')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    try {
+      await sql`SELECT add_compression_policy('ohlcv_data', INTERVAL '7 days')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
 
-    await sql`
-      SELECT add_compression_policy('market_analytics', INTERVAL '3 days')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    try {
+      await sql`SELECT add_compression_policy('market_analytics', INTERVAL '3 days')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
   }
 
   /**
@@ -216,20 +223,24 @@ export class TimescaleClient {
    */
   private async setupRetentionPolicies(): Promise<void> {
     // Keep data for 2 years
-    await sql`
-      SELECT add_retention_policy('crypto_prices', INTERVAL '2 years')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    // Add retention policies with error handling
+    try {
+      await sql`SELECT add_retention_policy('crypto_prices', INTERVAL '2 years')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
 
-    await sql`
-      SELECT add_retention_policy('ohlcv_data', INTERVAL '2 years')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    try {
+      await sql`SELECT add_retention_policy('ohlcv_data', INTERVAL '2 years')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
 
-    await sql`
-      SELECT add_retention_policy('market_analytics', INTERVAL '1 year')
-      ON CONFLICT DO NOTHING
-    `.execute(this.db);
+    try {
+      await sql`SELECT add_retention_policy('market_analytics', INTERVAL '1 year')`.execute(this.db);
+    } catch (error) {
+      // Policy may already exist, ignore error
+    }
   }
 
   /**
@@ -237,12 +248,12 @@ export class TimescaleClient {
    */
   private async createIndexes(): Promise<void> {
     await sql`
-      CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_crypto_prices_symbol_time 
+      CREATE INDEX IF NOT EXISTS idx_crypto_prices_symbol_time 
       ON crypto_prices (symbol, time DESC)
     `.execute(this.db);
 
     await sql`
-      CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_ohlcv_symbol_time 
+      CREATE INDEX IF NOT EXISTS idx_ohlcv_symbol_time 
       ON ohlcv_data (symbol, time DESC)
     `.execute(this.db);
   }
@@ -319,25 +330,29 @@ export class TimescaleClient {
    * Insert market analytics data
    */
   async insertMarketAnalytics(analytics: TimescaleMarketAnalytics): Promise<void> {
+    const insertData = {
+      time: analytics.time,
+      total_market_cap: analytics.total_market_cap,
+      total_volume: analytics.total_volume,
+      btc_dominance: analytics.btc_dominance,
+      eth_dominance: analytics.eth_dominance,
+      active_cryptocurrencies: analytics.active_cryptocurrencies,
+      markets: analytics.markets,
+      market_cap_change_24h: analytics.market_cap_change_24h,
+    };
+
     await this.db
       .insertInto("market_analytics")
-      .values({
-        time: analytics.time,
-        total_market_cap: analytics.total_market_cap ?? null,
-        total_volume: analytics.total_volume ?? null,
-        btc_dominance: analytics.btc_dominance ?? null,
-        eth_dominance: analytics.eth_dominance ?? null,
-        defi_market_cap: analytics.defi_market_cap ?? null,
-        active_cryptocurrencies: analytics.active_cryptocurrencies ?? null,
-      })
+      .values(insertData)
       .onConflict((oc) =>
         oc.column("time").doUpdateSet({
           total_market_cap: (eb) => eb.ref("excluded.total_market_cap"),
           total_volume: (eb) => eb.ref("excluded.total_volume"),
           btc_dominance: (eb) => eb.ref("excluded.btc_dominance"),
           eth_dominance: (eb) => eb.ref("excluded.eth_dominance"),
-          defi_market_cap: (eb) => eb.ref("excluded.defi_market_cap"),
           active_cryptocurrencies: (eb) => eb.ref("excluded.active_cryptocurrencies"),
+          markets: (eb) => eb.ref("excluded.markets"),
+          market_cap_change_24h: (eb) => eb.ref("excluded.market_cap_change_24h"),
         }),
       )
       .execute();

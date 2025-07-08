@@ -108,7 +108,7 @@ export const cryptoPrices = pgTable(
     time: timestamp("time", { mode: "date" }).notNull(),
     coinId: varchar("coin_id", { length: 50 }).notNull(), // bitcoin, ethereum
     symbol: varchar("symbol", { length: 20 }).notNull(), // BTC, ETH
-    exchangeId: integer("exchange_id").references(() => exchanges.id),
+    name: varchar("name", { length: 100 }), // Bitcoin, Ethereum
 
     // Price data - using numeric for financial precision (up to 20 digits, 8 decimal places)
     usdPrice: numeric("usd_price", { precision: 20, scale: 8 }),
@@ -121,9 +121,10 @@ export const cryptoPrices = pgTable(
     change24h: numeric("change_24h", { precision: 10, scale: 4 }), // Percentage change
     change7d: numeric("change_7d", { precision: 10, scale: 4 }),
 
-    // Metadata
-    lastUpdated: timestamp("last_updated", { mode: "date" }),
-    source: varchar("source", { length: 50 }).default("coingecko"),
+    // Metadata (from DSL)
+    lastUpdated: timestamp("last_updated", { mode: "date" }).notNull(),
+    source: varchar("source", { length: 50 }).notNull(),
+    attribution: varchar("attribution", { length: 200 }).notNull(),
 
     ...timestamps,
   },
@@ -147,25 +148,21 @@ export const ohlcvData = pgTable(
   {
     time: timestamp("time", { mode: "date" }).notNull(),
     coinId: varchar("coin_id", { length: 50 }).notNull(),
-    symbol: varchar("symbol", { length: 20 }).notNull(),
-    exchangeId: integer("exchange_id").references(() => exchanges.id),
+    symbol: varchar("symbol", { length: 20 }),
 
     // Timeframe for this candle
     timeframe: varchar("timeframe", { length: 10 }).notNull(), // 1m, 5m, 1h, 1d, 1w
 
-    // OHLCV data - financial precision
+    // OHLCV data - financial precision (from DSL)
     open: numeric("open", { precision: 20, scale: 8 }).notNull(),
     high: numeric("high", { precision: 20, scale: 8 }).notNull(),
     low: numeric("low", { precision: 20, scale: 8 }).notNull(),
     close: numeric("close", { precision: 20, scale: 8 }).notNull(),
     volume: numeric("volume", { precision: 30, scale: 8 }).notNull(),
 
-    // Additional trading metrics
-    trades: integer("trades").default(0), // Number of trades in this period
-    vwap: numeric("vwap", { precision: 20, scale: 8 }), // Volume Weighted Average Price
-
-    // Metadata
-    source: varchar("source", { length: 50 }).default("coingecko"),
+    // Metadata (from DSL)
+    source: varchar("source", { length: 50 }).notNull(),
+    attribution: varchar("attribution", { length: 200 }).notNull(),
     ...timestamps,
   },
   (table) => ({
@@ -224,25 +221,20 @@ export const marketAnalytics = pgTable(
   {
     time: timestamp("time", { mode: "date" }).notNull().primaryKey(),
 
-    // Global market metrics
+    // Global market metrics (from DSL CryptoMarketAnalytics)
     totalMarketCap: numeric("total_market_cap", { precision: 30, scale: 2 }),
     totalVolume: numeric("total_volume", { precision: 30, scale: 2 }),
     btcDominance: numeric("btc_dominance", { precision: 10, scale: 4 }),
     ethDominance: numeric("eth_dominance", { precision: 10, scale: 4 }),
 
-    // Market segments
-    defiMarketCap: numeric("defi_market_cap", { precision: 30, scale: 2 }),
-    nftVolume: numeric("nft_volume", { precision: 30, scale: 2 }),
-
-    // Market activity
+    // Market activity (from DSL CryptoMarketAnalytics)
     activeCryptocurrencies: integer("active_cryptocurrencies"),
-    activeExchanges: integer("active_exchanges"),
-
-    // Market sentiment indicators
-    fearGreedIndex: integer("fear_greed_index"), // 0-100
+    markets: integer("markets"),
+    marketCapChange24h: numeric("market_cap_change_24h", { precision: 10, scale: 4 }),
 
     // Metadata
     source: varchar("source", { length: 50 }).default("coingecko"),
+    attribution: varchar("attribution", { length: 100 }).notNull(),
     ...timestamps,
   },
   (table) => ({

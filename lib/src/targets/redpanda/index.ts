@@ -16,8 +16,8 @@
 export {
   RedpandaMarketDataWriter,
   createRedpandaMarketDataWriter,
-} from "./RedpandaMarketDataWriter";
-export type { RedpandaWriterConfig } from "./RedpandaMarketDataWriter";
+} from "./MarketDataWriter";
+export type { RedpandaWriterConfig } from "./MarketDataWriter";
 
 // Export unified types from DSL abstraction
 export type {

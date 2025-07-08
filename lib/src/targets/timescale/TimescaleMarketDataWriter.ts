@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 
 /**
- * TimescaleDB Market Data Writer - Clean Plugin Implementation
+ * TimescaleDB Market Data Writer - Clean Handler Implementation
  *
  * This Writer:
  * - Extends BaseWriter for unified DSL foundation
- * - Implements only the plugin functions for TimescaleDB-specific logic
+ * - Implements only the handler functions for TimescaleDB-specific logic
  * - BaseWriter handles all DSL interface + workflow complexity
  * - Writes to TimescaleDB using real TimescaleClient
  */
@@ -22,12 +22,12 @@ import type {
   PublishResult,
 } from "../../abstract/dsl";
 import { BaseWriter } from "../../abstract/writers/BaseWriter";
-import { TimescaleClient } from "../../base/database/timescale-client";
+import { DrizzleClient } from "../../base/database/drizzle-client";
 import type {
-  TimescaleCryptoPrice,
-  TimescaleMarketAnalytics,
-  TimescaleOHLCV,
-} from "../../base/database/timescale-client";
+  CryptoPriceInsert,
+  MarketAnalyticsInsert,
+  OHLCVDataInsert,
+} from "../../base/database/schema";
 
 // =============================================================================
 // TIMESCALE WRITER CONFIGURATION
@@ -46,12 +46,12 @@ export interface TimescaleWriterConfig {
 }
 
 // =============================================================================
-// TIMESCALE MARKET DATA WRITER - CLEAN PLUGIN IMPLEMENTATION
+// TIMESCALE MARKET DATA WRITER - CLEAN HANDLER IMPLEMENTATION
 // =============================================================================
 
 export class TimescaleMarketDataWriter extends BaseWriter {
   protected config: TimescaleWriterConfig & { name: string };
-  private timescaleClient: TimescaleClient;
+  private drizzleClient: DrizzleClient;
   private isConnected = false;
 
   constructor(config: TimescaleWriterConfig & { name: string }) {
@@ -61,7 +61,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
     });
 
     const defaultConfig = {
-      connectionString: process.env.DATABASE_URL || "postgresql://localhost:5432/crypto_data",
+      connectionString: process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/cryptodb",
       poolConfig: {
         max: 20,
         idleTimeoutMillis: 30000,
@@ -81,11 +81,12 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       },
     };
 
-    // Initialize TimescaleClient with config
-    this.timescaleClient = new TimescaleClient(
-      this.config.connectionString,
-      this.config.poolConfig,
-    );
+    // Initialize DrizzleClient with config
+    this.drizzleClient = new DrizzleClient({
+      connectionString: this.config.connectionString,
+      poolConfig: this.config.poolConfig,
+      debug: this.config.debug,
+    });
   }
 
   // =============================================================================
@@ -102,9 +103,22 @@ export class TimescaleMarketDataWriter extends BaseWriter {
         console.log("🚀 Initializing TimescaleDB Writer...");
       }
 
-      // Initialize TimescaleDB using real client
-      await this.timescaleClient.initialize();
+      // Initialize TimescaleDB using Drizzle client
+      await this.drizzleClient.initialize();
       this.isConnected = true;
+
+      // Register client with BaseWriter's client management
+      this.addClient("timescale-db", this.drizzleClient, {
+        name: "timescale-db",
+        type: "data-target",
+      });
+
+      // Mark client as connected
+      const clientAssoc = this.getClient("timescale-db");
+      if (clientAssoc) {
+        clientAssoc.isConnected = true;
+      }
+
       this.isInitialized = true;
 
       if (this.config.debug) {
@@ -132,7 +146,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       }
 
       if (this.isConnected) {
-        await this.timescaleClient.destroy();
+        await this.drizzleClient.close();
         this.isConnected = false;
       }
 
@@ -152,193 +166,245 @@ export class TimescaleMarketDataWriter extends BaseWriter {
   }
 
   // =============================================================================
-  // PLUGIN IMPLEMENTATIONS - TIMESCALE-SPECIFIC DATABASE WRITING
+  // HANDLER IMPLEMENTATIONS - TIMESCALE-SPECIFIC DATABASE WRITING
   // =============================================================================
 
-  protected async publishPricePlugin(
+  protected async publishPriceHandler(
     data: CryptoPriceData,
     _options?: PublishOptions,
-  ): Promise<any> {
-    const timescalePrice: TimescaleCryptoPrice = {
+  ): Promise<PublishResult> {
+    const cryptoPrice: CryptoPriceInsert = {
       time: data.lastUpdated,
-      coin_id: data.coinId,
+      coinId: data.coinId,
       symbol: data.symbol,
-      usd_price: data.usdPrice,
-      btc_price: data.btcPrice,
-      market_cap: data.marketCap,
-      volume_24h: data.volume24h,
-      change_24h: data.change24h,
-      last_updated: data.lastUpdated.getTime(),
+      name: data.name,
+      usdPrice: data.usdPrice.toString(),
+      btcPrice: data.btcPrice?.toString(),
+      ethPrice: data.ethPrice?.toString(),
+      marketCap: data.marketCap?.toString(),
+      volume24h: data.volume24h?.toString(),
+      change24h: data.change24h?.toString(),
+      change7d: data.change7d?.toString(),
+      lastUpdated: data.lastUpdated,
+      source: data.source,
+      attribution: data.attribution,
     };
 
-    await this.timescaleClient.insertPrices([timescalePrice]);
+    await this.drizzleClient.insertCryptoPrices([cryptoPrice]);
 
     return {
-      table: "crypto_prices",
-      rowsInserted: 1,
+      messageId: this.generateMessageId(),
+      topic: "crypto_prices",
+      partition: 0,
+      offset: 0,
       timestamp: new Date(),
-      coinId: data.coinId,
+      size: 1,
     };
   }
 
-  protected async publishPricesPlugin(
+  protected async publishPricesHandler(
     data: CryptoPriceData[],
     _options?: BatchPublishOptions,
-  ): Promise<any> {
-    const timescalePrices: TimescaleCryptoPrice[] = data.map((price) => ({
+  ): Promise<BatchPublishResult> {
+    const cryptoPrices: CryptoPriceInsert[] = data.map((price) => ({
       time: price.lastUpdated,
-      coin_id: price.coinId,
+      coinId: price.coinId,
       symbol: price.symbol,
-      usd_price: price.usdPrice,
-      btc_price: price.btcPrice,
-      market_cap: price.marketCap,
-      volume_24h: price.volume24h,
-      change_24h: price.change24h,
-      last_updated: price.lastUpdated.getTime(),
+      name: price.name,
+      usdPrice: price.usdPrice.toString(),
+      btcPrice: price.btcPrice?.toString(),
+      ethPrice: price.ethPrice?.toString(),
+      marketCap: price.marketCap?.toString(),
+      volume24h: price.volume24h?.toString(),
+      change24h: price.change24h?.toString(),
+      change7d: price.change7d?.toString(),
+      lastUpdated: price.lastUpdated,
+      source: price.source,
+      attribution: price.attribution,
     }));
 
-    await this.timescaleClient.insertPrices(timescalePrices);
+    await this.drizzleClient.insertCryptoPrices(cryptoPrices);
+
+    const results: PublishResult[] = data.map((_, index) => ({
+      messageId: `timescale-batch-${Date.now()}-${index}`,
+      topic: "crypto_prices",
+      partition: 0,
+      offset: 0,
+      timestamp: new Date(),
+      size: 1,
+    }));
 
     return {
-      table: "crypto_prices",
-      rowsInserted: data.length,
-      timestamp: new Date(),
+      totalMessages: data.length,
+      successCount: data.length,
+      failureCount: 0,
+      results,
+      errors: [],
       batchId: this.generateMessageId(),
+      processingTime: 0,
     };
   }
 
-  protected async publishOHLCVPlugin(
+  protected async publishOHLCVHandler(
     data: CryptoOHLCVData,
     _options?: PublishOptions,
-  ): Promise<any> {
-    const timescaleOHLCV: TimescaleOHLCV = {
+  ): Promise<PublishResult> {
+    const ohlcvData: OHLCVDataInsert = {
       time: data.timestamp,
-      coin_id: data.coinId,
+      coinId: data.coinId,
       symbol: data.symbol || data.coinId.toUpperCase(),
-      open: data.open,
-      high: data.high,
-      low: data.low,
-      close: data.close,
-      volume: data.volume,
-      interval: data.timeframe,
+      timeframe: data.timeframe,
+      open: data.open.toString(),
+      high: data.high.toString(),
+      low: data.low.toString(),
+      close: data.close.toString(),
+      volume: data.volume.toString(),
+      source: data.source,
+      attribution: data.attribution,
     };
 
-    await this.timescaleClient.insertOHLCV([timescaleOHLCV]);
+    await this.drizzleClient.insertOHLCVData([ohlcvData]);
 
     return {
-      table: "ohlcv_data",
-      rowsInserted: 1,
+      messageId: this.generateMessageId(),
+      topic: "ohlcv_data",
+      partition: 0,
+      offset: 0,
       timestamp: new Date(),
-      coinId: data.coinId,
+      size: 1,
     };
   }
 
-  protected async publishOHLCVBatchPlugin(
+  protected async publishOHLCVBatchHandler(
     data: CryptoOHLCVData[],
     _options?: BatchPublishOptions,
-  ): Promise<any> {
-    const timescaleOHLCVs: TimescaleOHLCV[] = data.map((ohlcv) => ({
+  ): Promise<BatchPublishResult> {
+    const ohlcvDataArray: OHLCVDataInsert[] = data.map((ohlcv) => ({
       time: ohlcv.timestamp,
-      coin_id: ohlcv.coinId,
+      coinId: ohlcv.coinId,
       symbol: ohlcv.symbol || ohlcv.coinId.toUpperCase(),
-      open: ohlcv.open,
-      high: ohlcv.high,
-      low: ohlcv.low,
-      close: ohlcv.close,
-      volume: ohlcv.volume,
-      interval: ohlcv.timeframe,
+      timeframe: ohlcv.timeframe,
+      open: ohlcv.open.toString(),
+      high: ohlcv.high.toString(),
+      low: ohlcv.low.toString(),
+      close: ohlcv.close.toString(),
+      volume: ohlcv.volume.toString(),
+      source: ohlcv.source,
+      attribution: ohlcv.attribution,
     }));
 
-    await this.timescaleClient.insertOHLCV(timescaleOHLCVs);
+    await this.drizzleClient.insertOHLCVData(ohlcvDataArray);
+
+    const results: PublishResult[] = data.map((_, index) => ({
+      messageId: `timescale-ohlcv-batch-${Date.now()}-${index}`,
+      topic: "ohlcv_data",
+      partition: 0,
+      offset: 0,
+      timestamp: new Date(),
+      size: 1,
+    }));
 
     return {
-      table: "ohlcv_data",
-      rowsInserted: data.length,
-      timestamp: new Date(),
+      totalMessages: data.length,
+      successCount: data.length,
+      failureCount: 0,
+      results,
+      errors: [],
       batchId: this.generateMessageId(),
+      processingTime: 0,
     };
   }
 
-  protected async publishAnalyticsPlugin(
+  protected async publishAnalyticsHandler(
     data: CryptoMarketAnalytics,
     _options?: PublishOptions,
-  ): Promise<any> {
-    const timescaleAnalytics: TimescaleMarketAnalytics = {
+  ): Promise<PublishResult> {
+    const marketAnalytics: MarketAnalyticsInsert = {
       time: data.timestamp,
-      total_market_cap: data.totalMarketCap,
-      total_volume: data.totalVolume,
-      btc_dominance: data.btcDominance,
-      eth_dominance: data.ethDominance,
-      active_cryptocurrencies: data.activeCryptocurrencies,
+      totalMarketCap: data.totalMarketCap.toString(),
+      totalVolume: data.totalVolume.toString(),
+      btcDominance: data.btcDominance.toString(),
+      ethDominance: data.ethDominance?.toString(),
+      activeCryptocurrencies: data.activeCryptocurrencies,
+      markets: data.markets,
+      marketCapChange24h: data.marketCapChange24h.toString(),
+      source: data.source,
+      attribution: data.attribution,
     };
 
-    await this.timescaleClient.insertMarketAnalytics(timescaleAnalytics);
+    await this.drizzleClient.insertMarketAnalytics(marketAnalytics);
 
     return {
-      table: "market_analytics",
-      rowsInserted: 1,
+      messageId: this.generateMessageId(),
+      topic: "market_analytics",
+      partition: 0,
+      offset: 0,
       timestamp: new Date(),
+      size: 1,
     };
   }
 
-  protected async publishLevel1Plugin(data: Level1Data, _options?: PublishOptions): Promise<any> {
+  protected async publishLevel1Handler(
+    data: Level1Data,
+    _options?: PublishOptions,
+  ): Promise<PublishResult> {
     // Convert Level1 data to price format for storage
-    const priceData: TimescaleCryptoPrice = {
+    const priceData: CryptoPriceInsert = {
       time: data.timestamp,
-      coin_id: data.ticker.toLowerCase(),
+      coinId: data.ticker.toLowerCase(),
       symbol: data.ticker.toUpperCase(),
-      usd_price: (data.bestBid + data.bestAsk) / 2, // Mid price
-      last_updated: data.timestamp.getTime(),
+      usdPrice: ((data.bestBid + data.bestAsk) / 2).toString(), // Mid price
+      lastUpdated: data.timestamp,
+      source: data.source,
+      attribution: data.attribution,
     };
 
-    await this.timescaleClient.insertPrices([priceData]);
+    await this.drizzleClient.insertCryptoPrices([priceData]);
 
     return {
-      table: "crypto_prices",
-      rowsInserted: 1,
+      messageId: this.generateMessageId(),
+      topic: "crypto_prices",
+      partition: 0,
+      offset: 0,
       timestamp: new Date(),
-      ticker: data.ticker,
-      dataType: "level1",
+      size: 1,
     };
   }
 
-  protected async flushPlugin(_timeoutMs?: number): Promise<any> {
-    if (!this.timescaleClient) {
-      throw new Error("TimescaleClient not initialized");
+  protected async flushHandler(_timeoutMs?: number): Promise<void> {
+    if (!this.drizzleClient) {
+      throw new Error("DrizzleClient not initialized");
     }
 
     // TimescaleDB auto-commits transactions, but we can ensure connection is healthy
-    return { flushed: true, timestamp: new Date() };
+    // No return value needed for void
   }
 
-  protected async createDestinationPlugin(
+  protected async createDestinationHandler(
     name: string,
     _config?: Record<string, any>,
-  ): Promise<any> {
+  ): Promise<void> {
     // In TimescaleDB, "destinations" would be tables, which are already created
     // This could be used to create custom views or additional tables
-    return {
-      destination: name,
-      type: "timescale_table",
-      created: true,
-      timestamp: new Date(),
-    };
+    // No return value needed for void
   }
 
-  protected async getPublishingMetricsPlugin(): Promise<any> {
+  protected async getPublishingMetricsHandler(): Promise<{
+    totalMessages: number;
+    successRate: number;
+    averageLatency: number;
+    errorRate: number;
+  }> {
     // Get basic metrics from TimescaleDB
-    const hypertables = await this.timescaleClient.listHypertables();
+    const totalMessages = this.totalPublishes;
+    const successCount = this.totalPublishes - this.errorCount;
+    const failureCount = this.errorCount;
 
     return {
-      totalMessages: this.totalPublishes,
-      successCount: this.totalPublishes - this.errorCount,
-      failureCount: this.errorCount,
+      totalMessages,
+      successRate: totalMessages > 0 ? successCount / totalMessages : 0,
       averageLatency: 50, // Approximate database write latency
-      throughput: this.calculateThroughput(),
-      database: {
-        hypertables: hypertables.length,
-        connected: this.isConnected,
-      },
+      errorRate: totalMessages > 0 ? failureCount / totalMessages : 0,
     };
   }
 
@@ -409,7 +475,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
     return {
       isInitialized: this.isInitialized,
       isConnected: this.isConnected,
-      hasTimescaleClient: !!this.timescaleClient,
+      hasDrizzleClient: !!this.drizzleClient,
       connectionString: this.config.connectionString.replace(/:[^:@]*@/, ":****@"), // Hide password
       poolConfig: this.config.poolConfig,
       lastActivity: this.lastActivity,

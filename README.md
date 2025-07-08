@@ -1,32 +1,42 @@
-# Data Platform Actor System
+# QiCore Crypto Data Platform
 
-**Reusable cryptocurrency data processing actors** - One of two core subprojects within the broader Data Platform project.
+**Production-ready cryptocurrency data processing platform** with complete 2-layer actor architecture and DSL-driven schema management.
 
-## Project Structure
+## 🏗️ Architecture Overview
+
+**DSL-Driven 2-Layer System**: Single source of truth for all data schemas
 
 ```
-Data Platform Project
-├── Data Platform Actor System (this repo) - Reusable actors
-└── Data Platform MCP Server (parallel) - App-level services
+DSL Schema (source of truth) → Auto-generates → Database + Topic schemas
 ```
 
-## Architecture
+- **Layer 1**: Generic infrastructure (BaseReader/BaseWriter, database clients, MCP primitives)
+- **Layer 2**: Technology-specific actors (CoinGecko, Redpanda, TimescaleDB)
+- **DSL Layer**: Unified data types driving both storage and streaming schemas
 
-**2-Layer Actor System**: Production-ready foundation for cryptocurrency data processing
+## ✨ Key Features
 
-- **Layer 1**: Base Infrastructure (TimescaleDB, Redpanda, Base Agents)
-- **Layer 2**: DSL Actors (Sources & Targets with unified interfaces)
-- **External**: MCP Server project composes these actors into business services
-
-## Key Features
-
-✅ **Zero Code Duplication** - Plugin pattern eliminates repetitive DSL implementations  
-✅ **Technology Agnostic** - Swap data sources/targets without code changes  
-✅ **MCP Integration** - CoinGecko external MCP server (46 tools, live data)  
-✅ **Real Performance** - Sub-50ms streaming, 90% DB compression, 53% faster than Node.js  
+✅ **DSL-Driven Schema Management** - Single source of truth auto-generates database and topic schemas  
+✅ **Zero Code Duplication** - Handler pattern eliminates repetitive DSL implementations  
+✅ **External MCP Integration** - Live CoinGecko MCP server (46 tools, real market data)  
+✅ **Real-Time Streaming** - Redpanda/Kafka with auto-generated topic schemas and JSON validation  
+✅ **Time-Series Database** - TimescaleDB with hypertables, compression, and optimized queries  
 ✅ **Type Safety** - Complete TypeScript with functional Result<T> error handling  
+✅ **Production Ready** - Docker services, schema validation, and comprehensive testing  
 
-## Quick Start
+## 🚀 Quick Start
+
+### Schema Generation (Core Workflow)
+```bash
+# Generate all schemas from DSL types
+bun run scripts/generate-schema.ts
+
+# Start services with generated schemas
+cd services && docker-compose up -d
+
+# Test end-to-end pipeline
+bun run app/demos/layer2/end-to-end-pipeline-demo.ts
+```
 
 ### Development Commands
 ```bash
@@ -34,24 +44,58 @@ Data Platform Project
 bun run typecheck
 
 # Testing
-bun run test
+bun run test:basic                    # Core architecture tests
+bun run test:integration             # Full system tests
 
 # Code quality
 bun run biome check --fix
 
-# Demos
-bun app/demos/index.ts
+# Individual demos
+bun run app/demos/layer1/base/result-type-demo.ts
+bun run app/demos/layer2/sources/coingecko-source-demo.ts
+bun run app/demos/layer2/sources/redpanda-source-demo.ts
+bun run app/demos/layer2/targets/redpanda-target-demo.ts
+bun run app/demos/layer2/targets/timescale-target-demo.ts
 ```
 
-### Current Actors
+### System Architecture
 
-**Sources (Data Input)**:
-- `CoinGeckoMarketDataReader` - External MCP server integration
-- `RedpandaMarketDataReader` - Kafka/Redpanda streaming consumer
+**DSL Types (Single Source of Truth)**:
+- `CryptoPriceData` - Real-time cryptocurrency prices
+- `CryptoOHLCVData` - OHLCV candlestick data for technical analysis  
+- `CryptoMarketAnalytics` - Global market metrics and analytics
+- `Level1Data` - Order book top-of-book data
 
-**Targets (Data Output)**:
-- `TimescaleMarketDataWriter` - Time-series database persistence
-- `RedpandaMarketDataWriter` - Kafka/Redpanda streaming producer
+**Layer 2 Actors (Auto-Generated from DSL)**:
+
+*Sources (Data Input)*:
+- `CoinGeckoMarketDataReader` - External MCP server (46 tools, live data)
+- `RedpandaMarketDataReader` - Stream consumption with DSL validation
+
+*Targets (Data Output)*:
+- `TimescaleMarketDataWriter` - Time-series database with auto-generated schema
+- `RedpandaMarketDataWriter` - Stream production with topic management
+
+## 📊 Schema Management Workflow
+
+**The Core Innovation**: DSL types automatically generate all storage and streaming schemas
+
+```bash
+# 1. Update DSL types in lib/src/abstract/dsl/MarketDataTypes.ts
+# 2. Generate schemas from DSL
+bun run scripts/generate-schema.ts
+
+# 3. Restart services with new schemas  
+cd services && docker-compose down && docker-compose up -d
+
+# 4. All actors automatically use the updated schemas
+```
+
+**Generated Artifacts**:
+- `services/database/init-timescale-generated.sql` - TimescaleDB schema
+- `services/redpanda/topics.yml` - Redpanda topic configuration
+- `services/redpanda/schemas.json` - JSON Schema validation
+- `services/redpanda/generated-mappings.ts` - TypeScript serialization
 
 ## Live Data Results
 
