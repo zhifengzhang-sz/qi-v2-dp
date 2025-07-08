@@ -5,10 +5,14 @@ export default defineConfig({
   resolve: {
     alias: {
       "@qi/core/base": resolve(__dirname, "./lib/src/qicore/base"),
-      "@qi/agent": resolve(__dirname, "./lib/src/qiagent/index"),
       "@qi/mcp": resolve(__dirname, "./lib/src/qimcp/client"),
-      "@qi/prompt": resolve(__dirname, "./lib/src/qiprompt/index"),
-      "@qi/dp/abstract/*": resolve(__dirname, "./lib/src/abstract/*"),
+      "@qi/dp/dsl": resolve(__dirname, "./lib/src/dsl/index.ts"),
+      "@qi/dp/actors": resolve(__dirname, "./lib/src/actors"),
+      "@qi/dp/actors/abstract": resolve(__dirname, "./lib/src/actors/abstract"),
+      "@qi/dp/actors/sources": resolve(__dirname, "./lib/src/actors/sources"),
+      "@qi/dp/actors/targets": resolve(__dirname, "./lib/src/actors/targets"),
+      "@qi/dp/base": resolve(__dirname, "./lib/src/base"),
+      "@qi/dp/generators": resolve(__dirname, "./lib/src/generators"),
     },
   },
   test: {
@@ -19,17 +23,14 @@ export default defineConfig({
     exclude: ["./node_modules/**", "./dist/**"],
     isolate: true,
     pool: "forks",
-    timeout: 60000, // Very long timeout for end-to-end tests
-    testTimeout: 60000,
+    testTimeout: 60000, // Very long timeout for end-to-end tests
     hookTimeout: 15000,
     teardownTimeout: 15000,
-    reporter: ["verbose", "json"],
+    reporters: ["verbose", "json"],
     outputFile: {
       json: "./test-results/system-results.json",
     },
     // Allow retries for flaky end-to-end tests
     retry: 2,
-    // Run system tests sequentially to avoid resource conflicts
-    threads: false,
   },
 });

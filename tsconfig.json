@@ -19,22 +19,17 @@
     "jsx": "preserve",
     "baseUrl": "./",
     "paths": {
-      "@/*": ["lib/src/*"],
-      "@/agents/*": ["lib/src/agents/*"],
-      "@/pipeline/*": ["lib/src/pipeline/*"],
-      "@/streaming/*": ["lib/src/streaming/*"],
-      "@/database/*": ["lib/src/database/*"],
-      "@/config/*": ["lib/src/config/*"],
-      "@/types/*": ["lib/src/types/*"],
-      "@/utils/*": ["lib/src/utils/*"],
       "@qi/core/base": ["lib/src/qicore/base/index.ts"],
       "@qi/core/*": ["lib/src/qicore/*"],
       "@qi/mcp": ["lib/src/qimcp/client"],
       "@qi/dp/dsl": ["lib/src/dsl/index.ts"],
       "@qi/dp/dsl/*": ["lib/src/dsl/*"],
-      "@qi/dp/base/*": ["lib/src/*"],
+      "@qi/dp/actors/*": ["lib/src/actors/*"],
+      "@qi/dp/actors/abstract/*": ["lib/src/actors/abstract/*"],
       "@qi/dp/actors/sources/*": ["lib/src/actors/sources/*"],
-      "@qi/dp/actors/targets/*": ["lib/src/actors/targets/*"]
+      "@qi/dp/actors/targets/*": ["lib/src/actors/targets/*"],
+      "@qi/dp/base/*": ["lib/src/base/*"],
+      "@qi/dp/generators/*": ["lib/src/generators/*"]
     }
   },
   "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],
