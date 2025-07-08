@@ -29,7 +29,7 @@ describe("RedpandaConfigManager", () => {
       const config = RedpandaConfigManager.getInstance().getConfig();
 
       expect(config).toEqual({
-        brokers: ["localhost:9092"],
+        brokers: ["localhost:19092"],
         clientId: "qicore-crypto-platform",
         groupId: "crypto-group",
         enableAutoCommit: false,
@@ -106,10 +106,10 @@ describe("RedpandaConfigManager", () => {
       expect(mcpConfig).toEqual({
         server: "rpk",
         command: "rpk",
-        args: ["mcp", "server", "--brokers", "localhost:9092"],
+        args: ["mcp", "server", "--brokers", "localhost:19092"],
         transport: "stdio",
         environment: {
-          REDPANDA_BROKERS: "localhost:9092",
+          REDPANDA_BROKERS: "localhost:19092",
           RPK_MCP_LOG_LEVEL: "info",
           RPK_MCP_CLIENT_ID: "qicore-crypto-platform",
         },
