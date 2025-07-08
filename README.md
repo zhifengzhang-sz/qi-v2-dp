@@ -26,6 +26,15 @@ DSL Schema (source of truth) → Auto-generates → Database + Topic schemas
 
 ## 🚀 Quick Start
 
+### Initial Setup
+```bash
+# Install dependencies
+bun install
+
+# Verify installation with type checking
+bun run typecheck
+```
+
 ### Schema Generation (Core Workflow)
 ```bash
 # Generate all schemas from DSL types
