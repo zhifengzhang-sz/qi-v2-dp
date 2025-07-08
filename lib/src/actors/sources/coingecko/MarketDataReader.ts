@@ -136,23 +136,26 @@ export class CoinGeckoMarketDataReader extends BaseReader {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         if (this.config.debug) {
-          console.log(`🚀 Connecting to external CoinGecko MCP server (attempt ${attempt}/${maxRetries})...`);
+          console.log(
+            `🚀 Connecting to external CoinGecko MCP server (attempt ${attempt}/${maxRetries})...`,
+          );
         }
 
         const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
-        await this.mcpClient!.connect(transport);
+        await this.mcpClient?.connect(transport);
         this.mcpClientInitialized = true;
         return true;
-        
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        
+
         if (errorMsg.includes("429") || errorMsg.includes("Non-200 status code (429)")) {
-          const delay = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+          const delay = 2 ** attempt * 2000; // 2s, 4s, 8s
           if (this.config.debug) {
-            console.log(`⏳ Rate limited (attempt ${attempt}/${maxRetries}), waiting ${delay}ms...`);
+            console.log(
+              `⏳ Rate limited (attempt ${attempt}/${maxRetries}), waiting ${delay}ms...`,
+            );
           }
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           // Non-rate-limit error, don't retry
           if (this.config.debug) {
@@ -162,7 +165,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
         }
       }
     }
-    
+
     return false;
   }
 

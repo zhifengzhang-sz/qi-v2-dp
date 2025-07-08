@@ -9,9 +9,7 @@
           "filter": {
             "type": "string",
             "description": "apply relevant filters to results",
-            "enum": [
-              "nft"
-            ]
+            "enum": ["nft"]
           }
         }
       }
@@ -36,10 +34,7 @@
           "dex_pair_format": {
             "type": "string",
             "description": "set to `symbol` to display DEX pair base and target as symbols, default: `contract_address`",
-            "enum": [
-              "contract_address",
-              "symbol"
-            ]
+            "enum": ["contract_address", "symbol"]
           },
           "localization": {
             "type": "boolean",
@@ -81,10 +76,7 @@
           "status": {
             "type": "string",
             "description": "filter by status of coins, default: active",
-            "enum": [
-              "active",
-              "inactive"
-            ]
+            "enum": ["active", "inactive"]
           }
         }
       }
@@ -118,10 +110,7 @@
           "include_tokens": {
             "type": "string",
             "description": "for `symbols` lookups, specify `all` to include all matching tokens <br> Default `top` returns top-ranked tokens (by market cap or volume)",
-            "enum": [
-              "top",
-              "all"
-            ]
+            "enum": ["top", "all"]
           },
           "locale": {
             "type": "string",
@@ -241,25 +230,12 @@
           "duration": {
             "type": "string",
             "description": "filter result by time range <br> Default value: `24h`",
-            "enum": [
-              "1h",
-              "24h",
-              "7d",
-              "14d",
-              "30d",
-              "60d",
-              "1y"
-            ]
+            "enum": ["1h", "24h", "7d", "14d", "30d", "60d", "1y"]
           },
           "top_coins": {
             "type": "string",
             "description": "filter result by market cap ranking (top 300 to 1000) or all coins (including coins that do not have market cap) <br> Default value: `1000`",
-            "enum": [
-              "300",
-              "500",
-              "1000",
-              "all"
-            ]
+            "enum": ["300", "500", "1000", "all"]
           }
         }
       }
@@ -306,11 +282,7 @@
           "interval": {
             "type": "string",
             "description": "data interval, leave empty for auto granularity",
-            "enum": [
-              "5m",
-              "hourly",
-              "daily"
-            ]
+            "enum": ["5m", "hourly", "daily"]
           },
           "precision": {
             "type": "string",
@@ -385,11 +357,7 @@
           "interval": {
             "type": "string",
             "description": "data interval, leave empty for auto granularity",
-            "enum": [
-              "5m",
-              "hourly",
-              "daily"
-            ]
+            "enum": ["5m", "hourly", "daily"]
           },
           "precision": {
             "type": "string",
@@ -436,10 +404,7 @@
           "interval": {
             "type": "string",
             "description": "data interval",
-            "enum": [
-              "daily",
-              "hourly"
-            ]
+            "enum": ["daily", "hourly"]
           },
           "to": {
             "type": "number",
@@ -640,12 +605,7 @@
           "duration": {
             "type": "string",
             "description": "duration to sort trending list by <br> Default value: 24h",
-            "enum": [
-              "5m",
-              "1h",
-              "6h",
-              "24h"
-            ]
+            "enum": ["5m", "1h", "6h", "24h"]
           },
           "include": {
             "type": "string",
@@ -670,12 +630,7 @@
           "duration": {
             "type": "string",
             "description": "duration to sort trending list by <br> Default value: 24h",
-            "enum": [
-              "5m",
-              "1h",
-              "6h",
-              "24h"
-            ]
+            "enum": ["5m", "1h", "6h", "24h"]
           },
           "include": {
             "type": "string",
@@ -727,10 +682,7 @@
           "sort": {
             "type": "string",
             "description": "sort the pools by field <br> Default value: h24_tx_count_desc",
-            "enum": [
-              "h24_tx_count_desc",
-              "h24_volume_usd_desc"
-            ]
+            "enum": ["h24_tx_count_desc", "h24_volume_usd_desc"]
           }
         }
       }
@@ -755,10 +707,7 @@
           "sort": {
             "type": "string",
             "description": "sort the pools by field <br> Default value: h24_tx_count_desc",
-            "enum": [
-              "h24_tx_count_desc",
-              "h24_volume_usd_desc"
-            ]
+            "enum": ["h24_tx_count_desc", "h24_volume_usd_desc"]
           }
         }
       }
@@ -815,11 +764,7 @@
           },
           "timeframe": {
             "type": "string",
-            "enum": [
-              "day",
-              "hour",
-              "minute"
-            ]
+            "enum": ["day", "hour", "minute"]
           },
           "token": {
             "type": "string",
@@ -836,10 +781,7 @@
           "currency": {
             "type": "string",
             "description": "return OHLCV in USD or quote token <br> Default value: usd",
-            "enum": [
-              "usd",
-              "token"
-            ]
+            "enum": ["usd", "token"]
           },
           "include_empty_intervals": {
             "type": "boolean",
@@ -890,9 +832,7 @@
           "include": {
             "type": "string",
             "description": "attributes to include",
-            "enum": [
-              "top_pools"
-            ]
+            "enum": ["top_pools"]
           }
         }
       }
@@ -946,11 +886,7 @@
           "days": {
             "type": "string",
             "description": "number of days to return the historical token holders chart <br> Default value: 7",
-            "enum": [
-              "7",
-              "30",
-              "max"
-            ]
+            "enum": ["7", "30", "max"]
           }
         }
       }
@@ -969,11 +905,7 @@
           },
           "timeframe": {
             "type": "string",
-            "enum": [
-              "day",
-              "hour",
-              "minute"
-            ]
+            "enum": ["day", "hour", "minute"]
           },
           "aggregate": {
             "type": "string",
@@ -986,10 +918,7 @@
           "currency": {
             "type": "string",
             "description": "return OHLCV in USD or quote token <br> Default value: usd",
-            "enum": [
-              "usd",
-              "token"
-            ]
+            "enum": ["usd", "token"]
           },
           "include_empty_intervals": {
             "type": "boolean",
@@ -1025,11 +954,7 @@
           "sort": {
             "type": "string",
             "description": "sort the pools by field <br> Default value: h24_volume_usd_liquidity_desc",
-            "enum": [
-              "h24_volume_usd_liquidity_desc",
-              "h24_tx_count_desc",
-              "h24_volume_usd_desc"
-            ]
+            "enum": ["h24_volume_usd_liquidity_desc", "h24_tx_count_desc", "h24_volume_usd_desc"]
           }
         }
       }
@@ -1070,12 +995,7 @@
           "buys_duration": {
             "type": "string",
             "description": "duration for buy transactions metric <br> Default value: 24h",
-            "enum": [
-              "5m",
-              "1h",
-              "6h",
-              "24h"
-            ]
+            "enum": ["5m", "1h", "6h", "24h"]
           },
           "buys_max": {
             "type": "integer",
@@ -1148,12 +1068,7 @@
           "sells_duration": {
             "type": "string",
             "description": "duration for sell transactions metric <br> Default value: 24h",
-            "enum": [
-              "5m",
-              "1h",
-              "6h",
-              "24h"
-            ]
+            "enum": ["5m", "1h", "6h", "24h"]
           },
           "sells_max": {
             "type": "integer",
@@ -1180,12 +1095,7 @@
           "tx_count_duration": {
             "type": "string",
             "description": "duration for transaction count metric <br> Default value: 24h",
-            "enum": [
-              "5m",
-              "1h",
-              "6h",
-              "24h"
-            ]
+            "enum": ["5m", "1h", "6h", "24h"]
           },
           "tx_count_max": {
             "type": "integer",
@@ -1334,10 +1244,7 @@
           "include_tokens": {
             "type": "string",
             "description": "for `symbols` lookups, specify `all` to include all matching tokens <br> Default `top` returns top-ranked tokens (by market cap or volume)",
-            "enum": [
-              "top",
-              "all"
-            ]
+            "enum": ["top", "all"]
           },
           "names": {
             "type": "string",

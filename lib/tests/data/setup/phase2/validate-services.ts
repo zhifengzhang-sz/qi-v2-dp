@@ -2,18 +2,18 @@
 
 /**
  * Phase 2: Per-Test Service Validation Setup
- * 
+ *
  * Validates that all required services are running and accessible.
  * This runs before every test execution.
- * 
+ *
  * If this fails, tests are immediately terminated - no testing without proper services.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
+import { spawn } from "node:child_process";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
-import { spawn } from "node:child_process";
 
 interface ServiceStatus {
   name: string;
@@ -43,7 +43,7 @@ export class Phase2ServiceValidator {
 
   async validateAll(): Promise<ValidationResult> {
     console.log("🔍 Phase 2: Validating services for test execution...");
-    
+
     try {
       // Ensure real-time data directory exists
       await mkdir(this.realTimeDir, { recursive: true });
@@ -56,11 +56,11 @@ export class Phase2ServiceValidator {
       await this.validateRedpandaCluster();
       await this.validateTimescaleDB();
       await this.validateRedpandaMCPServer();
-      
+
       // Calculate results
-      const requiredServices = this.services.filter(s => s.required);
-      const requiredServicesUp = requiredServices.filter(s => s.available).length;
-      
+      const requiredServices = this.services.filter((s) => s.required);
+      const requiredServicesUp = requiredServices.filter((s) => s.available).length;
+
       const result: ValidationResult = {
         success: requiredServicesUp === requiredServices.length,
         timestamp: new Date(),
@@ -68,30 +68,33 @@ export class Phase2ServiceValidator {
         requiredServicesUp,
         totalRequiredServices: requiredServices.length,
       };
-      
+
       // Save validation results
       await this.saveValidationResults(result);
-      
+
       if (result.success) {
-        console.log(`✅ Phase 2: All ${result.totalRequiredServices} required services are available`);
+        console.log(
+          `✅ Phase 2: All ${result.totalRequiredServices} required services are available`,
+        );
         console.log("🚀 Tests can proceed with real service integration");
       } else {
-        console.error(`❌ Phase 2: ${result.totalRequiredServices - result.requiredServicesUp}/${result.totalRequiredServices} required services unavailable`);
+        console.error(
+          `❌ Phase 2: ${result.totalRequiredServices - result.requiredServicesUp}/${result.totalRequiredServices} required services unavailable`,
+        );
         console.error("🚫 Tests cannot proceed - fix service issues first");
-        
+
         // Log specific failures
-        const failedServices = this.services.filter(s => s.required && !s.available);
+        const failedServices = this.services.filter((s) => s.required && !s.available);
         for (const service of failedServices) {
-          console.error(`   - ${service.name}: ${service.error || 'Unknown error'}`);
+          console.error(`   - ${service.name}: ${service.error || "Unknown error"}`);
         }
       }
-      
+
       return result;
-      
     } catch (error) {
       const errorMsg = `Phase 2 validation failed: ${error instanceof Error ? error.message : String(error)}`;
       console.error("❌", errorMsg);
-      
+
       return {
         success: false,
         timestamp: new Date(),
@@ -114,14 +117,14 @@ export class Phase2ServiceValidator {
 
     try {
       console.log("🌐 Validating CoinGecko MCP API...");
-      
+
       // Try connecting with retry logic for rate limiting
       const client = await this.connectToMCPWithRetry();
-      
+
       if (!client) {
         throw new Error("Failed to connect after retries");
       }
-      
+
       // Test basic functionality with retry
       const testResponse = await this.callMCPToolWithRetry(client, {
         name: "get_coins_markets",
@@ -131,18 +134,17 @@ export class Phase2ServiceValidator {
         },
       });
 
-      if (testResponse && testResponse.content) {
+      if (testResponse?.content) {
         service.available = true;
         service.responseTime = Date.now() - startTime;
-        
+
         // Store current price for real-time data
         await this.saveRealTimeData("prices/bitcoin-current.json", testResponse);
-        
+
         console.log(`✅ CoinGecko API available (${service.responseTime}ms)`);
       }
 
       await client.close();
-
     } catch (error) {
       service.error = error instanceof Error ? error.message : String(error);
       console.error(`❌ CoinGecko API unavailable: ${service.error}`);
@@ -161,30 +163,27 @@ export class Phase2ServiceValidator {
           },
           {
             capabilities: {},
-          }
+          },
         );
 
-        const transport = new SSEClientTransport(
-          new URL("https://mcp.api.coingecko.com/sse")
-        );
-        
+        const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
+
         await client.connect(transport);
         return client;
-        
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        
+
         if (errorMsg.includes("429") || errorMsg.includes("Non-200 status code (429)")) {
-          const delay = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+          const delay = 2 ** attempt * 2000; // 2s, 4s, 8s
           console.log(`⏳ Rate limited (attempt ${attempt}/${maxRetries}), waiting ${delay}ms...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           // Non-rate-limit error, don't retry
           throw error;
         }
       }
     }
-    
+
     return null;
   }
 
@@ -194,11 +193,11 @@ export class Phase2ServiceValidator {
         return await client.callTool(toolCall);
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
-        
+
         if (errorMsg.includes("429") && attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000; // 1s, 2s
+          const delay = 2 ** attempt * 1000; // 1s, 2s
           console.log(`⏳ API call rate limited, waiting ${delay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         } else {
           throw error;
         }
@@ -217,13 +216,13 @@ export class Phase2ServiceValidator {
 
     try {
       console.log("🔄 Validating Redpanda cluster...");
-      
+
       // Test with kafkajs client
       const startTime = Date.now();
-      
+
       // Simple connection test using bun process
       const testResult = await this.testKafkaConnection("localhost:19092");
-      
+
       if (testResult.success) {
         service.available = true;
         service.responseTime = Date.now() - startTime;
@@ -231,7 +230,6 @@ export class Phase2ServiceValidator {
       } else {
         throw new Error(testResult.error);
       }
-
     } catch (error) {
       service.error = error instanceof Error ? error.message : String(error);
       console.error(`❌ Redpanda cluster unavailable: ${service.error}`);
@@ -251,12 +249,12 @@ export class Phase2ServiceValidator {
 
     try {
       console.log("🗄️ Validating TimescaleDB...");
-      
+
       const startTime = Date.now();
-      
+
       // Test database connection
       const testResult = await this.testDatabaseConnection();
-      
+
       if (testResult.success) {
         service.available = true;
         service.responseTime = Date.now() - startTime;
@@ -267,7 +265,7 @@ export class Phase2ServiceValidator {
           console.log("🔧 Database not found, attempting to create...");
           const { setupTimescaleDB } = await import("./setup-timescaledb");
           const setupResult = await setupTimescaleDB();
-          
+
           if (setupResult.success) {
             console.log("✅ TimescaleDB setup completed");
             service.available = true;
@@ -279,7 +277,6 @@ export class Phase2ServiceValidator {
           throw new Error(testResult.error);
         }
       }
-
     } catch (error) {
       service.error = error instanceof Error ? error.message : String(error);
       console.error(`❌ TimescaleDB unavailable: ${service.error}`);
@@ -299,12 +296,12 @@ export class Phase2ServiceValidator {
 
     try {
       console.log("🔌 Validating Redpanda MCP Server...");
-      
+
       const startTime = Date.now();
-      
+
       // Test rpk availability
       const rpkTest = await this.testRPKAvailability();
-      
+
       if (rpkTest.success) {
         service.available = true;
         service.responseTime = Date.now() - startTime;
@@ -312,7 +309,6 @@ export class Phase2ServiceValidator {
       } else {
         throw new Error(rpkTest.error);
       }
-
     } catch (error) {
       service.error = error instanceof Error ? error.message : String(error);
       console.log(`⚠️ Redpanda MCP Server unavailable: ${service.error} (optional)`);
@@ -327,7 +323,7 @@ export class Phase2ServiceValidator {
     try {
       // Simplified test - check if broker is reachable
       const { Kafka } = await import("kafkajs");
-      
+
       const kafka = new Kafka({
         clientId: "phase2-validator",
         brokers: [broker],
@@ -341,12 +337,12 @@ export class Phase2ServiceValidator {
       await admin.connect();
       await admin.listTopics();
       await admin.disconnect();
-      
+
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error) 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -355,7 +351,7 @@ export class Phase2ServiceValidator {
     try {
       // Test PostgreSQL/TimescaleDB connection
       const { Client } = await import("pg");
-      
+
       const client = new Client({
         host: "localhost",
         port: 5432,
@@ -365,16 +361,16 @@ export class Phase2ServiceValidator {
       });
 
       await client.connect();
-      
+
       // Test TimescaleDB extension
       const result = await client.query("SELECT 1");
       await client.end();
-      
+
       return { success: true };
     } catch (error) {
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : String(error) 
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : String(error),
       };
     }
   }
@@ -382,7 +378,7 @@ export class Phase2ServiceValidator {
   private async testRPKAvailability(): Promise<{ success: boolean; error?: string }> {
     return new Promise((resolve) => {
       const rpkProcess = spawn("rpk", ["version"], { stdio: "pipe" });
-      
+
       rpkProcess.on("exit", (code) => {
         if (code === 0) {
           resolve({ success: true });
@@ -390,11 +386,11 @@ export class Phase2ServiceValidator {
           resolve({ success: false, error: `rpk exited with code ${code}` });
         }
       });
-      
+
       rpkProcess.on("error", (error) => {
         resolve({ success: false, error: error.message });
       });
-      
+
       // Timeout after 5 seconds
       setTimeout(() => {
         rpkProcess.kill();
@@ -422,7 +418,7 @@ export class Phase2ServiceValidator {
     await writeFile(
       join(this.realTimeDir, "_validation.json"),
       JSON.stringify(validationData, null, 2),
-      "utf8"
+      "utf8",
     );
   }
 }
@@ -431,13 +427,13 @@ export class Phase2ServiceValidator {
 if (import.meta.main) {
   const validator = new Phase2ServiceValidator();
   const result = await validator.validateAll();
-  
+
   if (!result.success) {
     console.error("❌ Phase 2 validation failed - tests cannot run without required services");
     console.error("🔧 Fix service issues and retry");
     process.exit(1);
   }
-  
+
   console.log("🎉 Phase 2 complete - services validated, ready for testing");
   process.exit(0);
 }

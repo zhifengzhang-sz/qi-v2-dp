@@ -1,1 +1,1357 @@
-{"numTotalTestSuites":64,"numPassedTestSuites":31,"numFailedTestSuites":33,"numPendingTestSuites":0,"numTotalTests":115,"numPassedTests":34,"numFailedTests":47,"numPendingTests":34,"numTodoTests":0,"snapshot":{"added":0,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0,"didUpdate":false},"startTime":1751972954711,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["CoinGeckoMarketDataReader","Initialization"],"fullName":"CoinGeckoMarketDataReader Initialization should initialize with external MCP server","status":"passed","title":"should initialize with external MCP server","duration":3085.861265,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","MCP Client Integration"],"fullName":"CoinGeckoMarketDataReader MCP Client Integration should connect to external CoinGecko MCP server","status":"passed","title":"should connect to external CoinGecko MCP server","duration":0.44269600000006903,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","MCP Client Integration"],"fullName":"CoinGeckoMarketDataReader MCP Client Integration should register MCP client with BaseReader","status":"passed","title":"should register MCP client with BaseReader","duration":0.26571100000001024,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","DSL Interface Implementation"],"fullName":"CoinGeckoMarketDataReader DSL Interface Implementation should get current Bitcoin price from external server","status":"passed","title":"should get current Bitcoin price from external server","duration":347.1372489999999,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","DSL Interface Implementation"],"fullName":"CoinGeckoMarketDataReader DSL Interface Implementation should get multiple cryptocurrency prices","status":"passed","title":"should get multiple cryptocurrency prices","duration":521.090314,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","DSL Interface Implementation"],"fullName":"CoinGeckoMarketDataReader DSL Interface Implementation should get global market analytics","status":"passed","title":"should get global market analytics","duration":475.4992200000006,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","DSL Interface Implementation"],"fullName":"CoinGeckoMarketDataReader DSL Interface Implementation should get OHLCV data","status":"passed","title":"should get OHLCV data","duration":336.96636300000046,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Handler Architecture Verification"],"fullName":"CoinGeckoMarketDataReader Handler Architecture Verification should inherit all DSL methods from BaseReader","status":"passed","title":"should inherit all DSL methods from BaseReader","duration":0.2529560000002675,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Handler Architecture Verification"],"fullName":"CoinGeckoMarketDataReader Handler Architecture Verification should implement only handler methods, not DSL methods","status":"passed","title":"should implement only handler methods, not DSL methods","duration":0.22027499999967404,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Error Handling"],"fullName":"CoinGeckoMarketDataReader Error Handling should handle MCP client not initialized gracefully","status":"passed","title":"should handle MCP client not initialized gracefully","duration":1.7651770000002216,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Error Handling"],"fullName":"CoinGeckoMarketDataReader Error Handling should handle error cases properly","status":"passed","title":"should handle error cases properly","duration":0.4029150000005757,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Data Transformation"],"fullName":"CoinGeckoMarketDataReader Data Transformation should transform MCP response to unified data types","status":"passed","title":"should transform MCP response to unified data types","duration":383.20258399999966,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Status and Monitoring"],"fullName":"CoinGeckoMarketDataReader Status and Monitoring should provide comprehensive status information","status":"passed","title":"should provide comprehensive status information","duration":0.2040630000001329,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Status and Monitoring"],"fullName":"CoinGeckoMarketDataReader Status and Monitoring should track query activity","status":"passed","title":"should track query activity","duration":209.24853500000063,"failureMessages":[],"meta":{}},{"ancestorTitles":["CoinGeckoMarketDataReader","Cleanup"],"fullName":"CoinGeckoMarketDataReader Cleanup should cleanup resources properly","status":"passed","title":"should cleanup resources properly","duration":1324.6570659999998,"failureMessages":[],"meta":{}}],"startTime":1751972958841,"endTime":1751972965530.657,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/CoinGeckoMarketDataReader.test.ts"},{"assertionResults":[{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP Server Connection"],"fullName":"RedpandaMCPSourceActor - External Integration MCP Server Connection should connect to Redpanda MCP Server","status":"failed","title":"should connect to Redpanda MCP Server","duration":18.506076000000007,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:62:55\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP Server Connection"],"fullName":"RedpandaMCPSourceActor - External Integration MCP Server Connection should list available MCP tools","status":"failed","title":"should list available MCP tools","duration":0.3363949999999818,"failureMessages":["TypeError: reader.listMCPTools is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:71:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP Server Connection"],"fullName":"RedpandaMCPSourceActor - External Integration MCP Server Connection should verify MCP protocol compliance","status":"failed","title":"should verify MCP protocol compliance","duration":0.9101959999999849,"failureMessages":["AssertionError: expected 'redpanda-mcp' to be 'mcp+kafka' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:92:33\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP-Based Kafka Operations"],"fullName":"RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should list topics via MCP tools","status":"failed","title":"should list topics via MCP tools","duration":0.25139599999999973,"failureMessages":["TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:108:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP-Based Kafka Operations"],"fullName":"RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should consume messages via MCP tools","status":"failed","title":"should consume messages via MCP tools","duration":0.18758900000000267,"failureMessages":["TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:127:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","MCP-Based Kafka Operations"],"fullName":"RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should get consumer group status via MCP","status":"failed","title":"should get consumer group status via MCP","duration":0.193883000000028,"failureMessages":["TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:151:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","DSL Implementation via MCP"],"fullName":"RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get current cryptocurrency price via MCP","status":"failed","title":"should get current cryptocurrency price via MCP","duration":0.8198189999999954,"failureMessages":["Error: Current price via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:180:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","DSL Implementation via MCP"],"fullName":"RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get multiple prices via MCP streaming","status":"failed","title":"should get multiple prices via MCP streaming","duration":0.31977299999999786,"failureMessages":["Error: Multiple prices via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:202:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","DSL Implementation via MCP"],"fullName":"RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get market analytics from streaming data","status":"failed","title":"should get market analytics from streaming data","duration":0.3291489999999726,"failureMessages":["Error: Market analytics via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:221:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Handler Architecture"],"fullName":"RedpandaMCPSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader","status":"passed","title":"should inherit DSL methods from BaseReader","duration":0.1789229999999975,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Handler Architecture"],"fullName":"RedpandaMCPSourceActor - External Integration Handler Architecture should implement MCP+Kafka-specific handlers","status":"failed","title":"should implement MCP+Kafka-specific handlers","duration":0.4380439999999908,"failureMessages":["AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:245:41\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Streaming Performance"],"fullName":"RedpandaMCPSourceActor - External Integration Streaming Performance should handle real-time message processing","status":"failed","title":"should handle real-time message processing","duration":0.5612830000000031,"failureMessages":["TypeError: reader.subscribeToTopic is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:260:34\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Streaming Performance"],"fullName":"RedpandaMCPSourceActor - External Integration Streaming Performance should handle consumer lag monitoring","status":"failed","title":"should handle consumer lag monitoring","duration":0.3230609999999956,"failureMessages":["TypeError: reader.getConsumerLag is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:284:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Error Handling"],"fullName":"RedpandaMCPSourceActor - External Integration Error Handling should handle MCP server unavailable gracefully","status":"failed","title":"should handle MCP server unavailable gracefully","duration":18.365605000000016,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:315:33\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Error Handling"],"fullName":"RedpandaMCPSourceActor - External Integration Error Handling should handle invalid MCP tool calls","status":"failed","title":"should handle invalid MCP tool calls","duration":0.2400830000000269,"failureMessages":["TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:327:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaMCPSourceActor - External Integration","Error Handling"],"fullName":"RedpandaMCPSourceActor - External Integration Error Handling should handle Kafka cluster disconnection","status":"failed","title":"should handle Kafka cluster disconnection","duration":0.19492800000000443,"failureMessages":["TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:341:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}}],"startTime":1751972958841,"endTime":1751972958883.24,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts"},{"assertionResults":[{"ancestorTitles":["RedpandaSourceActor - External Integration","Kafka Cluster Connection"],"fullName":"RedpandaSourceActor - External Integration Kafka Cluster Connection should connect to Redpanda Kafka cluster","status":"passed","title":"should connect to Redpanda Kafka cluster","duration":39.780992000000026,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Kafka Cluster Connection"],"fullName":"RedpandaSourceActor - External Integration Kafka Cluster Connection should list available topics","status":"failed","title":"should list available topics","duration":2.0864329999999995,"failureMessages":["TypeError: reader.listTopics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:63:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Market Data Consumption"],"fullName":"RedpandaSourceActor - External Integration Market Data Consumption should consume cryptocurrency price messages","status":"failed","title":"should consume cryptocurrency price messages","duration":0.8891250000000355,"failureMessages":["Error: Market data consumption failed: PRICE_FETCH_ERROR: Consumer groupId must be a non-empty string.\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:89:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Market Data Consumption"],"fullName":"RedpandaSourceActor - External Integration Market Data Consumption should handle consumer group management","status":"failed","title":"should handle consumer group management","duration":0.17128300000001673,"failureMessages":["TypeError: reader.getConsumerStatus is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:103:29\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Streaming Architecture"],"fullName":"RedpandaSourceActor - External Integration Streaming Architecture should implement streaming DSL methods","status":"failed","title":"should implement streaming DSL methods","duration":1.87356699999998,"failureMessages":["AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:113:44\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Streaming Architecture"],"fullName":"RedpandaSourceActor - External Integration Streaming Architecture should handle real-time message consumption","status":"failed","title":"should handle real-time message consumption","duration":0.16704500000003009,"failureMessages":["TypeError: reader.subscribe is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:126:34\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Handler Architecture"],"fullName":"RedpandaSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader","status":"passed","title":"should inherit DSL methods from BaseReader","duration":0.2087359999999876,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Handler Architecture"],"fullName":"RedpandaSourceActor - External Integration Handler Architecture should implement Kafka-specific handlers only","status":"failed","title":"should implement Kafka-specific handlers only","duration":0.7572770000000446,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:155:80\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Error Handling"],"fullName":"RedpandaSourceActor - External Integration Error Handling should handle broker unavailable gracefully","status":"failed","title":"should handle broker unavailable gracefully","duration":6891.521938,"failureMessages":["AssertionError: expected 'Redpanda Reader initialization failed…' to contain 'broker'\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:173:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaSourceActor - External Integration","Error Handling"],"fullName":"RedpandaSourceActor - External Integration Error Handling should handle authentication failures","status":"failed","title":"should handle authentication failures","duration":6.22946199999933,"failureMessages":["Error: Authentication should have failed with invalid credentials\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:193:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}}],"startTime":1751972958874,"endTime":1751972965819.2295,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts"},{"assertionResults":[{"ancestorTitles":["RedpandaTargetActor - External Integration","Kafka Producer Connection"],"fullName":"RedpandaTargetActor - External Integration Kafka Producer Connection should connect to Redpanda Kafka cluster as producer","status":"passed","title":"should connect to Redpanda Kafka cluster as producer","duration":39.25910200000004,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Kafka Producer Connection"],"fullName":"RedpandaTargetActor - External Integration Kafka Producer Connection should verify topic availability for publishing","status":"failed","title":"should verify topic availability for publishing","duration":2.13293699999997,"failureMessages":["TypeError: writer.verifyTopics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:68:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Market Data Publishing"],"fullName":"RedpandaTargetActor - External Integration Market Data Publishing should publish cryptocurrency price data","status":"failed","title":"should publish cryptocurrency price data","duration":24.71551800000003,"failureMessages":["TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:110:37\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Market Data Publishing"],"fullName":"RedpandaTargetActor - External Integration Market Data Publishing should publish batch market analytics","status":"failed","title":"should publish batch market analytics","duration":0.24380500000000893,"failureMessages":["TypeError: writer.publishMarketAnalytics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:129:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Market Data Publishing"],"fullName":"RedpandaTargetActor - External Integration Market Data Publishing should handle batch publishing with proper partitioning","status":"failed","title":"should handle batch publishing with proper partitioning","duration":1.4245200000000295,"failureMessages":["TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:163:37\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Streaming Architecture"],"fullName":"RedpandaTargetActor - External Integration Streaming Architecture should implement streaming DSL methods","status":"failed","title":"should implement streaming DSL methods","duration":1.7736020000000394,"failureMessages":["AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:172:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Streaming Architecture"],"fullName":"RedpandaTargetActor - External Integration Streaming Architecture should handle producer batching and flushing","status":"failed","title":"should handle producer batching and flushing","duration":1.6562779999999862,"failureMessages":["TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:197:26\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Handler Architecture"],"fullName":"RedpandaTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter","status":"failed","title":"should inherit DSL methods from BaseWriter","duration":0.5401520000000346,"failureMessages":["AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:205:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Handler Architecture"],"fullName":"RedpandaTargetActor - External Integration Handler Architecture should implement Kafka-specific handlers only","status":"failed","title":"should implement Kafka-specific handlers only","duration":0.8178330000000074,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:214:80\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Error Handling"],"fullName":"RedpandaTargetActor - External Integration Error Handling should handle broker unavailable gracefully","status":"failed","title":"should handle broker unavailable gracefully","duration":6923.853305,"failureMessages":["AssertionError: expected 'Redpanda Writer initialization failed…' to contain 'broker'\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:232:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Error Handling"],"fullName":"RedpandaTargetActor - External Integration Error Handling should handle schema validation failures","status":"failed","title":"should handle schema validation failures","duration":0.7432600000001912,"failureMessages":["AssertionError: expected 'PRICE_PUBLISH_ERROR: Cannot read prop…' to match /schema|validation|invalid/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:254:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["RedpandaTargetActor - External Integration","Error Handling"],"fullName":"RedpandaTargetActor - External Integration Error Handling should handle topic permission errors","status":"failed","title":"should handle topic permission errors","duration":230.55587399999968,"failureMessages":["Error: Should have failed with topic permission error\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:279:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}}],"startTime":1751972958875,"endTime":1751972966102.556,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts"},{"assertionResults":[{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP Server Connection"],"fullName":"TimescaleMCPTargetActor - External Integration MCP Server Connection should connect to TimescaleDB MCP Server","status":"skipped","title":"should connect to TimescaleDB MCP Server","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP Server Connection"],"fullName":"TimescaleMCPTargetActor - External Integration MCP Server Connection should list available MCP tools","status":"skipped","title":"should list available MCP tools","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP Server Connection"],"fullName":"TimescaleMCPTargetActor - External Integration MCP Server Connection should verify MCP protocol compliance","status":"skipped","title":"should verify MCP protocol compliance","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP-Based Database Operations"],"fullName":"TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should create hypertables via MCP tools","status":"skipped","title":"should create hypertables via MCP tools","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP-Based Database Operations"],"fullName":"TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should verify database connection via MCP","status":"skipped","title":"should verify database connection via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","MCP-Based Database Operations"],"fullName":"TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should list existing hypertables via MCP","status":"skipped","title":"should list existing hypertables via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","DSL Implementation via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish cryptocurrency price data via MCP","status":"skipped","title":"should publish cryptocurrency price data via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","DSL Implementation via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish OHLCV data via MCP tools","status":"skipped","title":"should publish OHLCV data via MCP tools","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","DSL Implementation via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish market analytics via MCP","status":"skipped","title":"should publish market analytics via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","TimescaleDB Features via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should create continuous aggregates via MCP","status":"skipped","title":"should create continuous aggregates via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","TimescaleDB Features via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should manage compression policies via MCP","status":"skipped","title":"should manage compression policies via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","TimescaleDB Features via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should manage retention policies via MCP","status":"skipped","title":"should manage retention policies via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Handler Architecture"],"fullName":"TimescaleMCPTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter","status":"skipped","title":"should inherit DSL methods from BaseWriter","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Handler Architecture"],"fullName":"TimescaleMCPTargetActor - External Integration Handler Architecture should implement MCP+TimescaleDB-specific handlers","status":"skipped","title":"should implement MCP+TimescaleDB-specific handlers","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Batch Processing via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration Batch Processing via MCP should handle batch insertions via MCP","status":"skipped","title":"should handle batch insertions via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Batch Processing via MCP"],"fullName":"TimescaleMCPTargetActor - External Integration Batch Processing via MCP should handle transaction batching via MCP","status":"skipped","title":"should handle transaction batching via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Error Handling"],"fullName":"TimescaleMCPTargetActor - External Integration Error Handling should handle MCP server unavailable gracefully","status":"skipped","title":"should handle MCP server unavailable gracefully","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Error Handling"],"fullName":"TimescaleMCPTargetActor - External Integration Error Handling should handle database constraint violations via MCP","status":"skipped","title":"should handle database constraint violations via MCP","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleMCPTargetActor - External Integration","Error Handling"],"fullName":"TimescaleMCPTargetActor - External Integration Error Handling should handle MCP tool call failures","status":"skipped","title":"should handle MCP tool call failures","failureMessages":[],"meta":{}}],"startTime":1751972954711,"endTime":1751972954711,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleMCPTargetActor.test.ts"},{"assertionResults":[{"ancestorTitles":["TimescaleSourceActor - External Integration","Database Connection"],"fullName":"TimescaleSourceActor - External Integration Database Connection should connect to TimescaleDB instance for reading","status":"skipped","title":"should connect to TimescaleDB instance for reading","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Database Connection"],"fullName":"TimescaleSourceActor - External Integration Database Connection should verify read access to hypertables","status":"skipped","title":"should verify read access to hypertables","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Historical Data Queries"],"fullName":"TimescaleSourceActor - External Integration Historical Data Queries should read current cryptocurrency prices from TimescaleDB","status":"skipped","title":"should read current cryptocurrency prices from TimescaleDB","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Historical Data Queries"],"fullName":"TimescaleSourceActor - External Integration Historical Data Queries should query price history with time ranges","status":"skipped","title":"should query price history with time ranges","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Historical Data Queries"],"fullName":"TimescaleSourceActor - External Integration Historical Data Queries should query OHLCV data with time aggregations","status":"skipped","title":"should query OHLCV data with time aggregations","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Time-Series Analytics"],"fullName":"TimescaleSourceActor - External Integration Time-Series Analytics should perform time-bucket aggregations","status":"skipped","title":"should perform time-bucket aggregations","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Time-Series Analytics"],"fullName":"TimescaleSourceActor - External Integration Time-Series Analytics should query market analytics historical data","status":"skipped","title":"should query market analytics historical data","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Time-Series Analytics"],"fullName":"TimescaleSourceActor - External Integration Time-Series Analytics should support materialized view queries","status":"skipped","title":"should support materialized view queries","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Handler Architecture"],"fullName":"TimescaleSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader","status":"skipped","title":"should inherit DSL methods from BaseReader","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Handler Architecture"],"fullName":"TimescaleSourceActor - External Integration Handler Architecture should implement TimescaleDB-specific handlers","status":"skipped","title":"should implement TimescaleDB-specific handlers","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Performance Optimization"],"fullName":"TimescaleSourceActor - External Integration Performance Optimization should use connection pooling","status":"skipped","title":"should use connection pooling","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Performance Optimization"],"fullName":"TimescaleSourceActor - External Integration Performance Optimization should implement query result caching","status":"skipped","title":"should implement query result caching","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Error Handling"],"fullName":"TimescaleSourceActor - External Integration Error Handling should handle database unavailable gracefully","status":"skipped","title":"should handle database unavailable gracefully","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Error Handling"],"fullName":"TimescaleSourceActor - External Integration Error Handling should handle empty result sets gracefully","status":"skipped","title":"should handle empty result sets gracefully","failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleSourceActor - External Integration","Error Handling"],"fullName":"TimescaleSourceActor - External Integration Error Handling should handle query timeout gracefully","status":"skipped","title":"should handle query timeout gracefully","failureMessages":[],"meta":{}}],"startTime":1751972954711,"endTime":1751972954711,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleSourceActor.test.ts"},{"assertionResults":[{"ancestorTitles":["TimescaleTargetActor - External Integration","Database Connection"],"fullName":"TimescaleTargetActor - External Integration Database Connection should connect to TimescaleDB instance","status":"passed","title":"should connect to TimescaleDB instance","duration":63.647332000000006,"failureMessages":[],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Database Connection"],"fullName":"TimescaleTargetActor - External Integration Database Connection should verify hypertables exist","status":"failed","title":"should verify hypertables exist","duration":1.7680050000000165,"failureMessages":["TypeError: writer.verifyTables is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:75:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Database Connection"],"fullName":"TimescaleTargetActor - External Integration Database Connection should verify TimescaleDB extensions","status":"failed","title":"should verify TimescaleDB extensions","duration":0.22089799999997695,"failureMessages":["TypeError: writer.checkExtensions is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:95:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Time-Series Data Storage"],"fullName":"TimescaleTargetActor - External Integration Time-Series Data Storage should store cryptocurrency price data","status":"failed","title":"should store cryptocurrency price data","duration":2.024671000000012,"failureMessages":["Error: Price storage failed: PRICE_PUBLISH_ERROR: column \"exchange_id\" of relation \"crypto_prices\" does not exist\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:129:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Time-Series Data Storage"],"fullName":"TimescaleTargetActor - External Integration Time-Series Data Storage should store OHLCV time-series data","status":"failed","title":"should store OHLCV time-series data","duration":1.0827239999999847,"failureMessages":["Error: OHLCV storage failed: OHLCV_PUBLISH_ERROR: column \"exchange_id\" of relation \"ohlcv_data\" does not exist\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:162:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Time-Series Data Storage"],"fullName":"TimescaleTargetActor - External Integration Time-Series Data Storage should handle time-series queries and aggregations","status":"failed","title":"should handle time-series queries and aggregations","duration":0.1749810000000025,"failureMessages":["TypeError: writer.getHourlyAggregates is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:174:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","TimescaleDB Features"],"fullName":"TimescaleTargetActor - External Integration TimescaleDB Features should implement time partitioning","status":"failed","title":"should implement time partitioning","duration":0.19950399999999036,"failureMessages":["TypeError: writer.getPartitionInfo is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:194:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","TimescaleDB Features"],"fullName":"TimescaleTargetActor - External Integration TimescaleDB Features should support compression policies","status":"failed","title":"should support compression policies","duration":0.152828999999997,"failureMessages":["TypeError: writer.checkCompressionPolicies is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:213:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","TimescaleDB Features"],"fullName":"TimescaleTargetActor - External Integration TimescaleDB Features should handle retention policies","status":"failed","title":"should handle retention policies","duration":0.2082990000000109,"failureMessages":["TypeError: writer.checkRetentionPolicies is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:231:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Handler Architecture"],"fullName":"TimescaleTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter","status":"failed","title":"should inherit DSL methods from BaseWriter","duration":1.825967999999989,"failureMessages":["AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:249:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Handler Architecture"],"fullName":"TimescaleTargetActor - External Integration Handler Architecture should implement TimescaleDB-specific handlers","status":"failed","title":"should implement TimescaleDB-specific handlers","duration":0.6953459999999723,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:257:86\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Error Handling"],"fullName":"TimescaleTargetActor - External Integration Error Handling should handle database unavailable gracefully","status":"failed","title":"should handle database unavailable gracefully","duration":31.70392800000002,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:278:33\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Error Handling"],"fullName":"TimescaleTargetActor - External Integration Error Handling should handle schema validation failures","status":"failed","title":"should handle schema validation failures","duration":0.5942850000000135,"failureMessages":["AssertionError: expected 'PRICE_PUBLISH_ERROR: value.toISOStrin…' to match /schema|validation|invalid|constraint/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:304:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["TimescaleTargetActor - External Integration","Error Handling"],"fullName":"TimescaleTargetActor - External Integration Error Handling should handle permission errors","status":"failed","title":"should handle permission errors","duration":31.044926000000032,"failureMessages":["AssertionError: expected 'PRICE_PUBLISH_ERROR: column \"exchange…' to match /permission|access|denied/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:339:32\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}}],"startTime":1751972958928,"endTime":1751972959064.045,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts"},{"assertionResults":[{"ancestorTitles":["OfficialRedpandaMCPLauncher","Initialization"],"fullName":"OfficialRedpandaMCPLauncher Initialization should create launcher with default configuration","status":"passed","title":"should create launcher with default configuration","duration":0.8416730000000143,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Initialization"],"fullName":"OfficialRedpandaMCPLauncher Initialization should create launcher with custom configuration","status":"passed","title":"should create launcher with custom configuration","duration":0.12381999999999493,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Server Information"],"fullName":"OfficialRedpandaMCPLauncher Server Information should provide comprehensive server information","status":"passed","title":"should provide comprehensive server information","duration":0.5248670000000004,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Server Information"],"fullName":"OfficialRedpandaMCPLauncher Server Information should list available MCP tools","status":"passed","title":"should list available MCP tools","duration":0.45460800000000745,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Server Information"],"fullName":"OfficialRedpandaMCPLauncher Server Information should provide broker information","status":"passed","title":"should provide broker information","duration":0.11496099999999387,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Cloud Configuration"],"fullName":"OfficialRedpandaMCPLauncher Cloud Configuration should support cloud MCP configuration","status":"passed","title":"should support cloud MCP configuration","duration":0.1907340000000204,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Process Management"],"fullName":"OfficialRedpandaMCPLauncher Process Management should handle rpk availability check gracefully","status":"passed","title":"should handle rpk availability check gracefully","duration":0.12433500000000208,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Process Management"],"fullName":"OfficialRedpandaMCPLauncher Process Management should provide status information","status":"passed","title":"should provide status information","duration":0.12169399999999087,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Process Management"],"fullName":"OfficialRedpandaMCPLauncher Process Management should handle startup failure gracefully","status":"passed","title":"should handle startup failure gracefully","duration":3044.56446,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Process Management"],"fullName":"OfficialRedpandaMCPLauncher Process Management should handle stop gracefully when not running","status":"passed","title":"should handle stop gracefully when not running","duration":0.38677800000004936,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Error Handling"],"fullName":"OfficialRedpandaMCPLauncher Error Handling should handle missing rpk binary gracefully","status":"passed","title":"should handle missing rpk binary gracefully","duration":0.06119799999987663,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Error Handling"],"fullName":"OfficialRedpandaMCPLauncher Error Handling should handle invalid configuration gracefully","status":"passed","title":"should handle invalid configuration gracefully","duration":0.052871000000322965,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Integration Readiness"],"fullName":"OfficialRedpandaMCPLauncher Integration Readiness should be ready for MCP client integration","status":"passed","title":"should be ready for MCP client integration","duration":0.11993200000006254,"failureMessages":[],"meta":{}},{"ancestorTitles":["OfficialRedpandaMCPLauncher","Integration Readiness"],"fullName":"OfficialRedpandaMCPLauncher Integration Readiness should support both local and cloud deployment modes","status":"passed","title":"should support both local and cloud deployment modes","duration":0.06619399999999587,"failureMessages":[],"meta":{}}],"startTime":1751972958759,"endTime":1751972961807.1199,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/mcp-servers/redpanda-mcp-launcher.test.ts"}]}
+{
+  "numTotalTestSuites": 64,
+  "numPassedTestSuites": 31,
+  "numFailedTestSuites": 33,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 115,
+  "numPassedTests": 34,
+  "numFailedTests": 47,
+  "numPendingTests": 34,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1751972954711,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Initialization"],
+          "fullName": "CoinGeckoMarketDataReader Initialization should initialize with external MCP server",
+          "status": "passed",
+          "title": "should initialize with external MCP server",
+          "duration": 3085.861265,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "MCP Client Integration"],
+          "fullName": "CoinGeckoMarketDataReader MCP Client Integration should connect to external CoinGecko MCP server",
+          "status": "passed",
+          "title": "should connect to external CoinGecko MCP server",
+          "duration": 0.44269600000006903,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "MCP Client Integration"],
+          "fullName": "CoinGeckoMarketDataReader MCP Client Integration should register MCP client with BaseReader",
+          "status": "passed",
+          "title": "should register MCP client with BaseReader",
+          "duration": 0.26571100000001024,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "DSL Interface Implementation"],
+          "fullName": "CoinGeckoMarketDataReader DSL Interface Implementation should get current Bitcoin price from external server",
+          "status": "passed",
+          "title": "should get current Bitcoin price from external server",
+          "duration": 347.1372489999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "DSL Interface Implementation"],
+          "fullName": "CoinGeckoMarketDataReader DSL Interface Implementation should get multiple cryptocurrency prices",
+          "status": "passed",
+          "title": "should get multiple cryptocurrency prices",
+          "duration": 521.090314,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "DSL Interface Implementation"],
+          "fullName": "CoinGeckoMarketDataReader DSL Interface Implementation should get global market analytics",
+          "status": "passed",
+          "title": "should get global market analytics",
+          "duration": 475.4992200000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "DSL Interface Implementation"],
+          "fullName": "CoinGeckoMarketDataReader DSL Interface Implementation should get OHLCV data",
+          "status": "passed",
+          "title": "should get OHLCV data",
+          "duration": 336.96636300000046,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Handler Architecture Verification"],
+          "fullName": "CoinGeckoMarketDataReader Handler Architecture Verification should inherit all DSL methods from BaseReader",
+          "status": "passed",
+          "title": "should inherit all DSL methods from BaseReader",
+          "duration": 0.2529560000002675,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Handler Architecture Verification"],
+          "fullName": "CoinGeckoMarketDataReader Handler Architecture Verification should implement only handler methods, not DSL methods",
+          "status": "passed",
+          "title": "should implement only handler methods, not DSL methods",
+          "duration": 0.22027499999967404,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Error Handling"],
+          "fullName": "CoinGeckoMarketDataReader Error Handling should handle MCP client not initialized gracefully",
+          "status": "passed",
+          "title": "should handle MCP client not initialized gracefully",
+          "duration": 1.7651770000002216,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Error Handling"],
+          "fullName": "CoinGeckoMarketDataReader Error Handling should handle error cases properly",
+          "status": "passed",
+          "title": "should handle error cases properly",
+          "duration": 0.4029150000005757,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Data Transformation"],
+          "fullName": "CoinGeckoMarketDataReader Data Transformation should transform MCP response to unified data types",
+          "status": "passed",
+          "title": "should transform MCP response to unified data types",
+          "duration": 383.20258399999966,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Status and Monitoring"],
+          "fullName": "CoinGeckoMarketDataReader Status and Monitoring should provide comprehensive status information",
+          "status": "passed",
+          "title": "should provide comprehensive status information",
+          "duration": 0.2040630000001329,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Status and Monitoring"],
+          "fullName": "CoinGeckoMarketDataReader Status and Monitoring should track query activity",
+          "status": "passed",
+          "title": "should track query activity",
+          "duration": 209.24853500000063,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["CoinGeckoMarketDataReader", "Cleanup"],
+          "fullName": "CoinGeckoMarketDataReader Cleanup should cleanup resources properly",
+          "status": "passed",
+          "title": "should cleanup resources properly",
+          "duration": 1324.6570659999998,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958841,
+      "endTime": 1751972965530.657,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/CoinGeckoMarketDataReader.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP Server Connection should connect to Redpanda MCP Server",
+          "status": "failed",
+          "title": "should connect to Redpanda MCP Server",
+          "duration": 18.506076000000007,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:62:55\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP Server Connection should list available MCP tools",
+          "status": "failed",
+          "title": "should list available MCP tools",
+          "duration": 0.3363949999999818,
+          "failureMessages": [
+            "TypeError: reader.listMCPTools is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:71:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP Server Connection should verify MCP protocol compliance",
+          "status": "failed",
+          "title": "should verify MCP protocol compliance",
+          "duration": 0.9101959999999849,
+          "failureMessages": [
+            "AssertionError: expected 'redpanda-mcp' to be 'mcp+kafka' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:92:33\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP-Based Kafka Operations"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should list topics via MCP tools",
+          "status": "failed",
+          "title": "should list topics via MCP tools",
+          "duration": 0.25139599999999973,
+          "failureMessages": [
+            "TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:108:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP-Based Kafka Operations"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should consume messages via MCP tools",
+          "status": "failed",
+          "title": "should consume messages via MCP tools",
+          "duration": 0.18758900000000267,
+          "failureMessages": [
+            "TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:127:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "MCP-Based Kafka Operations"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration MCP-Based Kafka Operations should get consumer group status via MCP",
+          "status": "failed",
+          "title": "should get consumer group status via MCP",
+          "duration": 0.193883000000028,
+          "failureMessages": [
+            "TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:151:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get current cryptocurrency price via MCP",
+          "status": "failed",
+          "title": "should get current cryptocurrency price via MCP",
+          "duration": 0.8198189999999954,
+          "failureMessages": [
+            "Error: Current price via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:180:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get multiple prices via MCP streaming",
+          "status": "failed",
+          "title": "should get multiple prices via MCP streaming",
+          "duration": 0.31977299999999786,
+          "failureMessages": [
+            "Error: Multiple prices via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:202:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration DSL Implementation via MCP should get market analytics from streaming data",
+          "status": "failed",
+          "title": "should get market analytics from streaming data",
+          "duration": 0.3291489999999726,
+          "failureMessages": [
+            "Error: Market analytics via MCP failed: No client available\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:221:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "Handler Architecture"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader",
+          "status": "passed",
+          "title": "should inherit DSL methods from BaseReader",
+          "duration": 0.1789229999999975,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "Handler Architecture"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration Handler Architecture should implement MCP+Kafka-specific handlers",
+          "status": "failed",
+          "title": "should implement MCP+Kafka-specific handlers",
+          "duration": 0.4380439999999908,
+          "failureMessages": [
+            "AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:245:41\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "Streaming Performance"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration Streaming Performance should handle real-time message processing",
+          "status": "failed",
+          "title": "should handle real-time message processing",
+          "duration": 0.5612830000000031,
+          "failureMessages": [
+            "TypeError: reader.subscribeToTopic is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:260:34\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaMCPSourceActor - External Integration",
+            "Streaming Performance"
+          ],
+          "fullName": "RedpandaMCPSourceActor - External Integration Streaming Performance should handle consumer lag monitoring",
+          "status": "failed",
+          "title": "should handle consumer lag monitoring",
+          "duration": 0.3230609999999956,
+          "failureMessages": [
+            "TypeError: reader.getConsumerLag is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:284:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaMCPSourceActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaMCPSourceActor - External Integration Error Handling should handle MCP server unavailable gracefully",
+          "status": "failed",
+          "title": "should handle MCP server unavailable gracefully",
+          "duration": 18.365605000000016,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:315:33\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaMCPSourceActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaMCPSourceActor - External Integration Error Handling should handle invalid MCP tool calls",
+          "status": "failed",
+          "title": "should handle invalid MCP tool calls",
+          "duration": 0.2400830000000269,
+          "failureMessages": [
+            "TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:327:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaMCPSourceActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaMCPSourceActor - External Integration Error Handling should handle Kafka cluster disconnection",
+          "status": "failed",
+          "title": "should handle Kafka cluster disconnection",
+          "duration": 0.19492800000000443,
+          "failureMessages": [
+            "TypeError: reader.callMCPTool is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts:341:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958841,
+      "endTime": 1751972958883.24,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaMCPSourceActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Kafka Cluster Connection"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Kafka Cluster Connection should connect to Redpanda Kafka cluster",
+          "status": "passed",
+          "title": "should connect to Redpanda Kafka cluster",
+          "duration": 39.780992000000026,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Kafka Cluster Connection"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Kafka Cluster Connection should list available topics",
+          "status": "failed",
+          "title": "should list available topics",
+          "duration": 2.0864329999999995,
+          "failureMessages": [
+            "TypeError: reader.listTopics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:63:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Market Data Consumption"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Market Data Consumption should consume cryptocurrency price messages",
+          "status": "failed",
+          "title": "should consume cryptocurrency price messages",
+          "duration": 0.8891250000000355,
+          "failureMessages": [
+            "Error: Market data consumption failed: PRICE_FETCH_ERROR: Consumer groupId must be a non-empty string.\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:89:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Market Data Consumption"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Market Data Consumption should handle consumer group management",
+          "status": "failed",
+          "title": "should handle consumer group management",
+          "duration": 0.17128300000001673,
+          "failureMessages": [
+            "TypeError: reader.getConsumerStatus is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:103:29\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Streaming Architecture"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Streaming Architecture should implement streaming DSL methods",
+          "status": "failed",
+          "title": "should implement streaming DSL methods",
+          "duration": 1.87356699999998,
+          "failureMessages": [
+            "AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:113:44\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaSourceActor - External Integration",
+            "Streaming Architecture"
+          ],
+          "fullName": "RedpandaSourceActor - External Integration Streaming Architecture should handle real-time message consumption",
+          "status": "failed",
+          "title": "should handle real-time message consumption",
+          "duration": 0.16704500000003009,
+          "failureMessages": [
+            "TypeError: reader.subscribe is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:126:34\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaSourceActor - External Integration", "Handler Architecture"],
+          "fullName": "RedpandaSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader",
+          "status": "passed",
+          "title": "should inherit DSL methods from BaseReader",
+          "duration": 0.2087359999999876,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaSourceActor - External Integration", "Handler Architecture"],
+          "fullName": "RedpandaSourceActor - External Integration Handler Architecture should implement Kafka-specific handlers only",
+          "status": "failed",
+          "title": "should implement Kafka-specific handlers only",
+          "duration": 0.7572770000000446,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:155:80\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaSourceActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaSourceActor - External Integration Error Handling should handle broker unavailable gracefully",
+          "status": "failed",
+          "title": "should handle broker unavailable gracefully",
+          "duration": 6891.521938,
+          "failureMessages": [
+            "AssertionError: expected 'Redpanda Reader initialization failed…' to contain 'broker'\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:173:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaSourceActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaSourceActor - External Integration Error Handling should handle authentication failures",
+          "status": "failed",
+          "title": "should handle authentication failures",
+          "duration": 6.22946199999933,
+          "failureMessages": [
+            "Error: Authentication should have failed with invalid credentials\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts:193:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958874,
+      "endTime": 1751972965819.2295,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaSourceActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Kafka Producer Connection"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Kafka Producer Connection should connect to Redpanda Kafka cluster as producer",
+          "status": "passed",
+          "title": "should connect to Redpanda Kafka cluster as producer",
+          "duration": 39.25910200000004,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Kafka Producer Connection"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Kafka Producer Connection should verify topic availability for publishing",
+          "status": "failed",
+          "title": "should verify topic availability for publishing",
+          "duration": 2.13293699999997,
+          "failureMessages": [
+            "TypeError: writer.verifyTopics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:68:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Market Data Publishing"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Market Data Publishing should publish cryptocurrency price data",
+          "status": "failed",
+          "title": "should publish cryptocurrency price data",
+          "duration": 24.71551800000003,
+          "failureMessages": [
+            "TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:110:37\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Market Data Publishing"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Market Data Publishing should publish batch market analytics",
+          "status": "failed",
+          "title": "should publish batch market analytics",
+          "duration": 0.24380500000000893,
+          "failureMessages": [
+            "TypeError: writer.publishMarketAnalytics is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:129:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Market Data Publishing"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Market Data Publishing should handle batch publishing with proper partitioning",
+          "status": "failed",
+          "title": "should handle batch publishing with proper partitioning",
+          "duration": 1.4245200000000295,
+          "failureMessages": [
+            "TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:163:37\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Streaming Architecture"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Streaming Architecture should implement streaming DSL methods",
+          "status": "failed",
+          "title": "should implement streaming DSL methods",
+          "duration": 1.7736020000000394,
+          "failureMessages": [
+            "AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:172:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "RedpandaTargetActor - External Integration",
+            "Streaming Architecture"
+          ],
+          "fullName": "RedpandaTargetActor - External Integration Streaming Architecture should handle producer batching and flushing",
+          "status": "failed",
+          "title": "should handle producer batching and flushing",
+          "duration": 1.6562779999999862,
+          "failureMessages": [
+            "TypeError: actual value must be number or bigint, received \"undefined\"\n    at assertTypes (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/utils/dist/helpers.js:25:9)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1210:3)\n    at Proxy.<anonymous> (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/expect/dist/index.js:1029:14)\n    at Proxy.methodWrapper (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/chai/chai.js:1618:25)\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:197:26\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaTargetActor - External Integration", "Handler Architecture"],
+          "fullName": "RedpandaTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter",
+          "status": "failed",
+          "title": "should inherit DSL methods from BaseWriter",
+          "duration": 0.5401520000000346,
+          "failureMessages": [
+            "AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:205:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaTargetActor - External Integration", "Handler Architecture"],
+          "fullName": "RedpandaTargetActor - External Integration Handler Architecture should implement Kafka-specific handlers only",
+          "status": "failed",
+          "title": "should implement Kafka-specific handlers only",
+          "duration": 0.8178330000000074,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:214:80\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaTargetActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaTargetActor - External Integration Error Handling should handle broker unavailable gracefully",
+          "status": "failed",
+          "title": "should handle broker unavailable gracefully",
+          "duration": 6923.853305,
+          "failureMessages": [
+            "AssertionError: expected 'Redpanda Writer initialization failed…' to contain 'broker'\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:232:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaTargetActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaTargetActor - External Integration Error Handling should handle schema validation failures",
+          "status": "failed",
+          "title": "should handle schema validation failures",
+          "duration": 0.7432600000001912,
+          "failureMessages": [
+            "AssertionError: expected 'PRICE_PUBLISH_ERROR: Cannot read prop…' to match /schema|validation|invalid/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:254:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaTargetActor - External Integration", "Error Handling"],
+          "fullName": "RedpandaTargetActor - External Integration Error Handling should handle topic permission errors",
+          "status": "failed",
+          "title": "should handle topic permission errors",
+          "duration": 230.55587399999968,
+          "failureMessages": [
+            "Error: Should have failed with topic permission error\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts:279:17\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958875,
+      "endTime": 1751972966102.556,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/RedpandaTargetActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP Server Connection should connect to TimescaleDB MCP Server",
+          "status": "skipped",
+          "title": "should connect to TimescaleDB MCP Server",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP Server Connection should list available MCP tools",
+          "status": "skipped",
+          "title": "should list available MCP tools",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP Server Connection"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP Server Connection should verify MCP protocol compliance",
+          "status": "skipped",
+          "title": "should verify MCP protocol compliance",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP-Based Database Operations"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should create hypertables via MCP tools",
+          "status": "skipped",
+          "title": "should create hypertables via MCP tools",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP-Based Database Operations"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should verify database connection via MCP",
+          "status": "skipped",
+          "title": "should verify database connection via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "MCP-Based Database Operations"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration MCP-Based Database Operations should list existing hypertables via MCP",
+          "status": "skipped",
+          "title": "should list existing hypertables via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish cryptocurrency price data via MCP",
+          "status": "skipped",
+          "title": "should publish cryptocurrency price data via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish OHLCV data via MCP tools",
+          "status": "skipped",
+          "title": "should publish OHLCV data via MCP tools",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "DSL Implementation via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration DSL Implementation via MCP should publish market analytics via MCP",
+          "status": "skipped",
+          "title": "should publish market analytics via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "TimescaleDB Features via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should create continuous aggregates via MCP",
+          "status": "skipped",
+          "title": "should create continuous aggregates via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "TimescaleDB Features via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should manage compression policies via MCP",
+          "status": "skipped",
+          "title": "should manage compression policies via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "TimescaleDB Features via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration TimescaleDB Features via MCP should manage retention policies via MCP",
+          "status": "skipped",
+          "title": "should manage retention policies via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "Handler Architecture"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter",
+          "status": "skipped",
+          "title": "should inherit DSL methods from BaseWriter",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "Handler Architecture"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration Handler Architecture should implement MCP+TimescaleDB-specific handlers",
+          "status": "skipped",
+          "title": "should implement MCP+TimescaleDB-specific handlers",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "Batch Processing via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration Batch Processing via MCP should handle batch insertions via MCP",
+          "status": "skipped",
+          "title": "should handle batch insertions via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleMCPTargetActor - External Integration",
+            "Batch Processing via MCP"
+          ],
+          "fullName": "TimescaleMCPTargetActor - External Integration Batch Processing via MCP should handle transaction batching via MCP",
+          "status": "skipped",
+          "title": "should handle transaction batching via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleMCPTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleMCPTargetActor - External Integration Error Handling should handle MCP server unavailable gracefully",
+          "status": "skipped",
+          "title": "should handle MCP server unavailable gracefully",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleMCPTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleMCPTargetActor - External Integration Error Handling should handle database constraint violations via MCP",
+          "status": "skipped",
+          "title": "should handle database constraint violations via MCP",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleMCPTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleMCPTargetActor - External Integration Error Handling should handle MCP tool call failures",
+          "status": "skipped",
+          "title": "should handle MCP tool call failures",
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972954711,
+      "endTime": 1751972954711,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleMCPTargetActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Database Connection"],
+          "fullName": "TimescaleSourceActor - External Integration Database Connection should connect to TimescaleDB instance for reading",
+          "status": "skipped",
+          "title": "should connect to TimescaleDB instance for reading",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Database Connection"],
+          "fullName": "TimescaleSourceActor - External Integration Database Connection should verify read access to hypertables",
+          "status": "skipped",
+          "title": "should verify read access to hypertables",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Historical Data Queries"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Historical Data Queries should read current cryptocurrency prices from TimescaleDB",
+          "status": "skipped",
+          "title": "should read current cryptocurrency prices from TimescaleDB",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Historical Data Queries"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Historical Data Queries should query price history with time ranges",
+          "status": "skipped",
+          "title": "should query price history with time ranges",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Historical Data Queries"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Historical Data Queries should query OHLCV data with time aggregations",
+          "status": "skipped",
+          "title": "should query OHLCV data with time aggregations",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Time-Series Analytics"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Time-Series Analytics should perform time-bucket aggregations",
+          "status": "skipped",
+          "title": "should perform time-bucket aggregations",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Time-Series Analytics"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Time-Series Analytics should query market analytics historical data",
+          "status": "skipped",
+          "title": "should query market analytics historical data",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Time-Series Analytics"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Time-Series Analytics should support materialized view queries",
+          "status": "skipped",
+          "title": "should support materialized view queries",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Handler Architecture"],
+          "fullName": "TimescaleSourceActor - External Integration Handler Architecture should inherit DSL methods from BaseReader",
+          "status": "skipped",
+          "title": "should inherit DSL methods from BaseReader",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Handler Architecture"],
+          "fullName": "TimescaleSourceActor - External Integration Handler Architecture should implement TimescaleDB-specific handlers",
+          "status": "skipped",
+          "title": "should implement TimescaleDB-specific handlers",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Performance Optimization"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Performance Optimization should use connection pooling",
+          "status": "skipped",
+          "title": "should use connection pooling",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleSourceActor - External Integration",
+            "Performance Optimization"
+          ],
+          "fullName": "TimescaleSourceActor - External Integration Performance Optimization should implement query result caching",
+          "status": "skipped",
+          "title": "should implement query result caching",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleSourceActor - External Integration Error Handling should handle database unavailable gracefully",
+          "status": "skipped",
+          "title": "should handle database unavailable gracefully",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleSourceActor - External Integration Error Handling should handle empty result sets gracefully",
+          "status": "skipped",
+          "title": "should handle empty result sets gracefully",
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleSourceActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleSourceActor - External Integration Error Handling should handle query timeout gracefully",
+          "status": "skipped",
+          "title": "should handle query timeout gracefully",
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972954711,
+      "endTime": 1751972954711,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleSourceActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Database Connection"],
+          "fullName": "TimescaleTargetActor - External Integration Database Connection should connect to TimescaleDB instance",
+          "status": "passed",
+          "title": "should connect to TimescaleDB instance",
+          "duration": 63.647332000000006,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Database Connection"],
+          "fullName": "TimescaleTargetActor - External Integration Database Connection should verify hypertables exist",
+          "status": "failed",
+          "title": "should verify hypertables exist",
+          "duration": 1.7680050000000165,
+          "failureMessages": [
+            "TypeError: writer.verifyTables is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:75:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Database Connection"],
+          "fullName": "TimescaleTargetActor - External Integration Database Connection should verify TimescaleDB extensions",
+          "status": "failed",
+          "title": "should verify TimescaleDB extensions",
+          "duration": 0.22089799999997695,
+          "failureMessages": [
+            "TypeError: writer.checkExtensions is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:95:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleTargetActor - External Integration",
+            "Time-Series Data Storage"
+          ],
+          "fullName": "TimescaleTargetActor - External Integration Time-Series Data Storage should store cryptocurrency price data",
+          "status": "failed",
+          "title": "should store cryptocurrency price data",
+          "duration": 2.024671000000012,
+          "failureMessages": [
+            "Error: Price storage failed: PRICE_PUBLISH_ERROR: column \"exchange_id\" of relation \"crypto_prices\" does not exist\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:129:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleTargetActor - External Integration",
+            "Time-Series Data Storage"
+          ],
+          "fullName": "TimescaleTargetActor - External Integration Time-Series Data Storage should store OHLCV time-series data",
+          "status": "failed",
+          "title": "should store OHLCV time-series data",
+          "duration": 1.0827239999999847,
+          "failureMessages": [
+            "Error: OHLCV storage failed: OHLCV_PUBLISH_ERROR: column \"exchange_id\" of relation \"ohlcv_data\" does not exist\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:162:15\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "TimescaleTargetActor - External Integration",
+            "Time-Series Data Storage"
+          ],
+          "fullName": "TimescaleTargetActor - External Integration Time-Series Data Storage should handle time-series queries and aggregations",
+          "status": "failed",
+          "title": "should handle time-series queries and aggregations",
+          "duration": 0.1749810000000025,
+          "failureMessages": [
+            "TypeError: writer.getHourlyAggregates is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:174:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "TimescaleDB Features"],
+          "fullName": "TimescaleTargetActor - External Integration TimescaleDB Features should implement time partitioning",
+          "status": "failed",
+          "title": "should implement time partitioning",
+          "duration": 0.19950399999999036,
+          "failureMessages": [
+            "TypeError: writer.getPartitionInfo is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:194:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "TimescaleDB Features"],
+          "fullName": "TimescaleTargetActor - External Integration TimescaleDB Features should support compression policies",
+          "status": "failed",
+          "title": "should support compression policies",
+          "duration": 0.152828999999997,
+          "failureMessages": [
+            "TypeError: writer.checkCompressionPolicies is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:213:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "TimescaleDB Features"],
+          "fullName": "TimescaleTargetActor - External Integration TimescaleDB Features should handle retention policies",
+          "status": "failed",
+          "title": "should handle retention policies",
+          "duration": 0.2082990000000109,
+          "failureMessages": [
+            "TypeError: writer.checkRetentionPolicies is not a function\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:231:35\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Handler Architecture"],
+          "fullName": "TimescaleTargetActor - External Integration Handler Architecture should inherit DSL methods from BaseWriter",
+          "status": "failed",
+          "title": "should inherit DSL methods from BaseWriter",
+          "duration": 1.825967999999989,
+          "failureMessages": [
+            "AssertionError: expected 'undefined' to be 'function' // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:249:52\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Handler Architecture"],
+          "fullName": "TimescaleTargetActor - External Integration Handler Architecture should implement TimescaleDB-specific handlers",
+          "status": "failed",
+          "title": "should implement TimescaleDB-specific handlers",
+          "duration": 0.6953459999999723,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:257:86\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20\n    at new Promise (<anonymous>)\n    at runWithTimeout (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)\n    at runTest (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)\n    at runSuite (file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleTargetActor - External Integration Error Handling should handle database unavailable gracefully",
+          "status": "failed",
+          "title": "should handle database unavailable gracefully",
+          "duration": 31.70392800000002,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:278:33\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleTargetActor - External Integration Error Handling should handle schema validation failures",
+          "status": "failed",
+          "title": "should handle schema validation failures",
+          "duration": 0.5942850000000135,
+          "failureMessages": [
+            "AssertionError: expected 'PRICE_PUBLISH_ERROR: value.toISOStrin…' to match /schema|validation|invalid|constraint/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:304:30\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["TimescaleTargetActor - External Integration", "Error Handling"],
+          "fullName": "TimescaleTargetActor - External Integration Error Handling should handle permission errors",
+          "status": "failed",
+          "title": "should handle permission errors",
+          "duration": 31.044926000000032,
+          "failureMessages": [
+            "AssertionError: expected 'PRICE_PUBLISH_ERROR: column \"exchange…' to match /permission|access|denied/i\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts:339:32\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958928,
+      "endTime": 1751972959064.045,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/external-apis/TimescaleTargetActor.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Initialization"],
+          "fullName": "OfficialRedpandaMCPLauncher Initialization should create launcher with default configuration",
+          "status": "passed",
+          "title": "should create launcher with default configuration",
+          "duration": 0.8416730000000143,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Initialization"],
+          "fullName": "OfficialRedpandaMCPLauncher Initialization should create launcher with custom configuration",
+          "status": "passed",
+          "title": "should create launcher with custom configuration",
+          "duration": 0.12381999999999493,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Server Information"],
+          "fullName": "OfficialRedpandaMCPLauncher Server Information should provide comprehensive server information",
+          "status": "passed",
+          "title": "should provide comprehensive server information",
+          "duration": 0.5248670000000004,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Server Information"],
+          "fullName": "OfficialRedpandaMCPLauncher Server Information should list available MCP tools",
+          "status": "passed",
+          "title": "should list available MCP tools",
+          "duration": 0.45460800000000745,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Server Information"],
+          "fullName": "OfficialRedpandaMCPLauncher Server Information should provide broker information",
+          "status": "passed",
+          "title": "should provide broker information",
+          "duration": 0.11496099999999387,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Cloud Configuration"],
+          "fullName": "OfficialRedpandaMCPLauncher Cloud Configuration should support cloud MCP configuration",
+          "status": "passed",
+          "title": "should support cloud MCP configuration",
+          "duration": 0.1907340000000204,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Process Management"],
+          "fullName": "OfficialRedpandaMCPLauncher Process Management should handle rpk availability check gracefully",
+          "status": "passed",
+          "title": "should handle rpk availability check gracefully",
+          "duration": 0.12433500000000208,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Process Management"],
+          "fullName": "OfficialRedpandaMCPLauncher Process Management should provide status information",
+          "status": "passed",
+          "title": "should provide status information",
+          "duration": 0.12169399999999087,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Process Management"],
+          "fullName": "OfficialRedpandaMCPLauncher Process Management should handle startup failure gracefully",
+          "status": "passed",
+          "title": "should handle startup failure gracefully",
+          "duration": 3044.56446,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Process Management"],
+          "fullName": "OfficialRedpandaMCPLauncher Process Management should handle stop gracefully when not running",
+          "status": "passed",
+          "title": "should handle stop gracefully when not running",
+          "duration": 0.38677800000004936,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Error Handling"],
+          "fullName": "OfficialRedpandaMCPLauncher Error Handling should handle missing rpk binary gracefully",
+          "status": "passed",
+          "title": "should handle missing rpk binary gracefully",
+          "duration": 0.06119799999987663,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Error Handling"],
+          "fullName": "OfficialRedpandaMCPLauncher Error Handling should handle invalid configuration gracefully",
+          "status": "passed",
+          "title": "should handle invalid configuration gracefully",
+          "duration": 0.052871000000322965,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Integration Readiness"],
+          "fullName": "OfficialRedpandaMCPLauncher Integration Readiness should be ready for MCP client integration",
+          "status": "passed",
+          "title": "should be ready for MCP client integration",
+          "duration": 0.11993200000006254,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["OfficialRedpandaMCPLauncher", "Integration Readiness"],
+          "fullName": "OfficialRedpandaMCPLauncher Integration Readiness should support both local and cloud deployment modes",
+          "status": "passed",
+          "title": "should support both local and cloud deployment modes",
+          "duration": 0.06619399999999587,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972958759,
+      "endTime": 1751972961807.1199,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/integration/mcp-servers/redpanda-mcp-launcher.test.ts"
+    }
+  ]
+}

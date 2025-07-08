@@ -5,7 +5,7 @@
  *
  * Tests the Redpanda source actor with real Kafka cluster connections.
  * These tests verify streaming data consumption from actual Redpanda clusters.
- * 
+ *
  * EXPECTED TO FAIL until Redpanda cluster is properly configured and running.
  */
 
@@ -18,8 +18,10 @@ describe("RedpandaSourceActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createRedpandaMarketDataReader } = await import("../../../src/actors/sources/redpanda");
-      
+      const { createRedpandaMarketDataReader } = await import(
+        "../../../src/actors/sources/redpanda"
+      );
+
       reader = createRedpandaMarketDataReader({
         name: "integration-test-redpanda-source",
         debug: false,
@@ -43,7 +45,7 @@ describe("RedpandaSourceActor - External Integration", () => {
     it("should connect to Redpanda Kafka cluster", async () => {
       // This SHOULD FAIL until cluster is running
       const result = await reader.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Redpanda cluster not available:", error?.message);
@@ -61,7 +63,7 @@ describe("RedpandaSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until topics are created
       const result = await reader.listTopics();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Failed to list topics:", error?.message);
@@ -82,7 +84,7 @@ describe("RedpandaSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until data is flowing
       const result = await reader.getCurrentPrice("bitcoin");
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No data available:", error?.message);
@@ -127,7 +129,7 @@ describe("RedpandaSourceActor - External Integration", () => {
         messages.push(message);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 5000));
+      await new Promise((resolve) => setTimeout(resolve, 5000));
       unsubscribe();
 
       if (messages.length === 0) {
@@ -150,16 +152,18 @@ describe("RedpandaSourceActor - External Integration", () => {
     it("should implement Kafka-specific handlers only", () => {
       const prototype = Object.getPrototypeOf(reader);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have Kafka-specific handlers
-      expect(methods.some(m => m.includes("Kafka") || m.includes("Consumer"))).toBe(true);
+      expect(methods.some((m) => m.includes("Kafka") || m.includes("Consumer"))).toBe(true);
     });
   });
 
   describe("Error Handling", () => {
     it("should handle broker unavailable gracefully", async () => {
-      const { createRedpandaMarketDataReader } = await import("../../../src/actors/sources/redpanda");
-      
+      const { createRedpandaMarketDataReader } = await import(
+        "../../../src/actors/sources/redpanda"
+      );
+
       const unreachableReader = createRedpandaMarketDataReader({
         name: "unreachable-test",
         brokers: ["unreachable:9999"],
@@ -168,15 +172,17 @@ describe("RedpandaSourceActor - External Integration", () => {
 
       const result = await unreachableReader.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toContain("broker");
     });
 
     it("should handle authentication failures", async () => {
       // This SHOULD FAIL until auth is configured
-      const { createRedpandaMarketDataReader } = await import("../../../src/actors/sources/redpanda");
-      
+      const { createRedpandaMarketDataReader } = await import(
+        "../../../src/actors/sources/redpanda"
+      );
+
       const authReader = createRedpandaMarketDataReader({
         name: "auth-test",
         brokers: ["localhost:19092"],

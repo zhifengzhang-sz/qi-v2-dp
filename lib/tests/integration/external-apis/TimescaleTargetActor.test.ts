@@ -5,7 +5,7 @@
  *
  * Tests the TimescaleDB target actor with real database connections.
  * These tests verify time-series data storage to actual TimescaleDB instances.
- * 
+ *
  * EXPECTED TO FAIL until TimescaleDB is properly configured and running.
  */
 
@@ -18,8 +18,10 @@ describe("TimescaleTargetActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createTimescaleMarketDataWriter } = await import("../../../src/actors/targets/timescale");
-      
+      const { createTimescaleMarketDataWriter } = await import(
+        "../../../src/actors/targets/timescale"
+      );
+
       writer = createTimescaleMarketDataWriter({
         name: "integration-test-timescale-target",
         debug: false,
@@ -55,7 +57,7 @@ describe("TimescaleTargetActor - External Integration", () => {
     it("should connect to TimescaleDB instance", async () => {
       // This SHOULD FAIL until database is running
       const result = await writer.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: TimescaleDB not available:", error?.message);
@@ -73,7 +75,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until hypertables are created
       const result = await writer.verifyTables();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Hypertables not created:", error?.message);
@@ -93,7 +95,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until TimescaleDB extension is installed
       const result = await writer.checkExtensions();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: TimescaleDB extensions missing:", error?.message);
@@ -122,7 +124,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until tables are created and accessible
       const result = await writer.publishPrice(priceData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Price storage failed:", error?.message);
@@ -130,7 +132,7 @@ describe("TimescaleTargetActor - External Integration", () => {
       }
 
       expect(isSuccess(result)).toBe(true);
-      
+
       // Verify data was actually stored
       const status = writer.getStatus();
       expect(status.totalStored).toBeGreaterThan(0);
@@ -155,7 +157,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until OHLCV hypertable is configured
       const result = await writer.publishOHLCV(ohlcvData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: OHLCV storage failed:", error?.message);
@@ -171,8 +173,12 @@ describe("TimescaleTargetActor - External Integration", () => {
       }
 
       // This SHOULD FAIL until continuous aggregates are configured
-      const result = await writer.getHourlyAggregates("bitcoin", new Date(Date.now() - 24 * 60 * 60 * 1000), new Date());
-      
+      const result = await writer.getHourlyAggregates(
+        "bitcoin",
+        new Date(Date.now() - 24 * 60 * 60 * 1000),
+        new Date(),
+      );
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Time-series aggregation failed:", error?.message);
@@ -192,7 +198,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until partitioning is configured
       const result = await writer.getPartitionInfo("crypto_prices");
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Time partitioning not configured:", error?.message);
@@ -211,7 +217,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until compression is configured
       const result = await writer.checkCompressionPolicies();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Compression policies not configured:", error?.message);
@@ -229,7 +235,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until retention is configured
       const result = await writer.checkRetentionPolicies();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Retention policies not configured:", error?.message);
@@ -252,16 +258,18 @@ describe("TimescaleTargetActor - External Integration", () => {
     it("should implement TimescaleDB-specific handlers", () => {
       const prototype = Object.getPrototypeOf(writer);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have TimescaleDB-specific handlers
-      expect(methods.some(m => m.includes("Timescale") || m.includes("Hypertable"))).toBe(true);
+      expect(methods.some((m) => m.includes("Timescale") || m.includes("Hypertable"))).toBe(true);
     });
   });
 
   describe("Error Handling", () => {
     it("should handle database unavailable gracefully", async () => {
-      const { createTimescaleMarketDataWriter } = await import("../../../src/actors/targets/timescale");
-      
+      const { createTimescaleMarketDataWriter } = await import(
+        "../../../src/actors/targets/timescale"
+      );
+
       const unreachableWriter = createTimescaleMarketDataWriter({
         name: "unreachable-test",
         connection: {
@@ -276,7 +284,7 @@ describe("TimescaleTargetActor - External Integration", () => {
 
       const result = await unreachableWriter.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/connection|database|host/i);
     });
@@ -295,7 +303,7 @@ describe("TimescaleTargetActor - External Integration", () => {
       };
 
       const result = await writer.publishPrice(invalidData as any);
-      
+
       if (isSuccess(result)) {
         throw new Error("Should have failed with invalid data schema");
       }
@@ -306,8 +314,10 @@ describe("TimescaleTargetActor - External Integration", () => {
 
     it("should handle permission errors", async () => {
       // This SHOULD FAIL until database permissions are configured
-      const { createTimescaleMarketDataWriter } = await import("../../../src/actors/targets/timescale");
-      
+      const { createTimescaleMarketDataWriter } = await import(
+        "../../../src/actors/targets/timescale"
+      );
+
       const restrictedWriter = createTimescaleMarketDataWriter({
         name: "restricted-test",
         connection: {

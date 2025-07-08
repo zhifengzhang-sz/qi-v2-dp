@@ -10,37 +10,28 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import type {
-  CryptoMarketAnalytics,
-  CryptoOHLCVData,
-  CryptoPriceData,
-} from "../../../src/dsl";
 import {
-  getData,
-  getError,
-  isFailure,
-  isSuccess,
-} from "../../../src/qicore/base";
-import { 
+  type CoinGeckoMarketDataReader,
   createCoinGeckoMarketDataReader,
-  type CoinGeckoMarketDataReader 
 } from "../../../src/actors/sources/coingecko";
+import type { CryptoMarketAnalytics, CryptoOHLCVData, CryptoPriceData } from "../../../src/dsl";
+import { getData, getError, isFailure, isSuccess } from "../../../src/qicore/base";
 
 describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
   let reader: CoinGeckoMarketDataReader;
 
   beforeEach(async () => {
-    reader = createCoinGeckoMarketDataReader({ 
-      name: "test-reader", 
+    reader = createCoinGeckoMarketDataReader({
+      name: "test-reader",
       debug: false,
-      useRemoteServer: false // Use local/mock mode for unit tests
+      useRemoteServer: false, // Use local/mock mode for unit tests
     });
 
     // Add a mock client to simulate connected state
-    const mockClient = { 
-      connect: () => {}, 
+    const mockClient = {
+      connect: () => {},
       close: () => {},
-      callTool: async () => ({ content: [] })
+      callTool: async () => ({ content: [] }),
     };
     reader.addClient("test-client", mockClient, {
       name: "test-client",
@@ -128,10 +119,10 @@ describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
     it("should return Result<T> types from DSL methods", async () => {
       // Test that BaseReader workflow returns proper Result<T> types
       const result = await reader.getCurrentPrice("bitcoin", "usd");
-      
+
       expect(result).toHaveProperty("_tag");
       expect(["Left", "Right"]).toContain(result._tag);
-      
+
       // The result might be success or failure depending on mock setup
       // but it should always be a proper Result<T>
       if (isSuccess(result)) {
@@ -173,7 +164,7 @@ describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
       expect(finalQueries).toBeGreaterThanOrEqual(initialQueries);
       if (finalActivity && initialActivity) {
         expect(new Date(finalActivity).getTime()).toBeGreaterThanOrEqual(
-          new Date(initialActivity).getTime()
+          new Date(initialActivity).getTime(),
         );
       }
     });
@@ -181,9 +172,9 @@ describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
 
   describe("Lifecycle Management (BaseReader functionality)", () => {
     it("should initialize and cleanup properly", async () => {
-      const newReader = createCoinGeckoMarketDataReader({ 
+      const newReader = createCoinGeckoMarketDataReader({
         name: "lifecycle-test",
-        useRemoteServer: false
+        useRemoteServer: false,
       });
 
       const status = newReader.getStatus();
@@ -191,13 +182,13 @@ describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
 
       const initResult = await newReader.initialize();
       expect(isSuccess(initResult)).toBe(true);
-      
+
       const statusAfterInit = newReader.getStatus();
       expect(statusAfterInit.isInitialized).toBe(true);
 
       const cleanupResult = await newReader.cleanup();
       expect(isSuccess(cleanupResult)).toBe(true);
-      
+
       const statusAfterCleanup = newReader.getStatus();
       expect(statusAfterCleanup.isInitialized).toBe(false);
     });
@@ -226,24 +217,25 @@ describe("BaseReader (tested via CoinGeckoMarketDataReader)", () => {
     it("should verify CoinGecko reader extends BaseReader", () => {
       // Verify inheritance from BaseReader
       expect(reader.constructor.name).toBe("CoinGeckoMarketDataReader");
-      
+
       // DSL methods should be inherited, not redefined
       const readerPrototype = Object.getPrototypeOf(reader);
-      const hasGetCurrentPrice = 'getCurrentPrice' in readerPrototype || 'getCurrentPrice' in reader;
+      const hasGetCurrentPrice =
+        "getCurrentPrice" in readerPrototype || "getCurrentPrice" in reader;
       expect(hasGetCurrentPrice).toBe(true);
     });
 
     it("should have proper status reporting", () => {
       const status = reader.getStatus();
-      
+
       // BaseReader should provide these status fields
       expect(status).toHaveProperty("isInitialized");
       expect(typeof status.isInitialized).toBe("boolean");
-      
+
       // Status should be an object with properties
       expect(typeof status).toBe("object");
       expect(status).not.toBeNull();
-      
+
       // Should have some properties (the exact ones depend on implementation)
       const statusKeys = Object.keys(status);
       expect(statusKeys.length).toBeGreaterThan(0);

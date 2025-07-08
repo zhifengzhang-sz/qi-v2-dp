@@ -59,7 +59,6 @@
    - generic market data reader = generic actor implementing MarketDataReadingDSL
    - generic market data writer = generic actor implementing MarketDataWritingDSL
 2. **mcp actor** = a generic actor that associate with a mcp client
-   - Inherits all DSL methods from generic actor
    - Uses MCP tools to implement the DSL interfaces (no additional capabilities beyond DSL)
 
 #### Documentation Updates

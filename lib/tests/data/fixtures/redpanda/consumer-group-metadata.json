@@ -11,10 +11,7 @@
       "assignments": [
         {
           "topic": "crypto-prices",
-          "partitions": [
-            0,
-            1
-          ]
+          "partitions": [0, 1]
         }
       ]
     }

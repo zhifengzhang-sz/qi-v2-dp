@@ -2,7 +2,7 @@
 
 /**
  * Test Data Loader - No Mocking Allowed
- * 
+ *
  * Loads real data from fixtures for testing.
  * All test data comes from actual API responses or generated realistic samples.
  */
@@ -131,9 +131,9 @@ export class TestDataLoader {
   async loadUnifiedPriceData(): Promise<CryptoPriceData[]> {
     const bitcoinData = await this.loadBitcoinMarketData();
     const multiCoinData = await this.loadMultiCoinData();
-    
+
     const unified: CryptoPriceData[] = [];
-    
+
     // Process Bitcoin data
     if (bitcoinData && bitcoinData.length > 0) {
       const btc = bitcoinData[0];
@@ -146,7 +146,7 @@ export class TestDataLoader {
         attribution: "CoinGecko MCP API",
       });
     }
-    
+
     // Process multi-coin data
     if (multiCoinData && multiCoinData.length > 0) {
       for (const coin of multiCoinData) {
@@ -160,7 +160,7 @@ export class TestDataLoader {
         });
       }
     }
-    
+
     return unified;
   }
 
@@ -176,7 +176,7 @@ export class TestDataLoader {
   // Validate that fixture data exists and is recent
   async validateFixtures(): Promise<{ valid: boolean; errors: string[] }> {
     const errors: string[] = [];
-    
+
     try {
       // Check that all required fixtures exist
       const requiredFixtures = [
@@ -187,7 +187,7 @@ export class TestDataLoader {
         "redpanda/price-messages.json",
         "timescaledb/price-records.json",
       ];
-      
+
       for (const fixture of requiredFixtures) {
         try {
           await this.loadFixture(fixture);
@@ -195,7 +195,7 @@ export class TestDataLoader {
           errors.push(`Missing fixture: ${fixture}`);
         }
       }
-      
+
       // Check that data is reasonably recent (within 1 hour for prices)
       try {
         const bitcoinData = await this.loadBitcoinMarketData();
@@ -203,22 +203,25 @@ export class TestDataLoader {
           const lastUpdated = new Date(bitcoinData[0].last_updated);
           const now = new Date();
           const ageHours = (now.getTime() - lastUpdated.getTime()) / (1000 * 60 * 60);
-          
+
           if (ageHours > 1) {
-            errors.push(`Bitcoin price data is ${ageHours.toFixed(1)} hours old - may need refresh`);
+            errors.push(
+              `Bitcoin price data is ${ageHours.toFixed(1)} hours old - may need refresh`,
+            );
           }
         }
       } catch (error) {
         errors.push("Cannot validate data freshness");
       }
-      
+
       return {
         valid: errors.length === 0,
         errors,
       };
-      
     } catch (error) {
-      errors.push(`Fixture validation failed: ${error instanceof Error ? error.message : String(error)}`);
+      errors.push(
+        `Fixture validation failed: ${error instanceof Error ? error.message : String(error)}`,
+      );
       return { valid: false, errors };
     }
   }
@@ -229,7 +232,9 @@ export class TestDataLoader {
       const content = await readFile(fullPath, "utf8");
       return JSON.parse(content);
     } catch (error) {
-      throw new Error(`Failed to load fixture ${path}: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to load fixture ${path}: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 }

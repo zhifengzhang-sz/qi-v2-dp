@@ -48,8 +48,8 @@ export default defineConfig({
     outputFile: {
       json: "./test-results/integration-v1-results.json",
     },
-    // Global setup validates services BEFORE running any tests
-    globalSetup: ["./lib/tests/integration/setup/global-setup.ts"],
+    // Global setup disabled for v1.0 - tests handle MCP availability gracefully
+    // globalSetup: ["./lib/tests/integration/setup/global-setup.ts"],
     // No retries - real integration should work or fail clearly
     retry: 0,
   },

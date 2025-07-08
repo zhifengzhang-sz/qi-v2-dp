@@ -1,5 +1,5 @@
 {
-  "validationTime": "2025-07-08T12:29:59.441Z",
+  "validationTime": "2025-07-08T14:16:44.847Z",
   "success": true,
   "requiredServicesUp": 3,
   "totalRequiredServices": 3,
@@ -10,7 +10,7 @@
       "required": true,
       "available": true,
       "endpoint": "https://mcp.api.coingecko.com/sse",
-      "responseTime": 5253
+      "responseTime": 3780
     },
     {
       "name": "Redpanda Kafka Cluster",
@@ -18,7 +18,7 @@
       "required": true,
       "available": true,
       "endpoint": "localhost:19092",
-      "responseTime": 51
+      "responseTime": 94
     },
     {
       "name": "TimescaleDB",
@@ -26,7 +26,7 @@
       "required": true,
       "available": true,
       "endpoint": "localhost:5432",
-      "responseTime": 20
+      "responseTime": 38
     },
     {
       "name": "Redpanda MCP Server",

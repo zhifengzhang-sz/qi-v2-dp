@@ -5,7 +5,7 @@
  *
  * Tests the TimescaleDB source actor with real database connections.
  * These tests verify time-series data reading from actual TimescaleDB instances.
- * 
+ *
  * EXPECTED TO FAIL until TimescaleDB is properly configured with historical data.
  */
 
@@ -18,8 +18,10 @@ describe("TimescaleSourceActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createTimescaleMarketDataReader } = await import("../../../src/actors/sources/timescale-mcp");
-      
+      const { createTimescaleMarketDataReader } = await import(
+        "../../../src/actors/sources/timescale-mcp"
+      );
+
       reader = createTimescaleMarketDataReader({
         name: "integration-test-timescale-source",
         debug: false,
@@ -33,7 +35,7 @@ describe("TimescaleSourceActor - External Integration", () => {
         },
         tables: {
           prices: "crypto_prices",
-          ohlcv: "crypto_ohlcv", 
+          ohlcv: "crypto_ohlcv",
           analytics: "market_analytics",
         },
         cacheTimeout: 60000,
@@ -54,7 +56,7 @@ describe("TimescaleSourceActor - External Integration", () => {
     it("should connect to TimescaleDB instance for reading", async () => {
       // This SHOULD FAIL until database is running
       const result = await reader.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: TimescaleDB not available:", error?.message);
@@ -72,7 +74,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until hypertables exist with data
       const result = await reader.verifyDataAccess();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No data access to hypertables:", error?.message);
@@ -94,7 +96,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until historical data exists
       const result = await reader.getCurrentPrice("bitcoin");
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No historical price data:", error?.message);
@@ -116,7 +118,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until historical data is populated
       const result = await reader.getPriceHistory("bitcoin", { startTime, endTime });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No price history data:", error?.message);
@@ -126,7 +128,7 @@ describe("TimescaleSourceActor - External Integration", () => {
       const history = getData(result);
       expect(Array.isArray(history)).toBe(true);
       expect(history.length).toBeGreaterThan(0);
-      
+
       // Verify time-series structure
       expect(history[0]).toHaveProperty("timestamp");
       expect(history[0]).toHaveProperty("usdPrice");
@@ -142,12 +144,12 @@ describe("TimescaleSourceActor - External Integration", () => {
       const startTime = new Date(endTime.getTime() - 7 * 24 * 60 * 60 * 1000); // 7 days ago
 
       // This SHOULD FAIL until OHLCV data is populated
-      const result = await reader.getOHLCVByDateRange("bitcoin", { 
-        startTime, 
-        endTime, 
-        interval: "1h" 
+      const result = await reader.getOHLCVByDateRange("bitcoin", {
+        startTime,
+        endTime,
+        interval: "1h",
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No OHLCV data:", error?.message);
@@ -157,7 +159,7 @@ describe("TimescaleSourceActor - External Integration", () => {
       const ohlcv = getData(result);
       expect(Array.isArray(ohlcv)).toBe(true);
       expect(ohlcv.length).toBeGreaterThan(0);
-      
+
       // Verify OHLCV structure
       expect(ohlcv[0]).toHaveProperty("open");
       expect(ohlcv[0]).toHaveProperty("high");
@@ -180,10 +182,13 @@ describe("TimescaleSourceActor - External Integration", () => {
         endTime: new Date(),
         metrics: ["avg", "max", "min", "stddev"],
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Time-bucket aggregations not available:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Time-bucket aggregations not available:",
+          error?.message,
+        );
         throw new Error(`Time-bucket analytics failed: ${error?.message}`);
       }
 
@@ -200,7 +205,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until market analytics data exists
       const result = await reader.getMarketAnalytics();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: No market analytics data:", error?.message);
@@ -224,7 +229,7 @@ describe("TimescaleSourceActor - External Integration", () => {
         coin_id: "bitcoin",
         date_range: 30,
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Materialized views not configured:", error?.message);
@@ -248,9 +253,9 @@ describe("TimescaleSourceActor - External Integration", () => {
     it("should implement TimescaleDB-specific handlers", () => {
       const prototype = Object.getPrototypeOf(reader);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have TimescaleDB-specific handlers
-      expect(methods.some(m => m.includes("Timescale") || m.includes("TimeBucket"))).toBe(true);
+      expect(methods.some((m) => m.includes("Timescale") || m.includes("TimeBucket"))).toBe(true);
     });
   });
 
@@ -289,8 +294,10 @@ describe("TimescaleSourceActor - External Integration", () => {
 
   describe("Error Handling", () => {
     it("should handle database unavailable gracefully", async () => {
-      const { createTimescaleMarketDataReader } = await import("../../../src/actors/sources/timescale-mcp");
-      
+      const { createTimescaleMarketDataReader } = await import(
+        "../../../src/actors/sources/timescale-mcp"
+      );
+
       const unreachableReader = createTimescaleMarketDataReader({
         name: "unreachable-test",
         connection: {
@@ -305,7 +312,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       const result = await unreachableReader.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/connection|database|host/i);
     });
@@ -317,7 +324,7 @@ describe("TimescaleSourceActor - External Integration", () => {
 
       // Query for non-existent coin
       const result = await reader.getCurrentPrice("nonexistent-coin-12345");
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         expect(error?.message).toMatch(/not found|no data|empty/i);
@@ -334,14 +341,17 @@ describe("TimescaleSourceActor - External Integration", () => {
       }
 
       // This SHOULD FAIL with timeout on long-running query
-      const result = await reader.runCustomQuery(`
+      const result = await reader.runCustomQuery(
+        `
         SELECT pg_sleep(60), * FROM crypto_prices 
         WHERE coin_id = 'bitcoin' 
         ORDER BY timestamp DESC
-      `, { timeout: 1000 }); // 1 second timeout
+      `,
+        { timeout: 1000 },
+      ); // 1 second timeout
 
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/timeout|cancelled/i);
     });

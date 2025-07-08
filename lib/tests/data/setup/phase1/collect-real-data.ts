@@ -2,14 +2,14 @@
 
 /**
  * Phase 1: One-Time Data Collection Setup
- * 
+ *
  * Collects real data from external APIs and stores as test fixtures.
  * This runs once manually or in CI/CD setup phase.
- * 
+ *
  * If this fails, it indicates external API issues or network problems.
  */
 
-import { writeFile, mkdir } from "node:fs/promises";
+import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
@@ -34,7 +34,7 @@ export class Phase1DataCollector {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         console.log(`🔄 Connection attempt ${attempt}/${maxRetries}...`);
-        
+
         const client = new Client(
           {
             name: "phase1-data-collector",
@@ -42,65 +42,62 @@ export class Phase1DataCollector {
           },
           {
             capabilities: {},
-          }
+          },
         );
 
-        const transport = new SSEClientTransport(
-          new URL("https://mcp.api.coingecko.com/sse")
-        );
-        
+        const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
+
         await client.connect(transport);
         console.log("✅ Connected to CoinGecko MCP API");
         return client;
-        
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : String(error);
         console.log(`❌ Attempt ${attempt} failed: ${errorMsg}`);
-        
+
         if (attempt < maxRetries) {
-          const delay = Math.pow(2, attempt) * 1000; // Exponential backoff
+          const delay = 2 ** attempt * 1000; // Exponential backoff
           console.log(`⏳ Waiting ${delay}ms before retry...`);
-          await new Promise(resolve => setTimeout(resolve, delay));
+          await new Promise((resolve) => setTimeout(resolve, delay));
         }
       }
     }
-    
+
     return null;
   }
 
   private async apiDelay(ms: number): Promise<void> {
     console.log(`⏳ Rate limiting delay: ${ms}ms`);
-    await new Promise(resolve => setTimeout(resolve, ms));
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async collectAll(): Promise<CollectionResult> {
     console.log("🔄 Phase 1: Starting one-time data collection...");
-    
+
     try {
       // Ensure directories exist
       await this.ensureDirectories();
-      
+
       // Collect data from each source
       await this.collectCoinGeckoData();
       await this.collectMarketAnalytics();
       await this.collectOHLCVSamples();
-      
+
       // Generate sample Kafka/Redpanda messages
       await this.generateKafkaFixtures();
-      
+
       // Generate TimescaleDB test records
       await this.generateTimescaleFixtures();
-      
+
       const result: CollectionResult = {
         success: this.errors.length === 0,
         dataFiles: this.dataFiles,
         errors: this.errors,
         timestamp: new Date(),
       };
-      
+
       // Save collection metadata
       await this.saveMetadata(result);
-      
+
       if (result.success) {
         console.log("✅ Phase 1: Data collection completed successfully");
         console.log(`📁 Created ${result.dataFiles.length} fixture files`);
@@ -108,13 +105,12 @@ export class Phase1DataCollector {
         console.error("❌ Phase 1: Data collection failed");
         console.error("Errors:", result.errors);
       }
-      
+
       return result;
-      
     } catch (error) {
       const errorMsg = `Phase 1 setup failed: ${error instanceof Error ? error.message : String(error)}`;
       console.error("❌", errorMsg);
-      
+
       return {
         success: false,
         dataFiles: this.dataFiles,
@@ -125,13 +121,8 @@ export class Phase1DataCollector {
   }
 
   private async ensureDirectories(): Promise<void> {
-    const dirs = [
-      "coingecko",
-      "redpanda", 
-      "timescaledb",
-      "market-data",
-    ];
-    
+    const dirs = ["coingecko", "redpanda", "timescaledb", "market-data"];
+
     for (const dir of dirs) {
       await mkdir(join(this.dataDir, dir), { recursive: true });
     }
@@ -139,7 +130,7 @@ export class Phase1DataCollector {
 
   private async collectCoinGeckoData(): Promise<void> {
     console.log("🌐 Collecting CoinGecko data...");
-    
+
     try {
       // Implement backoff retry for rate limiting
       const client = await this.connectWithRetry();
@@ -160,13 +151,13 @@ export class Phase1DataCollector {
       });
 
       await this.saveFixture("coingecko/bitcoin-market-data.json", bitcoinData);
-      
+
       // Rate limiting delay
       await this.apiDelay(2000);
 
       // Collect multiple coin data
       const multiCoinData = await client.callTool({
-        name: "get_coins_markets", 
+        name: "get_coins_markets",
         arguments: {
           ids: "bitcoin,ethereum,cardano",
           vs_currency: "usd",
@@ -175,17 +166,17 @@ export class Phase1DataCollector {
       });
 
       await this.saveFixture("coingecko/multi-coin-data.json", multiCoinData);
-      
+
       // Rate limiting delay
       await this.apiDelay(2000);
 
       // List available tools first
       const toolsResult = await client.listTools();
       await this.saveFixture("coingecko/available-tools.json", toolsResult);
-      
+
       // Rate limiting delay
       await this.apiDelay(2000);
-      
+
       // Get global market data using correct tool name
       try {
         const globalData = await client.callTool({
@@ -194,7 +185,7 @@ export class Phase1DataCollector {
         });
         await this.saveFixture("coingecko/global-market-data.json", globalData);
         console.log("✅ Global market data collected");
-        
+
         // Rate limiting delay
         await this.apiDelay(2000);
       } catch (globalError) {
@@ -211,8 +202,8 @@ export class Phase1DataCollector {
       // Get OHLCV data from CoinGecko directly
       try {
         const endTime = Math.floor(Date.now() / 1000);
-        const startTime = endTime - (24 * 60 * 60); // 24 hours ago
-        
+        const startTime = endTime - 24 * 60 * 60; // 24 hours ago
+
         const ohlcvData = await client.callTool({
           name: "get_range_coins_ohlc",
           arguments: {
@@ -231,7 +222,6 @@ export class Phase1DataCollector {
 
       await client.close();
       console.log("✅ CoinGecko data collected");
-
     } catch (error) {
       const errorMsg = `CoinGecko data collection failed: ${error instanceof Error ? error.message : String(error)}`;
       this.errors.push(errorMsg);
@@ -241,7 +231,7 @@ export class Phase1DataCollector {
 
   private async collectMarketAnalytics(): Promise<void> {
     console.log("📊 Generating market analytics fixtures...");
-    
+
     try {
       const marketAnalytics = {
         timestamp: new Date().toISOString(),
@@ -262,7 +252,7 @@ export class Phase1DataCollector {
       // Historical analytics (sample time series)
       const historicalAnalytics = [];
       const now = new Date();
-      
+
       for (let i = 0; i < 24; i++) {
         const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000); // Hourly data
         historicalAnalytics.push({
@@ -276,7 +266,6 @@ export class Phase1DataCollector {
 
       await this.saveFixture("market-data/historical-analytics.json", historicalAnalytics);
       console.log("✅ Market analytics fixtures generated");
-
     } catch (error) {
       const errorMsg = `Market analytics generation failed: ${error instanceof Error ? error.message : String(error)}`;
       this.errors.push(errorMsg);
@@ -286,12 +275,12 @@ export class Phase1DataCollector {
 
   private async collectOHLCVSamples(): Promise<void> {
     console.log("📈 Generating OHLCV fixtures...");
-    
+
     try {
       const ohlcvData = [];
       const now = new Date();
       const basePrice = 50000; // Bitcoin base price
-      
+
       for (let i = 0; i < 100; i++) {
         const timestamp = new Date(now.getTime() - i * 60 * 60 * 1000); // Hourly candles
         const open = basePrice + (Math.random() - 0.5) * 2000;
@@ -299,7 +288,7 @@ export class Phase1DataCollector {
         const low = open - Math.random() * 1000;
         const close = low + Math.random() * (high - low);
         const volume = Math.random() * 1000000;
-        
+
         ohlcvData.push({
           coinId: "bitcoin",
           timestamp: timestamp.toISOString(),
@@ -315,7 +304,6 @@ export class Phase1DataCollector {
 
       await this.saveFixture("market-data/bitcoin-ohlcv-hourly.json", ohlcvData);
       console.log("✅ OHLCV fixtures generated");
-
     } catch (error) {
       const errorMsg = `OHLCV generation failed: ${error instanceof Error ? error.message : String(error)}`;
       this.errors.push(errorMsg);
@@ -325,7 +313,7 @@ export class Phase1DataCollector {
 
   private async generateKafkaFixtures(): Promise<void> {
     console.log("🔄 Generating Kafka message fixtures...");
-    
+
     try {
       // Price update messages
       const priceMessages = [
@@ -348,12 +336,12 @@ export class Phase1DataCollector {
         },
         {
           topic: "crypto-prices",
-          partition: 0, 
+          partition: 0,
           offset: "1002",
           key: "ethereum",
           value: {
             coinId: "ethereum",
-            symbol: "ETH", 
+            symbol: "ETH",
             usdPrice: 3000,
             timestamp: new Date().toISOString(),
             source: "test-fixture",
@@ -378,16 +366,13 @@ export class Phase1DataCollector {
             memberId: "test-member-1",
             clientId: "test-client-1",
             clientHost: "/127.0.0.1",
-            assignments: [
-              { topic: "crypto-prices", partitions: [0, 1] },
-            ],
+            assignments: [{ topic: "crypto-prices", partitions: [0, 1] }],
           },
         ],
       };
 
       await this.saveFixture("redpanda/consumer-group-metadata.json", consumerGroupData);
       console.log("✅ Kafka fixtures generated");
-
     } catch (error) {
       const errorMsg = `Kafka fixture generation failed: ${error instanceof Error ? error.message : String(error)}`;
       this.errors.push(errorMsg);
@@ -397,12 +382,12 @@ export class Phase1DataCollector {
 
   private async generateTimescaleFixtures(): Promise<void> {
     console.log("🗄️ Generating TimescaleDB fixtures...");
-    
+
     try {
       // Sample price records
       const priceRecords = [];
       const now = new Date();
-      
+
       for (let i = 0; i < 1000; i++) {
         const timestamp = new Date(now.getTime() - i * 60 * 1000); // Minute data
         priceRecords.push({
@@ -453,7 +438,6 @@ export class Phase1DataCollector {
 
       await this.saveFixture("timescaledb/table-schemas.json", schemas);
       console.log("✅ TimescaleDB fixtures generated");
-
     } catch (error) {
       const errorMsg = `TimescaleDB fixture generation failed: ${error instanceof Error ? error.message : String(error)}`;
       this.errors.push(errorMsg);
@@ -482,7 +466,7 @@ export class Phase1DataCollector {
     await writeFile(
       join(this.dataDir, "_metadata.json"),
       JSON.stringify(metadata, null, 2),
-      "utf8"
+      "utf8",
     );
   }
 }
@@ -491,12 +475,12 @@ export class Phase1DataCollector {
 if (import.meta.main) {
   const collector = new Phase1DataCollector();
   const result = await collector.collectAll();
-  
+
   if (!result.success) {
     console.error("❌ Phase 1 setup failed - tests cannot run without proper fixtures");
     process.exit(1);
   }
-  
+
   console.log("🎉 Phase 1 complete - fixtures ready for testing");
   process.exit(0);
 }

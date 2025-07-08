@@ -5,7 +5,7 @@
  *
  * Tests the Redpanda MCP source actor with real MCP server connections.
  * These tests verify MCP-based streaming data consumption from Redpanda clusters.
- * 
+ *
  * EXPECTED TO FAIL until Redpanda MCP Server is properly configured and running.
  */
 
@@ -18,8 +18,10 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createRedpandaMCPMarketDataReader } = await import("../../../src/actors/sources/redpanda-mcp");
-      
+      const { createRedpandaMCPMarketDataReader } = await import(
+        "../../../src/actors/sources/redpanda-mcp"
+      );
+
       reader = createRedpandaMCPMarketDataReader({
         name: "integration-test-redpanda-mcp-source",
         debug: false,
@@ -50,7 +52,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
     it("should connect to Redpanda MCP Server", async () => {
       // This SHOULD FAIL until MCP server is running
       const result = await reader.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Redpanda MCP Server not available:", error?.message);
@@ -69,7 +71,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until MCP server exposes tools
       const result = await reader.listMCPTools();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: MCP tools not available:", error?.message);
@@ -91,10 +93,10 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
       const status = reader.getStatus();
       expect(status.dataSource).toBe("mcp+kafka");
       expect(status.hasMCPClient).toBe(true);
-      
+
       const mcpClient = reader.getClient("redpanda-mcp");
       expect(mcpClient).toBeDefined();
-      expect(mcpClient!.isConnected).toBe(true);
+      expect(mcpClient?.isConnected).toBe(true);
     });
   });
 
@@ -106,7 +108,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until topics exist
       const result = await reader.callMCPTool("list_topics", {});
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Topic listing via MCP failed:", error?.message);
@@ -130,7 +132,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
         max_messages: 5,
         timeout_ms: 10000,
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Message consumption via MCP failed:", error?.message);
@@ -151,7 +153,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
       const result = await reader.callMCPTool("describe_consumer_group", {
         group_id: "integration-test-mcp-group",
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Consumer group status via MCP failed:", error?.message);
@@ -173,7 +175,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until price data is flowing through Kafka
       const result = await reader.getCurrentPrice("bitcoin");
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Price data not available via MCP:", error?.message);
@@ -195,10 +197,13 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
         vsCurrencies: ["usd"],
         includeMarketCap: true,
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Multiple prices not available via MCP:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Multiple prices not available via MCP:",
+          error?.message,
+        );
         throw new Error(`Multiple prices via MCP failed: ${error?.message}`);
       }
 
@@ -214,10 +219,13 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until analytics data is flowing
       const result = await reader.getMarketAnalytics();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Market analytics not available via MCP:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Market analytics not available via MCP:",
+          error?.message,
+        );
         throw new Error(`Market analytics via MCP failed: ${error?.message}`);
       }
 
@@ -239,9 +247,9 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
     it("should implement MCP+Kafka-specific handlers", () => {
       const prototype = Object.getPrototypeOf(reader);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have MCP-specific handlers
-      expect(methods.some(m => m.includes("MCP") || m.includes("Kafka"))).toBe(true);
+      expect(methods.some((m) => m.includes("MCP") || m.includes("Kafka"))).toBe(true);
       expect(typeof reader.callMCPTool).toBe("function");
       expect(typeof reader.listMCPTools).toBe("function");
     });
@@ -256,19 +264,21 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
       // This SHOULD FAIL until high-throughput streaming is configured
       const startTime = Date.now();
       const messages = [];
-      
+
       const unsubscribe = reader.subscribeToTopic("crypto-prices", (message) => {
         messages.push(message);
       });
 
-      await new Promise(resolve => setTimeout(resolve, 10000)); // 10 seconds
+      await new Promise((resolve) => setTimeout(resolve, 10000)); // 10 seconds
       unsubscribe();
-      
+
       const endTime = Date.now();
       const messagesPerSecond = messages.length / ((endTime - startTime) / 1000);
 
       if (messagesPerSecond < 1) {
-        throw new Error(`Insufficient message throughput: ${messagesPerSecond} msg/sec - streaming broken`);
+        throw new Error(
+          `Insufficient message throughput: ${messagesPerSecond} msg/sec - streaming broken`,
+        );
       }
 
       expect(messagesPerSecond).toBeGreaterThan(1);
@@ -282,10 +292,13 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL until lag monitoring is configured
       const result = await reader.getConsumerLag();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Consumer lag monitoring not available:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Consumer lag monitoring not available:",
+          error?.message,
+        );
         throw new Error(`Consumer lag monitoring failed: ${error?.message}`);
       }
 
@@ -298,12 +311,14 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
   describe("Error Handling", () => {
     it("should handle MCP server unavailable gracefully", async () => {
-      const { createRedpandaMCPMarketDataReader } = await import("../../../src/actors/sources/redpanda-mcp");
-      
+      const { createRedpandaMCPMarketDataReader } = await import(
+        "../../../src/actors/sources/redpanda-mcp"
+      );
+
       const unreachableReader = createRedpandaMCPMarketDataReader({
         name: "unreachable-test",
         mcpConfig: {
-          transport: "stdio", 
+          transport: "stdio",
           command: "nonexistent-command",
           args: ["invalid"],
           brokers: ["unreachable:9999"],
@@ -313,7 +328,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       const result = await unreachableReader.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/mcp|server|command|connection/i);
     });
@@ -325,9 +340,9 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL with invalid tool name
       const result = await reader.callMCPTool("nonexistent_tool", {});
-      
+
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/tool|method|unknown|invalid/i);
     });
@@ -339,7 +354,7 @@ describe("RedpandaMCPSourceActor - External Integration", () => {
 
       // This SHOULD FAIL when cluster becomes unavailable
       const result = await reader.callMCPTool("cluster_info", {});
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         expect(error?.message).toMatch(/cluster|broker|connection|unavailable/i);

@@ -1,1 +1,120 @@
-{"numTotalTestSuites":6,"numPassedTestSuites":2,"numFailedTestSuites":4,"numPendingTestSuites":0,"numTotalTests":8,"numPassedTests":6,"numFailedTests":2,"numPendingTests":0,"numTodoTests":0,"snapshot":{"added":0,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0,"didUpdate":false},"startTime":1751972627781,"success":false,"testResults":[{"assertionResults":[{"ancestorTitles":["Complete System Integration","End-to-End Data Flow"],"fullName":"Complete System Integration End-to-End Data Flow should complete full initialization → data fetch → cleanup cycle","status":"passed","title":"should complete full initialization → data fetch → cleanup cycle","duration":948.8197339999999,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","End-to-End Data Flow"],"fullName":"Complete System Integration End-to-End Data Flow should demonstrate plugin architecture benefits","status":"passed","title":"should demonstrate plugin architecture benefits","duration":753.0812629999998,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","End-to-End Data Flow"],"fullName":"Complete System Integration End-to-End Data Flow should verify unified data format across all sources","status":"passed","title":"should verify unified data format across all sources","duration":0.1902460000001156,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","Error Resilience"],"fullName":"Complete System Integration Error Resilience should handle network failures gracefully","status":"failed","title":"should handle network failures gracefully","duration":5.014186999999993,"failureMessages":["AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20","AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20","AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}},{"ancestorTitles":["Complete System Integration","Error Resilience"],"fullName":"Complete System Integration Error Resilience should handle invalid coin IDs gracefully","status":"passed","title":"should handle invalid coin IDs gracefully","duration":0.10440599999992628,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","Performance Characteristics"],"fullName":"Complete System Integration Performance Characteristics should respond within reasonable time limits","status":"passed","title":"should respond within reasonable time limits","duration":0.1901500000001306,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","Performance Characteristics"],"fullName":"Complete System Integration Performance Characteristics should handle concurrent requests efficiently","status":"passed","title":"should handle concurrent requests efficiently","duration":0.5960250000000542,"failureMessages":[],"meta":{}},{"ancestorTitles":["Complete System Integration","MCP Protocol Compliance"],"fullName":"Complete System Integration MCP Protocol Compliance should establish proper MCP connection","status":"failed","title":"should establish proper MCP connection","duration":1.7042739999999412,"failureMessages":["AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20","AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20","AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"],"meta":{}}],"startTime":1751972628029,"endTime":1751972629738.7043,"status":"failed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts"}]}
+{
+  "numTotalTestSuites": 6,
+  "numPassedTestSuites": 2,
+  "numFailedTestSuites": 4,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 8,
+  "numPassedTests": 6,
+  "numFailedTests": 2,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1751972627781,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["Complete System Integration", "End-to-End Data Flow"],
+          "fullName": "Complete System Integration End-to-End Data Flow should complete full initialization → data fetch → cleanup cycle",
+          "status": "passed",
+          "title": "should complete full initialization → data fetch → cleanup cycle",
+          "duration": 948.8197339999999,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "End-to-End Data Flow"],
+          "fullName": "Complete System Integration End-to-End Data Flow should demonstrate plugin architecture benefits",
+          "status": "passed",
+          "title": "should demonstrate plugin architecture benefits",
+          "duration": 753.0812629999998,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "End-to-End Data Flow"],
+          "fullName": "Complete System Integration End-to-End Data Flow should verify unified data format across all sources",
+          "status": "passed",
+          "title": "should verify unified data format across all sources",
+          "duration": 0.1902460000001156,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "Error Resilience"],
+          "fullName": "Complete System Integration Error Resilience should handle network failures gracefully",
+          "status": "failed",
+          "title": "should handle network failures gracefully",
+          "duration": 5.014186999999993,
+          "failureMessages": [
+            "AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+            "AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+            "AssertionError: expected 0 to be greater than 0\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:146:49\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "Error Resilience"],
+          "fullName": "Complete System Integration Error Resilience should handle invalid coin IDs gracefully",
+          "status": "passed",
+          "title": "should handle invalid coin IDs gracefully",
+          "duration": 0.10440599999992628,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "Performance Characteristics"],
+          "fullName": "Complete System Integration Performance Characteristics should respond within reasonable time limits",
+          "status": "passed",
+          "title": "should respond within reasonable time limits",
+          "duration": 0.1901500000001306,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "Performance Characteristics"],
+          "fullName": "Complete System Integration Performance Characteristics should handle concurrent requests efficiently",
+          "status": "passed",
+          "title": "should handle concurrent requests efficiently",
+          "duration": 0.5960250000000542,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["Complete System Integration", "MCP Protocol Compliance"],
+          "fullName": "Complete System Integration MCP Protocol Compliance should establish proper MCP connection",
+          "status": "failed",
+          "title": "should establish proper MCP connection",
+          "duration": 1.7042739999999412,
+          "failureMessages": [
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20",
+            "AssertionError: expected false to be true // Object.is equality\n    at /home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts:218:43\n    at processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at file:///home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20"
+          ],
+          "meta": {}
+        }
+      ],
+      "startTime": 1751972628029,
+      "endTime": 1751972629738.7043,
+      "status": "failed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/system/workflows/complete-system.test.ts"
+    }
+  ]
+}

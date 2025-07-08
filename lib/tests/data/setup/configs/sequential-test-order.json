@@ -5,15 +5,10 @@
       {
         "name": "phase1-external-data-collection",
         "description": "Collect real data from external APIs",
-        "tests": [
-          "external-apis/CoinGeckoMarketDataReader.test.ts"
-        ],
+        "tests": ["external-apis/CoinGeckoMarketDataReader.test.ts"],
         "purpose": "Establish external data source connectivity and collect fresh data",
         "dataFlow": "External APIs → Test Data Storage",
-        "requirements": [
-          "CoinGecko MCP API accessible",
-          "Network connectivity"
-        ]
+        "requirements": ["CoinGecko MCP API accessible", "Network connectivity"]
       },
       {
         "name": "phase2-data-writers",
@@ -37,29 +32,21 @@
         "description": "Test all data readers that consume from populated storage",
         "tests": [
           "external-apis/RedpandaSourceActor.test.ts",
-          "external-apis/RedpandaMCPSourceActor.test.ts", 
+          "external-apis/RedpandaMCPSourceActor.test.ts",
           "external-apis/TimescaleSourceActor.test.ts"
         ],
         "purpose": "Verify data consumption from populated storage systems",
         "dataFlow": "Kafka Topics & Database Tables → Readers",
-        "requirements": [
-          "Data written by phase2 available",
-          "Storage systems accessible"
-        ],
+        "requirements": ["Data written by phase2 available", "Storage systems accessible"],
         "dependencies": ["phase2-data-writers"]
       },
       {
         "name": "phase4-mcp-launchers",
         "description": "Test MCP server process management",
-        "tests": [
-          "mcp-servers/redpanda-mcp-launcher.test.ts"
-        ],
+        "tests": ["mcp-servers/redpanda-mcp-launcher.test.ts"],
         "purpose": "Verify MCP server startup and tool availability",
         "dataFlow": "Process Management → MCP Servers",
-        "requirements": [
-          "rpk binary available",
-          "Process spawning permissions"
-        ],
+        "requirements": ["rpk binary available", "Process spawning permissions"],
         "dependencies": []
       }
     ]

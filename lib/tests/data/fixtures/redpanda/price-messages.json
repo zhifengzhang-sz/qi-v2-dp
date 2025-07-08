@@ -8,7 +8,7 @@
       "coinId": "bitcoin",
       "symbol": "BTC",
       "usdPrice": 50000,
-      "timestamp": "2025-07-08T12:21:21.976Z",
+      "timestamp": "2025-07-08T14:03:10.391Z",
       "source": "test-fixture"
     },
     "headers": {
@@ -25,7 +25,7 @@
       "coinId": "ethereum",
       "symbol": "ETH",
       "usdPrice": 3000,
-      "timestamp": "2025-07-08T12:21:21.976Z",
+      "timestamp": "2025-07-08T14:03:10.391Z",
       "source": "test-fixture"
     },
     "headers": {

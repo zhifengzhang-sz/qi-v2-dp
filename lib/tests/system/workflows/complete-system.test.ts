@@ -8,9 +8,9 @@
  */
 
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
+import { createCoinGeckoMarketDataReader } from "../../../src/actors/sources/coingecko";
 import type { CryptoMarketAnalytics, CryptoPriceData } from "../../../src/dsl";
 import { getData, getError, isFailure, isSuccess } from "../../../src/qicore/base";
-import { createCoinGeckoMarketDataReader } from "../../../src/actors/sources/coingecko";
 
 describe("Complete System Integration", () => {
   let reader: any;

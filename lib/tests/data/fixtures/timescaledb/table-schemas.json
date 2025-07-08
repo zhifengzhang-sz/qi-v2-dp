@@ -4,23 +4,17 @@
       {
         "name": "coin_id",
         "type": "TEXT",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "symbol",
         "type": "TEXT",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "usd_price",
         "type": "DECIMAL(20,8)",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "market_cap_usd",
@@ -33,16 +27,12 @@
       {
         "name": "timestamp",
         "type": "TIMESTAMPTZ",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "source",
         "type": "TEXT",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "attribution",
@@ -57,44 +47,32 @@
       {
         "name": "coin_id",
         "type": "TEXT",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "timestamp",
         "type": "TIMESTAMPTZ",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "open_price",
         "type": "DECIMAL(20,8)",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "high_price",
         "type": "DECIMAL(20,8)",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "low_price",
         "type": "DECIMAL(20,8)",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "close_price",
         "type": "DECIMAL(20,8)",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       },
       {
         "name": "volume",
@@ -103,9 +81,7 @@
       {
         "name": "source",
         "type": "TEXT",
-        "constraints": [
-          "NOT NULL"
-        ]
+        "constraints": ["NOT NULL"]
       }
     ],
     "timeColumn": "timestamp",

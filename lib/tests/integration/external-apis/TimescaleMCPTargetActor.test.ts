@@ -5,7 +5,7 @@
  *
  * Tests the TimescaleDB MCP target actor with real MCP server connections.
  * These tests verify MCP-based time-series data storage to TimescaleDB instances.
- * 
+ *
  * EXPECTED TO FAIL until TimescaleDB MCP Server is properly configured and running.
  */
 
@@ -18,8 +18,10 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createTimescaleMCPMarketDataWriter } = await import("../../../src/actors/targets/timescale-mcp");
-      
+      const { createTimescaleMCPMarketDataWriter } = await import(
+        "../../../src/actors/targets/timescale-mcp"
+      );
+
       writer = createTimescaleMCPMarketDataWriter({
         name: "integration-test-timescale-mcp-target",
         debug: false,
@@ -61,7 +63,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
     it("should connect to TimescaleDB MCP Server", async () => {
       // This SHOULD FAIL until MCP server is running
       const result = await writer.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: TimescaleDB MCP Server not available:", error?.message);
@@ -80,7 +82,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until MCP server exposes TimescaleDB tools
       const result = await writer.listMCPTools();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: TimescaleDB MCP tools not available:", error?.message);
@@ -103,10 +105,10 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
       const status = writer.getStatus();
       expect(status.dataSource).toBe("mcp+timescaledb");
       expect(status.hasMCPClient).toBe(true);
-      
+
       const mcpClient = writer.getClient("timescaledb-mcp");
       expect(mcpClient).toBeDefined();
-      expect(mcpClient!.isConnected).toBe(true);
+      expect(mcpClient?.isConnected).toBe(true);
     });
   });
 
@@ -123,7 +125,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
         chunk_interval: "1 day",
         if_not_exists: true,
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Hypertable creation via MCP failed:", error?.message);
@@ -142,10 +144,13 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until database is accessible
       const result = await writer.callMCPTool("check_connection", {});
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Database connection check via MCP failed:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Database connection check via MCP failed:",
+          error?.message,
+        );
         throw new Error(`MCP database connection check failed: ${error?.message}`);
       }
 
@@ -161,7 +166,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until hypertables exist
       const result = await writer.callMCPTool("list_hypertables", {});
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Hypertable listing via MCP failed:", error?.message);
@@ -190,7 +195,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until hypertables are configured
       const result = await writer.publishPrice(priceData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Price publishing via MCP failed:", error?.message);
@@ -198,7 +203,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
       }
 
       expect(isSuccess(result)).toBe(true);
-      
+
       const status = writer.getStatus();
       expect(status.totalPublished).toBeGreaterThan(0);
     }, 15000);
@@ -222,7 +227,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until OHLCV hypertable is configured
       const result = await writer.publishOHLCV(ohlcvData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: OHLCV publishing via MCP failed:", error?.message);
@@ -249,7 +254,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until analytics table is configured
       const result = await writer.publishMarketAnalytics(analyticsData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Analytics publishing via MCP failed:", error?.message);
@@ -284,10 +289,13 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
           schedule_interval: "1 hour",
         },
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
-        console.error("🚫 EXPECTED FAILURE: Continuous aggregate creation via MCP failed:", error?.message);
+        console.error(
+          "🚫 EXPECTED FAILURE: Continuous aggregate creation via MCP failed:",
+          error?.message,
+        );
         throw new Error(`MCP continuous aggregate creation failed: ${error?.message}`);
       }
 
@@ -308,7 +316,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
         segment_by: "coin_id",
         order_by: "timestamp",
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Compression policy via MCP failed:", error?.message);
@@ -330,7 +338,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
         table_name: "crypto_prices",
         drop_after: "1 year",
       });
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Retention policy via MCP failed:", error?.message);
@@ -355,9 +363,9 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
     it("should implement MCP+TimescaleDB-specific handlers", () => {
       const prototype = Object.getPrototypeOf(writer);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have MCP+TimescaleDB-specific handlers
-      expect(methods.some(m => m.includes("MCP") || m.includes("Timescale"))).toBe(true);
+      expect(methods.some((m) => m.includes("MCP") || m.includes("Timescale"))).toBe(true);
       expect(typeof writer.callMCPTool).toBe("function");
       expect(typeof writer.listMCPTools).toBe("function");
     });
@@ -370,14 +378,35 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
       }
 
       const pricesBatch = [
-        { coinId: "bitcoin", symbol: "BTC", usdPrice: 50000, lastUpdated: new Date(), source: "test-mcp", attribution: "test" },
-        { coinId: "ethereum", symbol: "ETH", usdPrice: 3000, lastUpdated: new Date(), source: "test-mcp", attribution: "test" },
-        { coinId: "cardano", symbol: "ADA", usdPrice: 1.2, lastUpdated: new Date(), source: "test-mcp", attribution: "test" },
+        {
+          coinId: "bitcoin",
+          symbol: "BTC",
+          usdPrice: 50000,
+          lastUpdated: new Date(),
+          source: "test-mcp",
+          attribution: "test",
+        },
+        {
+          coinId: "ethereum",
+          symbol: "ETH",
+          usdPrice: 3000,
+          lastUpdated: new Date(),
+          source: "test-mcp",
+          attribution: "test",
+        },
+        {
+          coinId: "cardano",
+          symbol: "ADA",
+          usdPrice: 1.2,
+          lastUpdated: new Date(),
+          source: "test-mcp",
+          attribution: "test",
+        },
       ];
 
       // This SHOULD FAIL until batch processing is configured
       const result = await writer.publishPrices(pricesBatch);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Batch processing via MCP failed:", error?.message);
@@ -385,7 +414,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
       }
 
       expect(isSuccess(result)).toBe(true);
-      
+
       const status = writer.getStatus();
       expect(status.totalPublished).toBeGreaterThan(pricesBatch.length - 1);
     });
@@ -397,7 +426,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until transaction support is configured
       const result = await writer.callMCPTool("begin_transaction", {});
-      
+
       if (isSuccess(result)) {
         const insertResult = await writer.callMCPTool("insert_batch", {
           table_name: "crypto_prices",
@@ -408,7 +437,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
         });
 
         const commitResult = await writer.callMCPTool("commit_transaction", {});
-        
+
         expect(isSuccess(insertResult)).toBe(true);
         expect(isSuccess(commitResult)).toBe(true);
       }
@@ -417,8 +446,10 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
   describe("Error Handling", () => {
     it("should handle MCP server unavailable gracefully", async () => {
-      const { createTimescaleMCPMarketDataWriter } = await import("../../../src/actors/targets/timescale-mcp");
-      
+      const { createTimescaleMCPMarketDataWriter } = await import(
+        "../../../src/actors/targets/timescale-mcp"
+      );
+
       const unreachableWriter = createTimescaleMCPMarketDataWriter({
         name: "unreachable-test",
         mcpConfig: {
@@ -438,7 +469,7 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       const result = await unreachableWriter.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/mcp|server|command|connection/i);
     });
@@ -451,13 +482,13 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
       // This SHOULD FAIL with constraint violation
       const invalidData = {
         coinId: null, // Violates NOT NULL constraint
-        symbol: "", 
+        symbol: "",
         usdPrice: -1, // Violates CHECK constraint
         lastUpdated: "invalid-date",
       };
 
       const result = await writer.publishPrice(invalidData as any);
-      
+
       if (isSuccess(result)) {
         throw new Error("Should have failed with constraint violation");
       }
@@ -473,9 +504,9 @@ describe("TimescaleMCPTargetActor - External Integration", () => {
 
       // This SHOULD FAIL with invalid tool name
       const result = await writer.callMCPTool("nonexistent_timescale_tool", {});
-      
+
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toMatch(/tool|method|unknown|invalid/i);
     });

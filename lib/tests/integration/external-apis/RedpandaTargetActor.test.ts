@@ -5,7 +5,7 @@
  *
  * Tests the Redpanda target actor with real Kafka cluster connections.
  * These tests verify streaming data publishing to actual Redpanda clusters.
- * 
+ *
  * EXPECTED TO FAIL until Redpanda cluster is properly configured and running.
  */
 
@@ -18,8 +18,10 @@ describe("RedpandaTargetActor - External Integration", () => {
   beforeAll(async () => {
     try {
       // This import should exist but may fail
-      const { createRedpandaMarketDataWriter } = await import("../../../src/actors/targets/redpanda");
-      
+      const { createRedpandaMarketDataWriter } = await import(
+        "../../../src/actors/targets/redpanda"
+      );
+
       writer = createRedpandaMarketDataWriter({
         name: "integration-test-redpanda-target",
         debug: false,
@@ -48,7 +50,7 @@ describe("RedpandaTargetActor - External Integration", () => {
     it("should connect to Redpanda Kafka cluster as producer", async () => {
       // This SHOULD FAIL until cluster is running
       const result = await writer.initialize();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Redpanda cluster not available:", error?.message);
@@ -66,7 +68,7 @@ describe("RedpandaTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until topics are created
       const result = await writer.verifyTopics();
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Topics not available:", error?.message);
@@ -96,7 +98,7 @@ describe("RedpandaTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until Kafka is properly configured
       const result = await writer.publishPrice(priceData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Price publishing failed:", error?.message);
@@ -104,7 +106,7 @@ describe("RedpandaTargetActor - External Integration", () => {
       }
 
       expect(isSuccess(result)).toBe(true);
-      
+
       // Verify message was actually sent
       const status = writer.getStatus();
       expect(status.totalPublished).toBeGreaterThan(0);
@@ -127,7 +129,7 @@ describe("RedpandaTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until topics and schemas are configured
       const result = await writer.publishMarketAnalytics(analyticsData);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Analytics publishing failed:", error?.message);
@@ -143,14 +145,35 @@ describe("RedpandaTargetActor - External Integration", () => {
       }
 
       const pricesBatch = [
-        { coinId: "bitcoin", symbol: "BTC", usdPrice: 50000, lastUpdated: new Date(), source: "test", attribution: "test" },
-        { coinId: "ethereum", symbol: "ETH", usdPrice: 3000, lastUpdated: new Date(), source: "test", attribution: "test" },
-        { coinId: "cardano", symbol: "ADA", usdPrice: 1.2, lastUpdated: new Date(), source: "test", attribution: "test" },
+        {
+          coinId: "bitcoin",
+          symbol: "BTC",
+          usdPrice: 50000,
+          lastUpdated: new Date(),
+          source: "test",
+          attribution: "test",
+        },
+        {
+          coinId: "ethereum",
+          symbol: "ETH",
+          usdPrice: 3000,
+          lastUpdated: new Date(),
+          source: "test",
+          attribution: "test",
+        },
+        {
+          coinId: "cardano",
+          symbol: "ADA",
+          usdPrice: 1.2,
+          lastUpdated: new Date(),
+          source: "test",
+          attribution: "test",
+        },
       ];
 
       // This SHOULD FAIL until partitioning is configured
       const result = await writer.publishPrices(pricesBatch);
-      
+
       if (isFailure(result)) {
         const error = getError(result);
         console.error("🚫 EXPECTED FAILURE: Batch publishing failed:", error?.message);
@@ -158,7 +181,7 @@ describe("RedpandaTargetActor - External Integration", () => {
       }
 
       expect(isSuccess(result)).toBe(true);
-      
+
       const status = writer.getStatus();
       expect(status.totalPublished).toBeGreaterThan(pricesBatch.length - 1);
     });
@@ -180,14 +203,28 @@ describe("RedpandaTargetActor - External Integration", () => {
 
       // This SHOULD FAIL until batching is configured
       const initialCount = writer.getStatus().totalPublished;
-      
+
       // Add messages to batch
-      await writer.publishPrice({ coinId: "test1", symbol: "T1", usdPrice: 1, lastUpdated: new Date(), source: "test", attribution: "test" });
-      await writer.publishPrice({ coinId: "test2", symbol: "T2", usdPrice: 2, lastUpdated: new Date(), source: "test", attribution: "test" });
-      
+      await writer.publishPrice({
+        coinId: "test1",
+        symbol: "T1",
+        usdPrice: 1,
+        lastUpdated: new Date(),
+        source: "test",
+        attribution: "test",
+      });
+      await writer.publishPrice({
+        coinId: "test2",
+        symbol: "T2",
+        usdPrice: 2,
+        lastUpdated: new Date(),
+        source: "test",
+        attribution: "test",
+      });
+
       // Force flush
       const flushResult = await writer.flush();
-      
+
       if (isFailure(flushResult)) {
         const error = getError(flushResult);
         throw new Error(`Flush failed: ${error?.message}`);
@@ -209,16 +246,18 @@ describe("RedpandaTargetActor - External Integration", () => {
     it("should implement Kafka-specific handlers only", () => {
       const prototype = Object.getPrototypeOf(writer);
       const methods = Object.getOwnPropertyNames(prototype);
-      
+
       // Should have Kafka-specific handlers
-      expect(methods.some(m => m.includes("Kafka") || m.includes("Producer"))).toBe(true);
+      expect(methods.some((m) => m.includes("Kafka") || m.includes("Producer"))).toBe(true);
     });
   });
 
   describe("Error Handling", () => {
     it("should handle broker unavailable gracefully", async () => {
-      const { createRedpandaMarketDataWriter } = await import("../../../src/actors/targets/redpanda");
-      
+      const { createRedpandaMarketDataWriter } = await import(
+        "../../../src/actors/targets/redpanda"
+      );
+
       const unreachableWriter = createRedpandaMarketDataWriter({
         name: "unreachable-test",
         brokers: ["unreachable:9999"],
@@ -227,7 +266,7 @@ describe("RedpandaTargetActor - External Integration", () => {
 
       const result = await unreachableWriter.initialize();
       expect(isFailure(result)).toBe(true);
-      
+
       const error = getError(result);
       expect(error?.message).toContain("broker");
     });
@@ -245,7 +284,7 @@ describe("RedpandaTargetActor - External Integration", () => {
       };
 
       const result = await writer.publishPrice(invalidData as any);
-      
+
       if (isSuccess(result)) {
         throw new Error("Should have failed with invalid data schema");
       }
@@ -256,8 +295,10 @@ describe("RedpandaTargetActor - External Integration", () => {
 
     it("should handle topic permission errors", async () => {
       // This SHOULD FAIL until permissions are configured
-      const { createRedpandaMarketDataWriter } = await import("../../../src/actors/targets/redpanda");
-      
+      const { createRedpandaMarketDataWriter } = await import(
+        "../../../src/actors/targets/redpanda"
+      );
+
       const restrictedWriter = createRedpandaMarketDataWriter({
         name: "restricted-test",
         brokers: ["localhost:19092"],

@@ -2,12 +2,17 @@
 
 /**
  * External Service Setup for Integration Tests
- * 
+ *
  * This module sets up and validates external services required for integration testing.
  * If any external service fails to connect, the entire integration test suite should fail.
  */
 
-import { createQiError, failure, success, type ResultType as Result } from "../../../src/qicore/base";
+import {
+  type ResultType as Result,
+  createQiError,
+  failure,
+  success,
+} from "../../../src/qicore/base";
 
 export interface ExternalServiceConfig {
   name: string;
@@ -51,14 +56,14 @@ export class ExternalServiceSetup {
         console.log(`   URL: ${service.url}`);
         console.log(`   Error: ${result.error}`);
         console.log("\n🚫 Integration tests cannot proceed without external services\n");
-        
+
         return failure(
           createQiError(
             "EXTERNAL_SERVICE_UNAVAILABLE",
             `External service '${service.name}' is not available: ${result.error}`,
             "EXTERNAL",
-            { service: service.name, url: service.url }
-          )
+            { service: service.name, url: service.url },
+          ),
         );
       }
 
@@ -74,15 +79,15 @@ export class ExternalServiceSetup {
    */
   private async setupService(config: ExternalServiceConfig): Promise<ExternalServiceStatus> {
     const startTime = Date.now();
-    
+
     try {
       console.log(`🔍 Checking ${config.name}...`);
-      
+
       const isAvailable = await Promise.race([
         config.healthCheck(),
-        new Promise<boolean>((_, reject) => 
-          setTimeout(() => reject(new Error(`Timeout after ${config.timeout}ms`)), config.timeout)
-        )
+        new Promise<boolean>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout after ${config.timeout}ms`)), config.timeout),
+        ),
       ]);
 
       const responseTime = Date.now() - startTime;
@@ -94,7 +99,7 @@ export class ExternalServiceSetup {
       };
     } catch (error) {
       const responseTime = Date.now() - startTime;
-      
+
       return {
         name: config.name,
         isAvailable: false,
@@ -133,7 +138,7 @@ export const EXTERNAL_SERVICES = {
         // Try to establish SSE connection to CoinGecko MCP server
         const { Client } = await import("@modelcontextprotocol/sdk/client/index.js");
         const { SSEClientTransport } = await import("@modelcontextprotocol/sdk/client/sse.js");
-        
+
         const client = new Client(
           {
             name: "integration-test-health-check",
@@ -141,18 +146,18 @@ export const EXTERNAL_SERVICES = {
           },
           {
             capabilities: {},
-          }
+          },
         );
 
         const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
-        
+
         await client.connect(transport);
-        
+
         // Test basic functionality
         const result = await client.listTools();
-        
+
         await client.close();
-        
+
         return result.tools && result.tools.length > 0;
       } catch (error) {
         return false;
