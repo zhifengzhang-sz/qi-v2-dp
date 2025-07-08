@@ -2,27 +2,27 @@
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { CoinGeckoMarketDataReader } from "../../../../src/publishers/sources/coingecko/MarketDataReader";
+import { CoinGeckoMarketDataReader } from "../../../../src/actors/sources/coingecko/MarketDataReader";
 
 // Mock the DSL functions
-vi.mock("../../../../src/publishers/sources/coingecko/CoinGeckoDSL", () => ({
+vi.mock("../../../../src/actors/sources/coingecko/CoinGeckoDSL", () => ({
   getCurrentPrice: vi.fn(),
   getCurrentPrices: vi.fn(),
   // Re-export actual types
-  ...vi.importActual("../../../../src/publishers/sources/coingecko/CoinGeckoDSL"),
+  ...vi.importActual("../../../../src/actors/sources/coingecko/CoinGeckoDSL"),
 }));
 
 // Mock the MCP Actor creation
-vi.mock("../../../../src/publishers/sources/coingecko/MarketDataReaderWithMCP", () => ({
+vi.mock("../../../../src/actors/sources/coingecko/MarketDataReaderWithMCP", () => ({
   createCoinGeckoMarketDataReaderWithMCP: vi.fn(),
 }));
 
-import { createQiError, failure, success } from "@qi/core/base";
+import { createQiError, failure, success } from "../../../../src/qicore/base";
 import {
   getCurrentPrice,
   getCurrentPrices,
-} from "../../../../src/publishers/sources/coingecko/CoinGeckoDSL";
-import { createCoinGeckoMarketDataReaderWithMCP } from "../../../../src/publishers/sources/coingecko/MarketDataReaderWithMCP";
+} from "../../../../src/actors/sources/coingecko/CoinGeckoDSL";
+import { createCoinGeckoMarketDataReaderWithMCP } from "../../../../src/actors/sources/coingecko/MarketDataReaderWithMCP";
 
 describe("CoinGeckoMarketDataReader (Actor)", () => {
   let actor: CoinGeckoMarketDataReader;

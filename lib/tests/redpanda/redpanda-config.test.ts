@@ -1,6 +1,6 @@
 // lib/redpanda/redpanda-config.test.ts
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { RedpandaConfigManager } from "../../src/redpanda/redpanda-config";
+import { RedpandaConfigManager } from "../../src/base/streaming/redpanda/redpanda-config";
 
 describe("RedpandaConfigManager", () => {
   let originalEnv: NodeJS.ProcessEnv;

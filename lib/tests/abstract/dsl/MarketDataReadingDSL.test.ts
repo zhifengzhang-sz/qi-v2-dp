@@ -14,13 +14,13 @@ import type {
   CryptoPriceData,
   Level1Data,
   MarketDataReadingDSL,
-} from "../../../src/abstract/dsl";
+} from "../../../src/dsl";
 import { getData, getError, isFailure, isSuccess } from "../../../src/qicore/base";
 
 // Mock implementation for testing the interface
 class MockMarketDataReader implements MarketDataReadingDSL {
   async getCurrentPrice(coinId: string, vsCurrency = "usd") {
-    return this.mockResult({ price: 50000 });
+    return this.mockResult(50000);
   }
 
   async getCurrentPrices(coinIds: string[], options?) {

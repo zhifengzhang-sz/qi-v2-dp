@@ -11,7 +11,7 @@ import { describe, expect, it } from "vitest";
 describe("QiCore 2-Layer Architecture", () => {
   it("should have abstract DSL interfaces", async () => {
     try {
-      const { MarketDataReadingDSL } = await import("../src/abstract/dsl/MarketDataReadingDSL");
+      const { MarketDataReadingDSL } = await import("../src/dsl/MarketDataReadingDSL");
       expect(MarketDataReadingDSL).toBeDefined();
     } catch (error) {
       // Interface imports might not work directly, check for type exports
@@ -20,14 +20,14 @@ describe("QiCore 2-Layer Architecture", () => {
   });
 
   it("should have base reader implementation", async () => {
-    const { BaseReader } = await import("../src/abstract/readers/BaseReader");
+    const { BaseReader } = await import("../src/actors/abstract/readers/BaseReader");
     expect(BaseReader).toBeDefined();
     expect(typeof BaseReader).toBe("function"); // Constructor function
   });
 
   it("should have CoinGecko actor implementation", async () => {
     const { CoinGeckoMarketDataReader, createCoinGeckoMarketDataReader } = await import(
-      "../src/sources/coingecko"
+      "../src/actors/sources/coingecko"
     );
     expect(CoinGeckoMarketDataReader).toBeDefined();
     expect(createCoinGeckoMarketDataReader).toBeDefined();
@@ -47,7 +47,7 @@ describe("QiCore 2-Layer Architecture", () => {
   });
 
   it("should create CoinGecko reader successfully", async () => {
-    const { createCoinGeckoMarketDataReader } = await import("../src/sources/coingecko");
+    const { createCoinGeckoMarketDataReader } = await import("../src/actors/sources/coingecko");
 
     const reader = createCoinGeckoMarketDataReader({
       name: "test-reader",
@@ -63,8 +63,8 @@ describe("QiCore 2-Layer Architecture", () => {
   });
 
   it("should verify plugin architecture pattern", async () => {
-    const { createCoinGeckoMarketDataReader } = await import("../src/sources/coingecko");
-    const { BaseReader } = await import("../src/abstract/readers/BaseReader");
+    const { createCoinGeckoMarketDataReader } = await import("../src/actors/sources/coingecko");
+    const { BaseReader } = await import("../src/actors/abstract/readers/BaseReader");
 
     const reader = createCoinGeckoMarketDataReader({
       name: "architecture-test",
@@ -104,7 +104,7 @@ describe("QiCore 2-Layer Architecture", () => {
 
   it("should verify data types are properly exported", async () => {
     try {
-      const types = await import("../src/abstract/dsl/MarketDataTypes");
+      const types = await import("../src/dsl/MarketDataTypes");
       expect(types).toBeDefined();
       // Data types are interfaces, so they exist at compile time but not runtime
       expect(true).toBe(true);
@@ -115,7 +115,7 @@ describe("QiCore 2-Layer Architecture", () => {
   });
 
   it("should verify factory functions work", async () => {
-    const { createCoinGeckoMarketDataReader } = await import("../src/sources/coingecko");
+    const { createCoinGeckoMarketDataReader } = await import("../src/actors/sources/coingecko");
 
     const config = {
       name: "factory-test",

@@ -15,8 +15,8 @@ import type {
   CryptoPriceData,
   MarketDataWritingDSL,
   PublishResult,
-} from "../../abstract/dsl";
-import { getData, getError, isFailure, isSuccess } from "../../qicore/base";
+} from "../../../src/dsl";
+import { getData, getError, isFailure, isSuccess } from "../../../src/qicore/base";
 
 // Mock implementation for testing the interface
 class MockMarketDataWriter implements MarketDataWritingDSL {
@@ -61,7 +61,7 @@ class MockMarketDataWriter implements MarketDataWritingDSL {
   }
 
   private mockPublishResult(): Promise<any> {
-    const { success } = require("../../qicore/base");
+    const { success } = require("../../../src/qicore/base");
     return Promise.resolve(
       success({
         messageId: "mock-message-id",
@@ -75,7 +75,7 @@ class MockMarketDataWriter implements MarketDataWritingDSL {
   }
 
   private mockBatchPublishResult(count: number): Promise<any> {
-    const { success } = require("../../qicore/base");
+    const { success } = require("../../../src/qicore/base");
     return Promise.resolve(
       success({
         successCount: count,
@@ -97,7 +97,7 @@ class MockMarketDataWriter implements MarketDataWritingDSL {
   }
 
   private mockResult<T>(data: T) {
-    const { success } = require("../../qicore/base");
+    const { success } = require("../../../src/qicore/base");
     return Promise.resolve(success(data));
   }
 }

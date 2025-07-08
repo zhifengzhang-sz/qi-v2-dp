@@ -1,4 +1,8 @@
 // lib/tests/mcp-tools/tool-registry.test.ts
+// DISABLED: mcp-tools directory structure no longer exists in the new 2-layer architecture
+// TODO: Update or remove this test once Layer 3 MCP server architecture is implemented
+
+/*
 import { beforeEach, describe, expect, it } from "vitest";
 import { StreamCryptoDataTool } from "../../src/mcp-tools/crypto-data-tools";
 import { type MCPToolRegistry, createMCPToolRegistry } from "../../src/mcp-tools/registry";
@@ -67,3 +71,4 @@ describe("MCPToolRegistry", () => {
     });
   });
 });
+*/

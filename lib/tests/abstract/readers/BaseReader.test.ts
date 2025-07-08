@@ -16,8 +16,8 @@ import type {
   DateRangeOHLCVQuery,
   Level1Data,
   Level1Query,
-} from "../../abstract/dsl";
-import { BaseReader } from "../../abstract/readers/BaseReader";
+} from "../../../src/dsl";
+import { BaseReader } from "../../../src/actors/abstract/readers/BaseReader";
 import {
   createQiError,
   failure,
@@ -26,7 +26,7 @@ import {
   isFailure,
   isSuccess,
   success,
-} from "../../qicore/base";
+} from "../../../src/qicore/base";
 
 // Test implementation of BaseReader
 class TestMarketDataReader extends BaseReader {

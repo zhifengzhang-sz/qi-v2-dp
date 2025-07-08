@@ -2,7 +2,7 @@ import { spawn } from "node:child_process";
 import { EventEmitter } from "node:events";
 // lib/tests/redpanda/redpanda-mcp-launcher.test.ts
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OfficialRedpandaMCPLauncher } from "../../src/redpanda/redpanda-mcp-launcher";
+import { OfficialRedpandaMCPLauncher } from "../../src/base/streaming/redpanda/redpanda-mcp-launcher";
 
 // Mock child_process
 vi.mock("node:child_process", () => ({
@@ -10,7 +10,7 @@ vi.mock("node:child_process", () => ({
 }));
 
 // Mock RedpandaConfigManager
-vi.mock("../../src/redpanda/redpanda-config", () => ({
+vi.mock("../../src/base/streaming/redpanda/redpanda-config", () => ({
   RedpandaConfigManager: {
     getInstance: () => ({
       getMCPConfig: () => ({

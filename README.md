@@ -272,22 +272,20 @@ bun run typecheck
 ### Demos
 
 ```bash
-cd app/demos/layer2
-
 # Source demos
-bun run sources/coingecko-source-demo.ts
-bun run sources/redpanda-source-demo.ts
-bun run sources/timescale-mcp-source-demo.ts    # NEW: MCP controlled DB queries
-bun run sources/redpanda-mcp-source-demo.ts     # NEW: MCP controlled streaming
+bun app/demos/layer2/sources/coingecko-source-demo.ts
+bun app/demos/layer2/sources/redpanda-source-demo.ts
+bun app/demos/layer2/sources/timescale-mcp-source-demo.ts    # NEW: MCP controlled DB queries
+bun app/demos/layer2/sources/redpanda-mcp-source-demo.ts     # NEW: MCP controlled streaming
 
 # Target demos  
-bun run targets/timescale-target-demo.ts
-bun run targets/redpanda-target-demo.ts
-bun run targets/timescale-mcp-target-demo.ts    # NEW: MCP controlled DB writes
-bun run targets/redpanda-mcp-target-demo.ts     # NEW: MCP controlled streaming
+bun app/demos/layer2/targets/timescale-target-demo.ts
+bun app/demos/layer2/targets/redpanda-target-demo.ts
+bun app/demos/layer2/targets/timescale-mcp-target-demo.ts    # NEW: MCP controlled DB writes
+bun app/demos/layer2/targets/redpanda-mcp-target-demo.ts     # NEW: MCP controlled streaming
 
 # End-to-end pipeline
-bun run end-to-end-pipeline-demo.ts
+bun app/demos/layer2/end-to-end-pipeline-demo.ts
 ```
 
 ## 🏛️ Architecture Benefits

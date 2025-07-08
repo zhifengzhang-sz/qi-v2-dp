@@ -8,12 +8,12 @@
  */
 
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import type { CryptoMarketAnalytics, CryptoOHLCVData, CryptoPriceData } from "../../abstract/dsl";
-import { getData, getError, isFailure, isSuccess } from "../../qicore/base";
+import type { CryptoMarketAnalytics, CryptoOHLCVData, CryptoPriceData } from "../../src/dsl";
+import { getData, getError, isFailure, isSuccess } from "../../src/qicore/base";
 import {
   type CoinGeckoMarketDataReader,
   createCoinGeckoMarketDataReader,
-} from "../../sources/coingecko";
+} from "../../src/actors/sources/coingecko";
 
 describe("CoinGeckoMarketDataReader", () => {
   let reader: CoinGeckoMarketDataReader;

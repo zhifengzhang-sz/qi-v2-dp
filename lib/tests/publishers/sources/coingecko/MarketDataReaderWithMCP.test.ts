@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   type CoinGeckoMarketDataReaderWithMCP,
   createCoinGeckoMarketDataReaderWithMCP,
-} from "../../../../src/publishers/sources/coingecko/MarketDataReaderWithMCP";
+} from "../../../../src/actors/sources/coingecko/MarketDataReaderWithMCP";
 
 describe("CoinGecko MCP Actor - Real Tests", () => {
   let mcpActor: CoinGeckoMarketDataReaderWithMCP;

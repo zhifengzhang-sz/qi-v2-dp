@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 
 import { describe, expect, it } from "vitest";
-import { createCoinGeckoMarketDataReaderWithMCP } from "../../../../src/publishers/sources/coingecko/MarketDataReaderWithMCP";
+import { createCoinGeckoMarketDataReaderWithMCP } from "../../../../src/actors/sources/coingecko/MarketDataReaderWithMCP";
 
 describe("CoinGecko MCP Actor - REAL Integration Test", () => {
   it("should get real Bitcoin price from CoinGecko API", async () => {
