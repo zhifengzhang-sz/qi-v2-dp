@@ -11,6 +11,12 @@
  */
 
 import { type ResultType as Result, createQiError, failure, success } from "@qi/core/base";
+import { DrizzleClient } from "../../../base/database/drizzle-client";
+import type {
+  CryptoPriceInsert,
+  MarketAnalyticsInsert,
+  OHLCVDataInsert,
+} from "../../../base/database/schema";
 import type {
   BatchPublishOptions,
   BatchPublishResult,
@@ -20,14 +26,8 @@ import type {
   Level1Data,
   PublishOptions,
   PublishResult,
-} from "../../abstract/dsl";
+} from "../../../dsl";
 import { BaseWriter } from "../../abstract/writers/BaseWriter";
-import { DrizzleClient } from "../../base/database/drizzle-client";
-import type {
-  CryptoPriceInsert,
-  MarketAnalyticsInsert,
-  OHLCVDataInsert,
-} from "../../base/database/schema";
 
 // =============================================================================
 // TIMESCALE WRITER CONFIGURATION
@@ -61,7 +61,8 @@ export class TimescaleMarketDataWriter extends BaseWriter {
     });
 
     const defaultConfig = {
-      connectionString: process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/cryptodb",
+      connectionString:
+        process.env.DATABASE_URL || "postgresql://postgres:password@localhost:5432/cryptodb",
       poolConfig: {
         max: 20,
         idleTimeoutMillis: 30000,
@@ -188,6 +189,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       lastUpdated: data.lastUpdated,
       source: data.source,
       attribution: data.attribution,
+      exchangeId: data.exchangeId, // Added required field
     };
 
     await this.drizzleClient.insertCryptoPrices([cryptoPrice]);
@@ -221,6 +223,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       lastUpdated: price.lastUpdated,
       source: price.source,
       attribution: price.attribution,
+      exchangeId: price.exchangeId, // Added required field
     }));
 
     await this.drizzleClient.insertCryptoPrices(cryptoPrices);
@@ -261,6 +264,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       volume: data.volume.toString(),
       source: data.source,
       attribution: data.attribution,
+      exchangeId: data.exchangeId, // Added required field
     };
 
     await this.drizzleClient.insertOHLCVData([ohlcvData]);
@@ -291,6 +295,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       volume: ohlcv.volume.toString(),
       source: ohlcv.source,
       attribution: ohlcv.attribution,
+      exchangeId: ohlcv.exchangeId, // Added required field
     }));
 
     await this.drizzleClient.insertOHLCVData(ohlcvDataArray);
@@ -357,6 +362,7 @@ export class TimescaleMarketDataWriter extends BaseWriter {
       lastUpdated: data.timestamp,
       source: data.source,
       attribution: data.attribution,
+      exchangeId: data.exchange, // Added required field
     };
 
     await this.drizzleClient.insertCryptoPrices([priceData]);

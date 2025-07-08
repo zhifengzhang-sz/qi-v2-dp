@@ -41,6 +41,7 @@ export interface CryptoPriceData {
   coinId: string;
   symbol: string;
   name?: string;
+  exchangeId: string; // Added: exchange identifier (e.g., "binance", "coinbase", "coingecko")
   usdPrice: number;
   btcPrice?: number;
   ethPrice?: number;
@@ -56,6 +57,7 @@ export interface CryptoPriceData {
 export interface CryptoOHLCVData {
   coinId: string;
   symbol?: string;
+  exchangeId: string; // Added: exchange identifier
   timestamp: Date;
   open: number;
   high: number;
@@ -69,6 +71,7 @@ export interface CryptoOHLCVData {
 
 export interface CryptoMarketAnalytics {
   timestamp: Date;
+  exchangeId?: string; // Added: optional for global analytics, required for exchange-specific
   totalMarketCap: number;
   totalVolume: number;
   btcDominance: number;
@@ -87,7 +90,7 @@ export interface Level1Data {
   bestAsk: number;
   spread: number;
   spreadPercent: number;
-  exchange?: string;
+  exchange: string; // Changed from optional to required
   market: string;
   source: string;
   attribution: string;

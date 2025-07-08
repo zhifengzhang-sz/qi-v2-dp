@@ -8,12 +8,8 @@
  */
 
 import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
-import { createCoinGeckoMarketDataReader } from "@qi/dp/actor/source/coingecko";
-import type {
-  CryptoMarketAnalytics,
-  CryptoOHLCVData,
-  CryptoPriceData,
-} from "@qi/dp/base/abstract/dsl";
+import { createCoinGeckoMarketDataReader } from "@qi/dp/actors/sources/coingecko";
+import type { CryptoMarketAnalytics, CryptoOHLCVData, CryptoPriceData } from "@qi/dp/dsl";
 
 console.log("🪙 CoinGecko Source Demo");
 console.log("=".repeat(50));
@@ -63,14 +59,14 @@ async function demonstrateCoinGeckoSource() {
     if (isSuccess(pricesResult)) {
       const cryptoPrices = getData(pricesResult) as CryptoPriceData[];
       console.log(`   📊 Retrieved ${cryptoPrices.length} cryptocurrency prices:`);
-      cryptoPrices.forEach((crypto) => {
+      for (const crypto of cryptoPrices) {
         console.log(
           `     💎 ${crypto.name} (${crypto.symbol.toUpperCase()}): $${crypto.usdPrice.toFixed(2)}`,
         );
         if (crypto.marketCap) {
           console.log(`       📈 Market Cap: $${(crypto.marketCap / 1e9).toFixed(2)}B`);
         }
-      });
+      }
     } else {
       const error = getError(pricesResult);
       console.log(`   ❌ Prices fetch failed: ${error?.message || "Unknown error"}`);
@@ -82,7 +78,7 @@ async function demonstrateCoinGeckoSource() {
 
     if (isSuccess(ohlcvResult)) {
       const ohlcv = getData(ohlcvResult) as CryptoOHLCVData;
-      console.log(`   📊 Bitcoin OHLCV:`);
+      console.log("   📊 Bitcoin OHLCV:");
       console.log(`     🔓 Open: $${ohlcv.open.toFixed(2)}`);
       console.log(`     🔺 High: $${ohlcv.high.toFixed(2)}`);
       console.log(`     🔻 Low: $${ohlcv.low.toFixed(2)}`);
@@ -99,7 +95,7 @@ async function demonstrateCoinGeckoSource() {
 
     if (isSuccess(analyticsResult)) {
       const analytics = getData(analyticsResult) as CryptoMarketAnalytics;
-      console.log(`   🌍 Global Market Analytics:`);
+      console.log("   🌍 Global Market Analytics:");
       console.log(`     💰 Total Market Cap: $${(analytics.totalMarketCap / 1e12).toFixed(2)}T`);
       console.log(`     📊 Total Volume (24h): $${(analytics.totalVolume / 1e9).toFixed(2)}B`);
       console.log(`     ₿ Bitcoin Dominance: ${analytics.btcDominance?.toFixed(1) || "N/A"}%`);
@@ -113,7 +109,7 @@ async function demonstrateCoinGeckoSource() {
     // Test 5: Actor status
     console.log("\n5️⃣ Checking actor status...");
     const status = coinGeckoReader.getStatus();
-    console.log(`   🔧 Actor Status:`);
+    console.log("   🔧 Actor Status:");
     console.log(`     ✅ Initialized: ${status.isInitialized}`);
     console.log(`     🔗 MCP Client: ${status.mcpClientInitialized ? "Ready" : "Not Ready"}`);
     console.log(`     📊 Total Queries: ${status.totalQueries}`);

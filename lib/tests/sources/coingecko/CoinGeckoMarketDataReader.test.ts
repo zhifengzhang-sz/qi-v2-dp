@@ -204,9 +204,9 @@ describe("CoinGeckoMarketDataReader", () => {
 
       // Should NOT have DSL method implementations (they're inherited)
       const dslMethods = ["getCurrentPrice", "getCurrentPrices", "getCurrentOHLCV"];
-      dslMethods.forEach((method) => {
-        expect(prototype.hasOwnProperty(method)).toBe(false);
-      });
+      for (const method of dslMethods) {
+        expect(Object.hasOwn(prototype, method)).toBe(false);
+      }
     });
   });
 

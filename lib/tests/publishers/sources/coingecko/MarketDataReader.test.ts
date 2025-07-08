@@ -60,7 +60,7 @@ describe("CoinGeckoMarketDataReader (Actor)", () => {
       expect(result._tag).toBe("Right");
       expect(createCoinGeckoMarketDataReaderWithMCP).toHaveBeenCalled();
       expect(mockMCPClient.initialize).toHaveBeenCalled();
-      expect(actor["mcpClientInitialized"]).toBe(true);
+      expect(actor.mcpClientInitialized).toBe(true);
     });
 
     it("should handle MCP client association failure gracefully", async () => {
@@ -71,7 +71,7 @@ describe("CoinGeckoMarketDataReader (Actor)", () => {
 
       // Should still succeed but without MCP client
       expect(result._tag).toBe("Right");
-      expect(actor["mcpClientInitialized"]).toBe(false);
+      expect(actor.mcpClientInitialized).toBe(false);
     });
   });
 
@@ -224,7 +224,7 @@ describe("CoinGeckoMarketDataReader (Actor)", () => {
 
       expect(result._tag).toBe("Right");
       expect(mockMCPClient.cleanup).toHaveBeenCalled();
-      expect(actor["mcpClientInitialized"]).toBe(false);
+      expect(actor.mcpClientInitialized).toBe(false);
     });
   });
 });

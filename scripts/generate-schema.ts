@@ -2,61 +2,70 @@
 
 /**
  * Schema Generation Script
- * 
+ *
  * Generates database schemas from DSL types and updates services configuration
  */
 
-import { execSync } from "child_process";
-import { existsSync } from "fs";
-import path from "path";
+import { execSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import path from "node:path";
 
 const PROJECT_ROOT = path.resolve(__dirname, "..");
 const TIMESCALE_GENERATOR = path.join(PROJECT_ROOT, "lib/src/generators/schema-generator.ts");
-const REDPANDA_GENERATOR = path.join(PROJECT_ROOT, "lib/src/generators/redpanda-schema-generator.ts");
-const GENERATED_TIMESCALE_SCHEMA = path.join(PROJECT_ROOT, "services/database/init-timescale-generated.sql");
+const REDPANDA_GENERATOR = path.join(
+  PROJECT_ROOT,
+  "lib/src/generators/redpanda-schema-generator.ts",
+);
+const GENERATED_TIMESCALE_SCHEMA = path.join(
+  PROJECT_ROOT,
+  "services/database/init-timescale-generated.sql",
+);
 const REDPANDA_OUTPUT_DIR = path.join(PROJECT_ROOT, "services/redpanda/");
 
 async function main() {
   console.log("🚀 QiCore Schema Generation");
   console.log("==========================");
-  
+
   // Step 1: Verify generators exist
   if (!existsSync(TIMESCALE_GENERATOR)) {
     console.error("❌ TimescaleDB generator not found:", TIMESCALE_GENERATOR);
     process.exit(1);
   }
-  
+
   if (!existsSync(REDPANDA_GENERATOR)) {
     console.error("❌ Redpanda generator not found:", REDPANDA_GENERATOR);
     process.exit(1);
   }
-  
+
   console.log("📝 Generating TimescaleDB schema from DSL types...");
-  
+
   try {
     // Step 2: Run TimescaleDB schema generator
-    const timescaleResult = execSync(`bun run ${TIMESCALE_GENERATOR} ${GENERATED_TIMESCALE_SCHEMA}`, {
-      cwd: PROJECT_ROOT,
-      encoding: "utf-8"
-    });
-    
+    const timescaleResult = execSync(
+      `bun run ${TIMESCALE_GENERATOR} ${GENERATED_TIMESCALE_SCHEMA}`,
+      {
+        cwd: PROJECT_ROOT,
+        encoding: "utf-8",
+      },
+    );
+
     console.log(timescaleResult.trim());
-    
+
     // Step 3: Run Redpanda schema generator
     console.log("\n🔴 Generating Redpanda topic schemas from DSL types...");
     const redpandaResult = execSync(`bun run ${REDPANDA_GENERATOR} ${REDPANDA_OUTPUT_DIR}`, {
       cwd: PROJECT_ROOT,
-      encoding: "utf-8"
+      encoding: "utf-8",
     });
-    
+
     console.log(redpandaResult.trim());
-    
+
     // Step 4: Verify generated files
     if (!existsSync(GENERATED_TIMESCALE_SCHEMA)) {
       console.error("❌ Failed to generate TimescaleDB schema file");
       process.exit(1);
     }
-    
+
     console.log("\n✅ Schema generation complete!");
     console.log("");
     console.log("📄 Files updated:");
@@ -75,7 +84,6 @@ async function main() {
     console.log("");
     console.log("🏗️ Architecture:");
     console.log("   DSL Schema (source of truth) → Auto-generates → Database + Topic schemas");
-    
   } catch (error) {
     console.error("❌ Schema generation failed:", error);
     process.exit(1);

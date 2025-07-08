@@ -82,7 +82,7 @@ describe("Complete System Integration", () => {
 
         // Verify method exists on the instance but not implemented in CoinGecko class
         const coinGeckoPrototype = Object.getPrototypeOf(reader);
-        expect(coinGeckoPrototype.hasOwnProperty(methodName)).toBe(false);
+        expect(Object.hasOwn(coinGeckoPrototype, methodName)).toBe(false);
       }
 
       console.log("✅ Plugin Architecture: DSL methods inherited, not reimplemented");

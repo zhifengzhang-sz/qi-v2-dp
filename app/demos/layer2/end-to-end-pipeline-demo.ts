@@ -17,16 +17,16 @@
  */
 
 import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
-import { createCoinGeckoMarketDataReader } from "@qi/dp/actor/source/coingecko";
-import { createRedpandaMarketDataReader } from "@qi/dp/actor/source/redpanda";
-import { createRedpandaMarketDataWriter } from "@qi/dp/actor/target/redpanda";
-import { createTimescaleMarketDataWriter } from "@qi/dp/actor/target/timescale";
+import { createCoinGeckoMarketDataReader } from "@qi/dp/actors/sources/coingecko";
+import { createRedpandaMarketDataReader } from "@qi/dp/actors/sources/redpanda";
+import { createRedpandaMarketDataWriter } from "@qi/dp/actors/targets/redpanda";
+import { createTimescaleMarketDataWriter } from "@qi/dp/actors/targets/timescale";
 import type {
   BatchPublishResult,
   CryptoMarketAnalytics,
   CryptoOHLCVData,
   CryptoPriceData,
-} from "@qi/dp/base/abstract/dsl";
+} from "@qi/dp/dsl";
 
 console.log("🔄 End-to-End Pipeline Demo");
 console.log("=".repeat(60));
@@ -155,7 +155,7 @@ async function demonstrateEndToEndPipeline() {
     if (bitcoinPrice === null) {
       throw new Error("Bitcoin price data is null");
     }
-    console.log(`   💰 Bitcoin price: $${bitcoinPrice.toFixed(2)}`);
+    console.log(`   💰 Bitcoin price: $${bitcoinPrice?.toFixed(2) || "N/A"}`);
 
     // Get multiple crypto prices
     console.log("   Fetching multiple crypto prices...");
@@ -172,7 +172,7 @@ async function demonstrateEndToEndPipeline() {
     if (cryptoPrices === null) {
       throw new Error("Cryptocurrency prices data is null");
     }
-    console.log(`   📈 Retrieved ${cryptoPrices.length} cryptocurrency prices`);
+    console.log(`   📈 Retrieved ${cryptoPrices?.length || 0} cryptocurrency prices`);
 
     // Get market analytics
     console.log("   Fetching market analytics...");
@@ -187,7 +187,7 @@ async function demonstrateEndToEndPipeline() {
     if (analytics === null) {
       throw new Error("Market analytics data is null");
     }
-    console.log(`   📊 Market cap: $${(analytics.totalMarketCap / 1e12).toFixed(2)}T`);
+    console.log(`   📊 Market cap: $${((analytics?.totalMarketCap || 0) / 1e12).toFixed(2)}T`);
 
     // Publish prices to Redpanda
     console.log("\n   Publishing data to Redpanda streams...");
@@ -231,7 +231,7 @@ async function demonstrateEndToEndPipeline() {
         console.log(`   📡 Read ${streamPrices?.length || 0} price records from stream`);
 
         // Store in TimescaleDB
-        if (streamPrices && streamPrices.length > 0) {
+        if (streamPrices && streamPrices?.length > 0) {
           const storePricesResult = await timescaleWriter.publishPrices(streamPrices);
           if (isSuccess(storePricesResult)) {
             const storeResult = getData(storePricesResult) as BatchPublishResult;
@@ -364,13 +364,13 @@ async function demonstrateEndToEndPipeline() {
 
 // Run the demo
 (async () => {
-  console.log("\n" + "=".repeat(80));
+  console.log(`\n${"=".repeat(80)}`);
   console.log("🚀 QICORE CRYPTO DATA PLATFORM - END-TO-END PIPELINE DEMO");
   console.log("=".repeat(80));
 
   const success = await demonstrateEndToEndPipeline();
 
-  console.log("\n" + "=".repeat(80));
+  console.log(`\n${"=".repeat(80)}`);
   console.log(success ? "✅ PIPELINE DEMO COMPLETED SUCCESSFULLY" : "❌ PIPELINE DEMO FAILED");
   console.log("=".repeat(80));
 

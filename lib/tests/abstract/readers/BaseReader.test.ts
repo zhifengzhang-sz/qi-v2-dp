@@ -33,10 +33,6 @@ class TestMarketDataReader extends BaseReader {
   private mockResponses: Map<string, any> = new Map();
   private shouldFail = false;
 
-  constructor(config: { name: string; debug?: boolean }) {
-    super(config);
-  }
-
   async initialize() {
     this.isInitialized = true;
     return success(undefined);
@@ -428,9 +424,9 @@ describe("BaseReader", () => {
     it("should handle no active client", async () => {
       // Remove all clients
       const allClients = reader.getAllClients();
-      allClients.forEach((client) => {
+      for (const client of allClients) {
         client.isConnected = false;
-      });
+      }
 
       const result = await reader.getCurrentPrice("bitcoin");
 

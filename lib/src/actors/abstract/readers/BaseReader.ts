@@ -27,7 +27,7 @@ import type {
   Level1Data,
   Level1Query,
   MarketDataReadingDSL,
-} from "../dsl";
+} from "../../../dsl";
 
 // Re-export types from DSL for backward compatibility
 export type {
@@ -40,7 +40,7 @@ export type {
   CurrentPricesOptions,
   DateRangeOHLCVQuery,
   Level1Query,
-} from "../dsl";
+} from "../../../dsl";
 
 // =============================================================================
 // BASE MARKET DATA READER - UNIFIED FOUNDATION

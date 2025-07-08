@@ -30,10 +30,11 @@
       "@qi/core/base": ["lib/src/qicore/base/index.ts"],
       "@qi/core/*": ["lib/src/qicore/*"],
       "@qi/mcp": ["lib/src/qimcp/client"],
-      "@qi/dp/abstract/*": ["lib/src/abstract/*"],
+      "@qi/dp/dsl": ["lib/src/dsl/index.ts"],
+      "@qi/dp/dsl/*": ["lib/src/dsl/*"],
       "@qi/dp/base/*": ["lib/src/*"],
-      "@qi/dp/actor/source/*": ["lib/src/sources/*"],
-      "@qi/dp/actor/target/*": ["lib/src/targets/*"]
+      "@qi/dp/actors/sources/*": ["lib/src/actors/sources/*"],
+      "@qi/dp/actors/targets/*": ["lib/src/actors/targets/*"]
     }
   },
   "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],

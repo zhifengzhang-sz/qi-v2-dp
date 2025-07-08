@@ -175,7 +175,7 @@ describe("MarketDataReadingDSL Interface", () => {
         expect(Array.isArray(prices)).toBe(true);
         expect(prices.length).toBeGreaterThan(0);
 
-        prices.forEach((price) => {
+        for (const price of prices) {
           expect(price).toHaveProperty("coinId");
           expect(price).toHaveProperty("symbol");
           expect(price).toHaveProperty("usdPrice");
@@ -183,7 +183,7 @@ describe("MarketDataReadingDSL Interface", () => {
           expect(price).toHaveProperty("source");
           expect(price).toHaveProperty("attribution");
           expect(typeof price.usdPrice).toBe("number");
-        });
+        }
       }
     });
 

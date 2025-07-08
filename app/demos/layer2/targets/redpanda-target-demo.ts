@@ -8,13 +8,13 @@
  */
 
 import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
-import { createRedpandaMarketDataWriter } from "@qi/dp/actor/target/redpanda";
+import { createRedpandaMarketDataWriter } from "@qi/dp/actors/targets/redpanda";
 import type {
   CryptoMarketAnalytics,
   CryptoOHLCVData,
   CryptoPriceData,
   Level1Data,
-} from "@qi/dp/base/abstract/dsl";
+} from "@qi/dp/dsl";
 
 console.log("🔄 Redpanda Target Demo");
 console.log("=".repeat(50));
@@ -72,6 +72,7 @@ async function demonstrateRedpandaTarget() {
       lastUpdated: new Date(),
       source: "demo-generator",
       attribution: "Demo data for testing Redpanda streaming",
+      exchangeId: "demo-exchange", // Added required field
     };
 
     const publishResult = await redpandaWriter.publishPrice(bitcoinPrice);
@@ -79,7 +80,7 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(publishResult)) {
       const publishData = getData(publishResult);
       if (publishData) {
-        console.log(`   ✅ Price published successfully:`);
+        console.log("   ✅ Price published successfully:");
         console.log(`     📨 Message ID: ${publishData.messageId}`);
         console.log(`     🔄 Topic: ${publishData.topic}`);
         console.log(`     📊 Size: ${publishData.size} bytes`);
@@ -109,6 +110,7 @@ async function demonstrateRedpandaTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing Redpanda streaming",
+        exchangeId: "demo-exchange", // Added required field
       },
       {
         coinId: "cardano",
@@ -123,6 +125,7 @@ async function demonstrateRedpandaTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing Redpanda streaming",
+        exchangeId: "demo-exchange", // Added required field
       },
       {
         coinId: "polkadot",
@@ -137,6 +140,7 @@ async function demonstrateRedpandaTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing Redpanda streaming",
+        exchangeId: "demo-exchange", // Added required field
       },
     ];
 
@@ -145,7 +149,7 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(batchResult)) {
       const batchData = getData(batchResult);
       if (batchData) {
-        console.log(`   ✅ Batch published successfully:`);
+        console.log("   ✅ Batch published successfully:");
         console.log(`     📨 Total Messages: ${batchData.totalMessages}`);
         console.log(`     ✅ Success Count: ${batchData.successCount}`);
         console.log(`     ❌ Failure Count: ${batchData.failureCount}`);
@@ -172,6 +176,7 @@ async function demonstrateRedpandaTarget() {
       timeframe: "1h",
       source: "demo-generator",
       attribution: "Demo OHLCV data for testing",
+      exchangeId: "demo-exchange", // Added required field
     };
 
     const ohlcvResult = await redpandaWriter.publishOHLCV(bitcoinOHLCV);
@@ -179,7 +184,7 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(ohlcvResult)) {
       const ohlcvData = getData(ohlcvResult);
       if (ohlcvData) {
-        console.log(`   ✅ OHLCV published successfully:`);
+        console.log("   ✅ OHLCV published successfully:");
         console.log(`     📨 Message ID: ${ohlcvData.messageId}`);
         console.log(`     🔄 Topic: ${ohlcvData.topic}`);
         console.log(`     📊 Timeframe: ${bitcoinOHLCV.timeframe}`);
@@ -206,6 +211,7 @@ async function demonstrateRedpandaTarget() {
       timeframe: "1h",
       source: "demo-generator",
       attribution: "Demo historical OHLCV data",
+      exchangeId: "demo-exchange", // Added required field
     }));
 
     const ohlcvBatchResult = await redpandaWriter.publishOHLCVBatch(ohlcvBatch);
@@ -213,11 +219,11 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(ohlcvBatchResult)) {
       const ohlcvBatchData = getData(ohlcvBatchResult);
       if (ohlcvBatchData) {
-        console.log(`   ✅ OHLCV batch published successfully:`);
+        console.log("   ✅ OHLCV batch published successfully:");
         console.log(`     📨 Total Records: ${ohlcvBatchData.totalMessages}`);
         console.log(`     ✅ Success Count: ${ohlcvBatchData.successCount}`);
-        console.log(`     🕒 Time Range: 5 hours of hourly data`);
-        console.log(`     🔄 Streaming to: crypto-ohlcv topic`);
+        console.log("     🕒 Time Range: 5 hours of hourly data");
+        console.log("     🔄 Streaming to: crypto-ohlcv topic");
       }
     } else {
       const error = getError(ohlcvBatchResult);
@@ -245,14 +251,14 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(analyticsResult)) {
       const analyticsData = getData(analyticsResult);
       if (analyticsData) {
-        console.log(`   ✅ Analytics published successfully:`);
+        console.log("   ✅ Analytics published successfully:");
         console.log(`     📨 Message ID: ${analyticsData.messageId}`);
         console.log(`     🔄 Topic: ${analyticsData.topic}`);
         console.log(
           `     💰 Total Market Cap: $${(marketAnalytics.totalMarketCap / 1e12).toFixed(2)}T`,
         );
         console.log(`     ₿ BTC Dominance: ${marketAnalytics.btcDominance}%`);
-        console.log(`     🔄 Now streaming to consumers in real-time`);
+        console.log("     🔄 Now streaming to consumers in real-time");
       }
     } else {
       const error = getError(analyticsResult);
@@ -280,7 +286,7 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(level1Result)) {
       const level1PublishData = getData(level1Result);
       if (level1PublishData) {
-        console.log(`   ✅ Level 1 data published successfully:`);
+        console.log("   ✅ Level 1 data published successfully:");
         console.log(`     📨 Message ID: ${level1PublishData.messageId}`);
         console.log(`     🔄 Topic: ${level1PublishData.topic}`);
         console.log(`     📊 Ticker: ${level1Data.ticker}`);
@@ -302,7 +308,7 @@ async function demonstrateRedpandaTarget() {
     if (isSuccess(metricsResult)) {
       const metrics = getData(metricsResult);
       if (metrics) {
-        console.log(`   📊 Publishing Metrics:`);
+        console.log("   📊 Publishing Metrics:");
         console.log(`     📨 Total Messages: ${metrics.totalMessages}`);
         console.log(`     ✅ Success Rate: ${(metrics.successRate * 100).toFixed(1)}%`);
         console.log(`     ⏱️ Average Latency: ${metrics.averageLatency.toFixed(1)}ms`);
@@ -317,7 +323,7 @@ async function demonstrateRedpandaTarget() {
     // Test 8: Actor status
     console.log("\n8️⃣ Checking actor status...");
     const status = redpandaWriter.getStatus();
-    console.log(`   🔧 Actor Status:`);
+    console.log("   🔧 Actor Status:");
     console.log(`     ✅ Initialized: ${status.isInitialized}`);
     console.log(`     🔗 Connected: ${status.isConnected}`);
     console.log(`     🔄 Redpanda Client: ${status.hasRedpandaClient ? "Ready" : "Not Ready"}`);
@@ -331,25 +337,24 @@ async function demonstrateRedpandaTarget() {
 
     // Test 9: Redpanda-specific advantages
     console.log("\n9️⃣ Demonstrating Redpanda streaming advantages...");
-    console.log(`   💡 Redpanda Features:`);
-    console.log(`     🚀 Zero-copy architecture for ultra-low latency`);
-    console.log(`     📊 Real-time message streaming with sub-millisecond latency`);
-    console.log(`     🗜️ Built-in compression (snappy)`);
-    console.log(`     📦 Efficient batching (100 messages)`);
-    console.log(`     🔄 Automatic topic creation and management`);
-    console.log(`     🛡️ Fault-tolerant with replication`);
-    console.log(`     🎯 Perfect for real-time trading systems`);
-    console.log(`     ⚡ High-throughput with back-pressure handling`);
+    console.log("   💡 Redpanda Features:");
+    console.log("     🚀 Zero-copy architecture for ultra-low latency");
+    console.log("     📊 Real-time message streaming with sub-millisecond latency");
+    console.log("     🗜️ Built-in compression (snappy)");
+    console.log("     📦 Efficient batching (100 messages)");
+    console.log("     🔄 Automatic topic creation and management");
+    console.log("     🛡️ Fault-tolerant with replication");
+    console.log("     🎯 Perfect for real-time trading systems");
+    console.log("     ⚡ High-throughput with back-pressure handling");
 
     // Test 10: Topic configuration
     console.log("\n🔟 Topic configuration...");
-    console.log(`   📊 Topic Configuration:`);
+    console.log("   📊 Topic Configuration:");
     console.log(`     💰 Prices Topic: ${status.topics?.prices}`);
     console.log(`     📈 OHLCV Topic: ${status.topics?.ohlcv}`);
     console.log(`     🌍 Analytics Topic: ${status.topics?.analytics}`);
     console.log(`     📊 Level 1 Topic: ${status.topics?.level1}`);
     console.log(`     🔗 Connected Brokers: ${status.brokers.join(", ")}`);
-
   } catch (error) {
     console.error("💥 Demo failed with error:", error);
     const errorMessage = (error as Error)?.message;

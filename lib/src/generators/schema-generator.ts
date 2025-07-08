@@ -2,18 +2,18 @@
 
 /**
  * Schema Generator - DSL to Database Schema
- * 
+ *
  * Generates database schemas from DSL types as single source of truth.
  * This ensures DSL changes automatically propagate to storage layer.
  */
 
+import { writeFileSync } from "node:fs";
 import type {
-  CryptoPriceData,
-  CryptoOHLCVData, 
   CryptoMarketAnalytics,
-  Level1Data
-} from "../abstract/dsl/MarketDataTypes";
-import { writeFileSync } from "fs";
+  CryptoOHLCVData,
+  CryptoPriceData,
+  Level1Data,
+} from "../dsl/MarketDataTypes";
 
 /**
  * Generate TimescaleDB SQL schema from DSL types
@@ -154,10 +154,10 @@ function mapCryptoPriceToStorage(data: CryptoPriceData) {
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
-      tableName: "ohlcv_data", 
+      tableName: "ohlcv_data",
       dslType: "CryptoOHLCVData",
       mapFunction: `
 function mapOHLCVToStorage(data: CryptoOHLCVData) {
@@ -174,11 +174,11 @@ function mapOHLCVToStorage(data: CryptoOHLCVData) {
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
       tableName: "market_analytics",
-      dslType: "CryptoMarketAnalytics", 
+      dslType: "CryptoMarketAnalytics",
       mapFunction: `
 function mapMarketAnalyticsToStorage(data: CryptoMarketAnalytics) {
   return {
@@ -193,7 +193,7 @@ function mapMarketAnalyticsToStorage(data: CryptoMarketAnalytics) {
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
       tableName: "level1_data",
@@ -212,15 +212,17 @@ function mapLevel1ToStorage(data: Level1Data) {
     source: data.source,
     attribution: data.attribution
   };
-}`
-    }
+}`,
+    },
   ];
 }
 
 /**
  * Generate and write the TimescaleDB schema file
  */
-export function generateSchemaFile(outputPath: string = "../../services/database/init-timescale-generated.sql"): void {
+export function generateSchemaFile(
+  outputPath = "../../services/database/init-timescale-generated.sql",
+): void {
   const schema = generateTimescaleSchema();
   writeFileSync(outputPath, schema);
   console.log(`✅ Generated TimescaleDB schema at: ${outputPath}`);

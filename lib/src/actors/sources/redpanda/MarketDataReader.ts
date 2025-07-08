@@ -19,10 +19,10 @@ import type {
   DateRangeOHLCVQuery,
   Level1Data,
   Level1Query,
-} from "../../abstract/dsl";
+} from "@qi/dp/dsl";
+import { RedpandaClient } from "../../../base/streaming/redpanda/redpanda-client";
+import type { ConsumerMessage } from "../../../base/streaming/redpanda/types";
 import { BaseReader } from "../../abstract/readers/BaseReader";
-import { RedpandaClient } from "../../base/streaming/redpanda/redpanda-client";
-import type { ConsumerMessage } from "../../base/streaming/redpanda/types";
 
 // =============================================================================
 // REDPANDA READER CONFIGURATION

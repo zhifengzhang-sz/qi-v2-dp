@@ -76,9 +76,9 @@ async function testDrizzleImplementation() {
     });
 
     console.log(`✅ Retrieved ${latestPrices.length} latest prices:`);
-    latestPrices.forEach((price) => {
+    for (const price of latestPrices) {
       console.log(`   ${price.symbol}: $${price.usdPrice} (${price.change24h}%)`);
-    });
+    }
 
     // Test 4: Test DSL convenience method
     console.log("🎯 Testing DSL convenience methods...");

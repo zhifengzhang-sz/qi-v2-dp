@@ -38,11 +38,11 @@ async function showActualToolList() {
           console.log(`\n${index + 1}. ${tool.name}`);
           console.log(`   Description: ${tool.description || "No description"}`);
 
-          if (tool.inputSchema && tool.inputSchema.properties) {
+          if (tool.inputSchema?.properties) {
             const params = Object.keys(tool.inputSchema.properties);
             console.log(`   Parameters: [${params.join(", ")}]`);
           } else {
-            console.log(`   Parameters: None or not specified`);
+            console.log("   Parameters: None or not specified");
           }
         });
       } else {

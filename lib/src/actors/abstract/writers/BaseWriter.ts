@@ -28,7 +28,7 @@ import type {
   MarketDataWritingDSL,
   PublishOptions,
   PublishResult,
-} from "../dsl";
+} from "../../../dsl";
 
 // Re-export types from DSL for backward compatibility
 export type {
@@ -42,7 +42,7 @@ export type {
   Level1Data,
   PublishOptions,
   PublishResult,
-} from "../dsl";
+} from "../../../dsl";
 
 // =============================================================================
 // BASE MARKET DATA WRITER - UNIFIED FOUNDATION

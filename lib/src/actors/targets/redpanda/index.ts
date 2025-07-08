@@ -29,7 +29,7 @@ export type {
   CryptoOHLCVData,
   CryptoMarketAnalytics,
   Level1Data,
-} from "../../abstract/dsl";
+} from "@qi/dp/dsl";
 
 // =============================================================================
 // CONSTANTS

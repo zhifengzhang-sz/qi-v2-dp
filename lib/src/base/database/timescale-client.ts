@@ -212,7 +212,9 @@ export class TimescaleClient {
     }
 
     try {
-      await sql`SELECT add_compression_policy('market_analytics', INTERVAL '3 days')`.execute(this.db);
+      await sql`SELECT add_compression_policy('market_analytics', INTERVAL '3 days')`.execute(
+        this.db,
+      );
     } catch (error) {
       // Policy may already exist, ignore error
     }
@@ -237,7 +239,9 @@ export class TimescaleClient {
     }
 
     try {
-      await sql`SELECT add_retention_policy('market_analytics', INTERVAL '1 year')`.execute(this.db);
+      await sql`SELECT add_retention_policy('market_analytics', INTERVAL '1 year')`.execute(
+        this.db,
+      );
     } catch (error) {
       // Policy may already exist, ignore error
     }

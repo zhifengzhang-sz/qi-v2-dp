@@ -31,7 +31,7 @@ export type {
   DateRangeOHLCVQuery,
   Level1Query,
   CurrentPricesOptions,
-} from "../../abstract/dsl";
+} from "@qi/dp/dsl";
 
 // Note: MCP integration is now handled directly in MarketDataReader
 // The unified architecture eliminates the need for separate MCP classes

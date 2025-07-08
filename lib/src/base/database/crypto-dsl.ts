@@ -175,6 +175,7 @@ export class CryptoFinancialDSL {
       lastUpdated: price.lastUpdated || new Date(),
       source: "api", // Default source
       attribution: price.attribution || "QiCore Crypto DSL",
+      exchangeId: price.exchange || "unknown", // Added required field
     }));
 
     await this.client.insertCryptoPrices(transformedPrices);
@@ -239,6 +240,7 @@ export class CryptoFinancialDSL {
       volume: item.volume.toString(),
       source: "api",
       attribution: item.attribution || "QiCore Crypto DSL",
+      exchangeId: item.exchange || "unknown", // Added required field
     }));
 
     await this.client.insertOHLCVData(transformedData);
@@ -322,7 +324,7 @@ export class CryptoFinancialDSL {
       .filter((p) => p.change24h)
       .map((p) => ({
         symbol: p.symbol,
-        change24h: Number.parseFloat(p.change24h!),
+        change24h: Number.parseFloat(p.change24h || "0"),
       }))
       .sort((a, b) => b.change24h - a.change24h);
 

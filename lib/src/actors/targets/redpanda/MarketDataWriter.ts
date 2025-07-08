@@ -19,10 +19,10 @@ import type {
   Level1Data,
   PublishOptions,
   PublishResult,
-} from "../../abstract/dsl";
+} from "@qi/dp/dsl";
+import { RedpandaClient } from "../../../base/streaming/redpanda/redpanda-client";
+import type { MessagePayload } from "../../../base/streaming/redpanda/types";
 import { BaseWriter } from "../../abstract/writers/BaseWriter";
-import { RedpandaClient } from "../../base/streaming/redpanda/redpanda-client";
-import type { MessagePayload } from "../../base/streaming/redpanda/types";
 
 // =============================================================================
 // REDPANDA WRITER CONFIGURATION

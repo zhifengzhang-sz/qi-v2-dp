@@ -15,9 +15,9 @@ import "./abstract/readers/BaseReader.test";
 import "./sources/coingecko/CoinGeckoMarketDataReader.test";
 
 console.log("🧪 QiCore Data Platform Test Suite");
-console.log("=" + "=".repeat(50));
+console.log(`=${"=".repeat(50)}`);
 console.log("✅ DSL Interface Tests");
 console.log("✅ Base Module Tests");
 console.log("✅ Actor Implementation Tests");
 console.log("✅ MCP Integration Tests");
-console.log("=" + "=".repeat(50));
+console.log(`=${"=".repeat(50)}`);

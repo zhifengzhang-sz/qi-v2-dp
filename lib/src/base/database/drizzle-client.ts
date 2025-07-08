@@ -93,10 +93,10 @@ export class DrizzleClient {
   private async createHypertables(): Promise<void> {
     // Check which tables exist and only create hypertables for those
     const tablesToCheck = [
-      { name: 'crypto_prices', interval: '1 day' },
-      { name: 'ohlcv_data', interval: '1 day' },
-      { name: 'market_analytics', interval: '1 hour' },
-      { name: 'level1_data', interval: '1 hour' }
+      { name: "crypto_prices", interval: "1 day" },
+      { name: "ohlcv_data", interval: "1 day" },
+      { name: "market_analytics", interval: "1 hour" },
+      { name: "level1_data", interval: "1 hour" },
     ];
 
     for (const table of tablesToCheck) {
@@ -119,7 +119,7 @@ export class DrizzleClient {
           `);
         }
       } catch (error: any) {
-        if (!error.message?.includes('already a hypertable')) {
+        if (!error.message?.includes("already a hypertable")) {
           console.warn(`⚠️ Could not create hypertable for ${table.name}:`, error.message);
         }
       }
@@ -139,13 +139,18 @@ export class DrizzleClient {
 
     for (const policy of policies) {
       try {
-        await this.db.execute(sql.raw(`
+        await this.db.execute(
+          sql.raw(`
           SELECT add_compression_policy('${policy.table}', INTERVAL '${policy.interval}');
-        `));
+        `),
+        );
       } catch (error: any) {
         // Ignore if policy already exists
-        if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
-          console.warn(`Warning: Could not add compression policy for ${policy.table}:`, error.message);
+        if (!error.message?.includes("already exists") && !error.message?.includes("duplicate")) {
+          console.warn(
+            `Warning: Could not add compression policy for ${policy.table}:`,
+            error.message,
+          );
         }
       }
     }
@@ -164,13 +169,18 @@ export class DrizzleClient {
 
     for (const policy of policies) {
       try {
-        await this.db.execute(sql.raw(`
+        await this.db.execute(
+          sql.raw(`
           SELECT add_retention_policy('${policy.table}', INTERVAL '${policy.retention}');
-        `));
+        `),
+        );
       } catch (error: any) {
         // Ignore if policy already exists
-        if (!error.message?.includes('already exists') && !error.message?.includes('duplicate')) {
-          console.warn(`Warning: Could not add retention policy for ${policy.table}:`, error.message);
+        if (!error.message?.includes("already exists") && !error.message?.includes("duplicate")) {
+          console.warn(
+            `Warning: Could not add retention policy for ${policy.table}:`,
+            error.message,
+          );
         }
       }
     }

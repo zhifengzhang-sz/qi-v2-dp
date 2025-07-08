@@ -109,6 +109,7 @@ export const cryptoPrices = pgTable(
     coinId: varchar("coin_id", { length: 50 }).notNull(), // bitcoin, ethereum
     symbol: varchar("symbol", { length: 20 }).notNull(), // BTC, ETH
     name: varchar("name", { length: 100 }), // Bitcoin, Ethereum
+    exchangeId: varchar("exchange_id", { length: 50 }).notNull(), // binance, coinbase, coingecko
 
     // Price data - using numeric for financial precision (up to 20 digits, 8 decimal places)
     usdPrice: numeric("usd_price", { precision: 20, scale: 8 }),
@@ -129,13 +130,14 @@ export const cryptoPrices = pgTable(
     ...timestamps,
   },
   (table) => ({
-    // Composite primary key for TimescaleDB hypertable
-    pk: primaryKey({ columns: [table.coinId, table.time] }),
+    // Composite primary key for TimescaleDB hypertable - include exchangeId
+    pk: primaryKey({ columns: [table.coinId, table.exchangeId, table.time] }),
 
     // Indexes optimized for time-series queries
     timeIdx: index("crypto_prices_time_idx").on(table.time),
     symbolTimeIdx: index("crypto_prices_symbol_time_idx").on(table.symbol, table.time),
     coinTimeIdx: index("crypto_prices_coin_time_idx").on(table.coinId, table.time),
+    exchangeTimeIdx: index("crypto_prices_exchange_time_idx").on(table.exchangeId, table.time),
   }),
 );
 
@@ -149,6 +151,7 @@ export const ohlcvData = pgTable(
     time: timestamp("time", { mode: "date" }).notNull(),
     coinId: varchar("coin_id", { length: 50 }).notNull(),
     symbol: varchar("symbol", { length: 20 }),
+    exchangeId: varchar("exchange_id", { length: 50 }).notNull(), // Added to match DSL
 
     // Timeframe for this candle
     timeframe: varchar("timeframe", { length: 10 }).notNull(), // 1m, 5m, 1h, 1d, 1w
@@ -166,13 +169,18 @@ export const ohlcvData = pgTable(
     ...timestamps,
   },
   (table) => ({
-    // Composite primary key for TimescaleDB hypertable
-    pk: primaryKey({ columns: [table.coinId, table.timeframe, table.time] }),
+    // Composite primary key for TimescaleDB hypertable - include exchangeId
+    pk: primaryKey({ columns: [table.coinId, table.exchangeId, table.timeframe, table.time] }),
 
     // Indexes for time-series analysis
     timeIdx: index("ohlcv_time_idx").on(table.time),
     symbolTimeframeTimeIdx: index("ohlcv_symbol_timeframe_time_idx").on(
       table.symbol,
+      table.timeframe,
+      table.time,
+    ),
+    exchangeTimeframeIdx: index("ohlcv_exchange_timeframe_idx").on(
+      table.exchangeId,
       table.timeframe,
       table.time,
     ),
@@ -220,6 +228,7 @@ export const marketAnalytics = pgTable(
   "market_analytics",
   {
     time: timestamp("time", { mode: "date" }).notNull().primaryKey(),
+    exchangeId: varchar("exchange_id", { length: 50 }), // Optional for global, required for exchange-specific
 
     // Global market metrics (from DSL CryptoMarketAnalytics)
     totalMarketCap: numeric("total_market_cap", { precision: 30, scale: 2 }),
@@ -239,6 +248,7 @@ export const marketAnalytics = pgTable(
   },
   (table) => ({
     timeIdx: index("market_analytics_time_idx").on(table.time),
+    exchangeTimeIdx: index("market_analytics_exchange_time_idx").on(table.exchangeId, table.time),
   }),
 );
 

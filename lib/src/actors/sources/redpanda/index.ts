@@ -25,7 +25,7 @@ export type {
   DateRangeOHLCVQuery,
   Level1Query,
   CurrentPricesOptions,
-} from "../../abstract/dsl";
+} from "@qi/dp/dsl";
 
 // =============================================================================
 // CONSTANTS

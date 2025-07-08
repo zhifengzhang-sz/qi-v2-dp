@@ -2,18 +2,18 @@
 
 /**
  * Redpanda Schema Generator - DSL to Topic Schema
- * 
+ *
  * Generates Redpanda topic schemas and message structures from DSL types.
  * Ensures DSL changes automatically propagate to streaming layer.
  */
 
+import { writeFileSync } from "node:fs";
 import type {
-  CryptoPriceData,
-  CryptoOHLCVData, 
   CryptoMarketAnalytics,
-  Level1Data
-} from "../abstract/dsl/MarketDataTypes";
-import { writeFileSync } from "fs";
+  CryptoOHLCVData,
+  CryptoPriceData,
+  Level1Data,
+} from "../dsl/MarketDataTypes";
 
 /**
  * Generate Redpanda topic configuration from DSL types
@@ -76,11 +76,20 @@ export function generateJsonSchemas(): Record<string, any> {
       $schema: "http://json-schema.org/draft-07/schema#",
       title: "CryptoPriceData",
       type: "object",
-      required: ["coinId", "symbol", "usdPrice", "lastUpdated", "source", "attribution"],
+      required: [
+        "coinId",
+        "symbol",
+        "exchangeId",
+        "usdPrice",
+        "lastUpdated",
+        "source",
+        "attribution",
+      ],
       properties: {
         coinId: { type: "string", minLength: 1, maxLength: 50 },
         symbol: { type: "string", minLength: 1, maxLength: 20 },
         name: { type: "string", maxLength: 100 },
+        exchangeId: { type: "string", minLength: 1, maxLength: 50 },
         usdPrice: { type: "number", minimum: 0 },
         btcPrice: { type: "number", minimum: 0 },
         ethPrice: { type: "number", minimum: 0 },
@@ -90,41 +99,65 @@ export function generateJsonSchemas(): Record<string, any> {
         change7d: { type: "number" },
         lastUpdated: { type: "string", format: "date-time" },
         source: { type: "string", minLength: 1 },
-        attribution: { type: "string", minLength: 1 }
+        attribution: { type: "string", minLength: 1 },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
-    
+
     "crypto-ohlcv": {
       $schema: "http://json-schema.org/draft-07/schema#",
-      title: "CryptoOHLCVData", 
+      title: "CryptoOHLCVData",
       type: "object",
-      required: ["coinId", "open", "high", "low", "close", "volume", "timestamp", "timeframe", "source", "attribution"],
+      required: [
+        "coinId",
+        "exchangeId",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+        "timestamp",
+        "timeframe",
+        "source",
+        "attribution",
+      ],
       properties: {
         coinId: { type: "string", minLength: 1, maxLength: 50 },
         symbol: { type: "string", maxLength: 20 },
+        exchangeId: { type: "string", minLength: 1, maxLength: 50 },
         open: { type: "number", minimum: 0 },
         high: { type: "number", minimum: 0 },
         low: { type: "number", minimum: 0 },
         close: { type: "number", minimum: 0 },
         volume: { type: "number", minimum: 0 },
         timestamp: { type: "string", format: "date-time" },
-        timeframe: { 
-          type: "string", 
-          enum: ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"] 
+        timeframe: {
+          type: "string",
+          enum: ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"],
         },
         source: { type: "string", minLength: 1 },
-        attribution: { type: "string", minLength: 1 }
+        attribution: { type: "string", minLength: 1 },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
-    
+
     "market-analytics": {
       $schema: "http://json-schema.org/draft-07/schema#",
       title: "CryptoMarketAnalytics",
-      type: "object", 
-      required: ["totalMarketCap", "totalVolume", "btcDominance", "activeCryptocurrencies", "markets", "marketCapChange24h", "timestamp", "source", "attribution"],
+      type: "object",
+      required: [
+        "totalMarketCap",
+        "totalVolume",
+        "btcDominance",
+        "activeCryptocurrencies",
+        "markets",
+        "marketCapChange24h",
+        "timestamp",
+        "source",
+        "attribution",
+      ],
       properties: {
+        exchangeId: { type: "string", maxLength: 50 },
         totalMarketCap: { type: "number", minimum: 0 },
         totalVolume: { type: "number", minimum: 0 },
         btcDominance: { type: "number", minimum: 0, maximum: 100 },
@@ -134,30 +167,41 @@ export function generateJsonSchemas(): Record<string, any> {
         marketCapChange24h: { type: "number" },
         timestamp: { type: "string", format: "date-time" },
         source: { type: "string", minLength: 1 },
-        attribution: { type: "string", minLength: 1 }
+        attribution: { type: "string", minLength: 1 },
       },
-      additionalProperties: false
+      additionalProperties: false,
     },
-    
+
     "level1-data": {
-      $schema: "http://json-schema.org/draft-07/schema#", 
+      $schema: "http://json-schema.org/draft-07/schema#",
       title: "Level1Data",
       type: "object",
-      required: ["ticker", "bestBid", "bestAsk", "spread", "spreadPercent", "market", "timestamp", "source", "attribution"],
+      required: [
+        "ticker",
+        "bestBid",
+        "bestAsk",
+        "spread",
+        "spreadPercent",
+        "exchange",
+        "market",
+        "timestamp",
+        "source",
+        "attribution",
+      ],
       properties: {
         ticker: { type: "string", minLength: 1, maxLength: 20 },
         bestBid: { type: "number", minimum: 0 },
         bestAsk: { type: "number", minimum: 0 },
         spread: { type: "number", minimum: 0 },
         spreadPercent: { type: "number", minimum: 0 },
-        exchange: { type: "string", maxLength: 50 },
+        exchange: { type: "string", minLength: 1, maxLength: 50 },
         market: { type: "string", minLength: 1, maxLength: 50 },
         timestamp: { type: "string", format: "date-time" },
         source: { type: "string", minLength: 1 },
-        attribution: { type: "string", minLength: 1 }
+        attribution: { type: "string", minLength: 1 },
       },
-      additionalProperties: false
-    }
+      additionalProperties: false,
+    },
   };
 }
 
@@ -166,10 +210,12 @@ export function generateJsonSchemas(): Record<string, any> {
  */
 export function generateKeyStrategies(): Record<string, string> {
   return {
-    "crypto-prices": "coinId + ':' + symbol",
-    "crypto-ohlcv": "coinId + ':' + timeframe + ':' + Math.floor(timestamp.getTime() / (timeframe === '1h' ? 3600000 : 86400000))",
-    "market-analytics": "'global:' + Math.floor(timestamp.getTime() / 3600000)", // Hourly keys
-    "level1-data": "ticker + ':' + market + ':' + exchange"
+    "crypto-prices": "coinId + ':' + exchangeId + ':' + symbol",
+    "crypto-ohlcv":
+      "coinId + ':' + exchangeId + ':' + timeframe + ':' + Math.floor(timestamp.getTime() / (timeframe === '1h' ? 3600000 : 86400000))",
+    "market-analytics":
+      "(exchangeId || 'global') + ':' + Math.floor(timestamp.getTime() / 3600000)", // Hourly keys
+    "level1-data": "ticker + ':' + market + ':' + exchange",
   };
 }
 
@@ -178,10 +224,10 @@ export function generateKeyStrategies(): Record<string, string> {
  */
 export function generatePartitionStrategies(): Record<string, string> {
   return {
-    "crypto-prices": "hash(coinId) % partitionCount",
-    "crypto-ohlcv": "hash(coinId + timeframe) % partitionCount", 
-    "market-analytics": "0", // Single partition for global data
-    "level1-data": "hash(ticker + market) % partitionCount"
+    "crypto-prices": "hash(coinId + exchangeId) % partitionCount",
+    "crypto-ohlcv": "hash(coinId + exchangeId + timeframe) % partitionCount",
+    "market-analytics": "exchangeId ? hash(exchangeId) % partitionCount : 0", // Partition by exchange or single partition for global
+    "level1-data": "hash(ticker + market + exchange) % partitionCount",
   };
 }
 
@@ -245,10 +291,10 @@ function deserializeCryptoPriceData(message: RedpandaMessage): CryptoPriceData {
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
-      topicName: "crypto-ohlcv", 
+      topicName: "crypto-ohlcv",
       dslType: "CryptoOHLCVData",
       keyStrategy: "coinId + ':' + timeframe",
       partitionStrategy: "hash(coinId + timeframe) % partitionCount",
@@ -289,11 +335,11 @@ function deserializeCryptoOHLCVData(message: RedpandaMessage): CryptoOHLCVData {
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
       topicName: "market-analytics",
-      dslType: "CryptoMarketAnalytics", 
+      dslType: "CryptoMarketAnalytics",
       keyStrategy: "'global'",
       partitionStrategy: "0",
       serializeFunction: `
@@ -331,7 +377,7 @@ function deserializeMarketAnalytics(message: RedpandaMessage): CryptoMarketAnaly
     source: data.source,
     attribution: data.attribution
   };
-}`
+}`,
     },
     {
       topicName: "level1-data",
@@ -373,43 +419,43 @@ function deserializeLevel1Data(message: RedpandaMessage): Level1Data {
     source: data.source,
     attribution: data.attribution
   };
-}`
-    }
+}`,
+    },
   ];
 }
 
 /**
  * Generate and write Redpanda configuration files
  */
-export function generateRedpandaConfigFiles(outputDir: string = "../../services/redpanda/"): void {
+export function generateRedpandaConfigFiles(outputDir = "../../services/redpanda/"): void {
   const topicConfig = generateRedpandaTopicConfig();
   const jsonSchemas = generateJsonSchemas();
   const mappings = generateTopicMappings();
 
   // Write topic configuration
   writeFileSync(`${outputDir}/topics.yml`, topicConfig);
-  
+
   // Write JSON schemas
   writeFileSync(`${outputDir}/schemas.json`, JSON.stringify(jsonSchemas, null, 2));
-  
+
   // Write TypeScript mappings
   const mappingsTs = `// Generated Redpanda Topic Mappings
 // Source: lib/src/abstract/dsl/MarketDataTypes.ts
 // DO NOT EDIT MANUALLY
 
-${mappings.map(m => m.serializeFunction).join('\n\n')}
+${mappings.map((m) => m.serializeFunction).join("\n\n")}
 
-${mappings.map(m => m.deserializeFunction).join('\n\n')}
+${mappings.map((m) => m.deserializeFunction).join("\n\n")}
 
 export const TOPIC_MAPPINGS = ${JSON.stringify(mappings, null, 2)};
 `;
-  
+
   writeFileSync(`${outputDir}/generated-mappings.ts`, mappingsTs);
-  
+
   console.log(`✅ Generated Redpanda configuration files in: ${outputDir}`);
-  console.log(`   - topics.yml: Topic configuration`);
-  console.log(`   - schemas.json: JSON Schema validation`);
-  console.log(`   - generated-mappings.ts: TypeScript serialization functions`);
+  console.log("   - topics.yml: Topic configuration");
+  console.log("   - schemas.json: JSON Schema validation");
+  console.log("   - generated-mappings.ts: TypeScript serialization functions");
 }
 
 /**

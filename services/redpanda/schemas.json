@@ -6,6 +6,7 @@
     "required": [
       "coinId",
       "symbol",
+      "exchangeId",
       "usdPrice",
       "lastUpdated",
       "source",
@@ -25,6 +26,11 @@
       "name": {
         "type": "string",
         "maxLength": 100
+      },
+      "exchangeId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
       },
       "usdPrice": {
         "type": "number",
@@ -73,6 +79,7 @@
     "type": "object",
     "required": [
       "coinId",
+      "exchangeId",
       "open",
       "high",
       "low",
@@ -92,6 +99,11 @@
       "symbol": {
         "type": "string",
         "maxLength": 20
+      },
+      "exchangeId": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 50
       },
       "open": {
         "type": "number",
@@ -119,17 +131,7 @@
       },
       "timeframe": {
         "type": "string",
-        "enum": [
-          "1m",
-          "5m",
-          "15m",
-          "30m",
-          "1h",
-          "4h",
-          "1d",
-          "1w",
-          "1M"
-        ]
+        "enum": ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w", "1M"]
       },
       "source": {
         "type": "string",
@@ -158,6 +160,10 @@
       "attribution"
     ],
     "properties": {
+      "exchangeId": {
+        "type": "string",
+        "maxLength": 50
+      },
       "totalMarketCap": {
         "type": "number",
         "minimum": 0
@@ -212,6 +218,7 @@
       "bestAsk",
       "spread",
       "spreadPercent",
+      "exchange",
       "market",
       "timestamp",
       "source",
@@ -241,6 +248,7 @@
       },
       "exchange": {
         "type": "string",
+        "minLength": 1,
         "maxLength": 50
       },
       "market": {

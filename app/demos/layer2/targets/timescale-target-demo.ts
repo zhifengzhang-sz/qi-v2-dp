@@ -8,12 +8,8 @@
  */
 
 import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
-import { createTimescaleMarketDataWriter } from "@qi/dp/actor/target/timescale";
-import type {
-  CryptoMarketAnalytics,
-  CryptoOHLCVData,
-  CryptoPriceData,
-} from "@qi/dp/base/abstract/dsl";
+import { createTimescaleMarketDataWriter } from "@qi/dp/actors/targets/timescale";
+import type { CryptoMarketAnalytics, CryptoOHLCVData, CryptoPriceData } from "@qi/dp/dsl";
 
 console.log("🗄️ TimescaleDB Target Demo");
 console.log("=".repeat(50));
@@ -67,6 +63,7 @@ async function demonstrateTimescaleTarget() {
       lastUpdated: new Date(),
       source: "demo-generator",
       attribution: "Demo data for testing TimescaleDB target",
+      exchangeId: "demo-exchange", // Added required field
     };
 
     const publishResult = await timescaleWriter.publishPrice(bitcoinPrice);
@@ -74,7 +71,7 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(publishResult)) {
       const publishData = getData(publishResult);
       if (publishData) {
-        console.log(`   ✅ Price stored successfully:`);
+        console.log("   ✅ Price stored successfully:");
         console.log(`     📨 Message ID: ${publishData.messageId}`);
         console.log(`     🗄️ Table: ${publishData.topic}`);
         console.log(`     📊 Size: ${publishData.size} row(s)`);
@@ -102,6 +99,7 @@ async function demonstrateTimescaleTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing TimescaleDB target",
+        exchangeId: "demo-exchange", // Added required field
       },
       {
         coinId: "cardano",
@@ -116,6 +114,7 @@ async function demonstrateTimescaleTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing TimescaleDB target",
+        exchangeId: "demo-exchange", // Added required field
       },
       {
         coinId: "polkadot",
@@ -130,6 +129,7 @@ async function demonstrateTimescaleTarget() {
         lastUpdated: new Date(),
         source: "demo-generator",
         attribution: "Demo data for testing TimescaleDB target",
+        exchangeId: "demo-exchange", // Added required field
       },
     ];
 
@@ -138,7 +138,7 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(batchResult)) {
       const batchData = getData(batchResult);
       if (batchData) {
-        console.log(`   ✅ Batch stored successfully:`);
+        console.log("   ✅ Batch stored successfully:");
         console.log(`     📨 Total Messages: ${batchData.totalMessages}`);
         console.log(`     ✅ Success Count: ${batchData.successCount}`);
         console.log(`     ❌ Failure Count: ${batchData.failureCount}`);
@@ -165,6 +165,7 @@ async function demonstrateTimescaleTarget() {
       timeframe: "1h",
       source: "demo-generator",
       attribution: "Demo OHLCV data for testing",
+      exchangeId: "demo-exchange", // Added required field
     };
 
     const ohlcvResult = await timescaleWriter.publishOHLCV(bitcoinOHLCV);
@@ -172,7 +173,7 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(ohlcvResult)) {
       const ohlcvData = getData(ohlcvResult);
       if (ohlcvData) {
-        console.log(`   ✅ OHLCV stored successfully:`);
+        console.log("   ✅ OHLCV stored successfully:");
         console.log(`     📨 Message ID: ${ohlcvData.messageId}`);
         console.log(`     🗄️ Table: ${ohlcvData.topic}`);
         console.log(`     📊 Timeframe: ${bitcoinOHLCV.timeframe}`);
@@ -198,6 +199,7 @@ async function demonstrateTimescaleTarget() {
       timeframe: "1h",
       source: "demo-generator",
       attribution: "Demo historical OHLCV data",
+      exchangeId: "demo-exchange", // Added required field
     }));
 
     const ohlcvBatchResult = await timescaleWriter.publishOHLCVBatch(ohlcvBatch);
@@ -205,10 +207,10 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(ohlcvBatchResult)) {
       const ohlcvBatchData = getData(ohlcvBatchResult);
       if (ohlcvBatchData) {
-        console.log(`   ✅ OHLCV batch stored successfully:`);
+        console.log("   ✅ OHLCV batch stored successfully:");
         console.log(`     📨 Total Records: ${ohlcvBatchData.totalMessages}`);
         console.log(`     ✅ Success Count: ${ohlcvBatchData.successCount}`);
-        console.log(`     🕒 Time Range: 5 hours of hourly data`);
+        console.log("     🕒 Time Range: 5 hours of hourly data");
       }
     } else {
       const error = getError(ohlcvBatchResult);
@@ -236,7 +238,7 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(analyticsResult)) {
       const analyticsData = getData(analyticsResult);
       if (analyticsData) {
-        console.log(`   ✅ Analytics stored successfully:`);
+        console.log("   ✅ Analytics stored successfully:");
         console.log(`     📨 Message ID: ${analyticsData.messageId}`);
         console.log(`     🗄️ Table: ${analyticsData.topic}`);
         console.log(
@@ -257,7 +259,7 @@ async function demonstrateTimescaleTarget() {
     if (isSuccess(metricsResult)) {
       const metrics = getData(metricsResult);
       if (metrics) {
-        console.log(`   📊 Storage Metrics:`);
+        console.log("   📊 Storage Metrics:");
         console.log(`     📨 Total Messages: ${metrics.totalMessages}`);
         console.log(`     ✅ Success Rate: ${(metrics.successRate * 100).toFixed(1)}%`);
         console.log(`     ⏱️ Average Latency: ${metrics.averageLatency.toFixed(1)}ms`);
@@ -271,7 +273,7 @@ async function demonstrateTimescaleTarget() {
     // Test 7: Actor status
     console.log("\n7️⃣ Checking actor status...");
     const status = timescaleWriter.getStatus();
-    console.log(`   🔧 Actor Status:`);
+    console.log("   🔧 Actor Status:");
     console.log(`     ✅ Initialized: ${status.isInitialized}`);
     console.log(`     🔗 Connected: ${status.isConnected}`);
     console.log(`     💾 Has TimescaleDB Client: ${status.hasDrizzleClient}`);
@@ -284,13 +286,13 @@ async function demonstrateTimescaleTarget() {
 
     // Test 8: Database-specific features
     console.log("\n8️⃣ Demonstrating TimescaleDB advantages...");
-    console.log(`   💡 TimescaleDB Features:`);
-    console.log(`     📈 Automatic time-based partitioning (hypertables)`);
-    console.log(`     🗜️ Compression for older data (90% space savings)`);
-    console.log(`     📊 Fast time-series aggregations and analytics`);
-    console.log(`     🔍 SQL queries with time-series specific functions`);
-    console.log(`     📅 Automatic retention policies`);
-    console.log(`     📈 Excellent for technical analysis and backtesting`);
+    console.log("   💡 TimescaleDB Features:");
+    console.log("     📈 Automatic time-based partitioning (hypertables)");
+    console.log("     🗜️ Compression for older data (90% space savings)");
+    console.log("     📊 Fast time-series aggregations and analytics");
+    console.log("     🔍 SQL queries with time-series specific functions");
+    console.log("     📅 Automatic retention policies");
+    console.log("     📈 Excellent for technical analysis and backtesting");
   } catch (error) {
     console.error("💥 Demo failed with error:", error);
     const errorMessage = (error as Error)?.message;

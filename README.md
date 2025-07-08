@@ -1,148 +1,322 @@
 # QiCore Crypto Data Platform
 
-**Production-ready cryptocurrency data processing platform** with complete 2-layer actor architecture and DSL-driven schema management.
+> **DSL-Driven 2-Layer Actor Architecture for Cryptocurrency Data Processing with AI Agent Control**
+
+A production-ready cryptocurrency data processing platform implementing a **Domain-Specific Language (DSL) driven architecture** with **AI agent control via MCP servers**. Features auto-generated schemas, clean 2-layer separation, and real external integrations.
 
 ## 🏗️ Architecture Overview
 
-**DSL-Driven 2-Layer System**: Single source of truth for all data schemas
+### 2-Layer Architecture
+- **Layer 1**: Infrastructure (Database, Streaming, Base Services)
+- **Layer 2**: DSL + Actors (Business Logic, Data Processing)
 
-```
-DSL Schema (source of truth) → Auto-generates → Database + Topic schemas
-```
-
-- **Layer 1**: Generic infrastructure (BaseReader/BaseWriter, database clients, MCP primitives)
-- **Layer 2**: Technology-specific actors (CoinGecko, Redpanda, TimescaleDB)
-- **DSL Layer**: Unified data types driving both storage and streaming schemas
-
-## ✨ Key Features
-
-✅ **DSL-Driven Schema Management** - Single source of truth auto-generates database and topic schemas  
-✅ **Zero Code Duplication** - Handler pattern eliminates repetitive DSL implementations  
-✅ **External MCP Integration** - Live CoinGecko MCP server (46 tools, real market data)  
-✅ **Real-Time Streaming** - Redpanda/Kafka with auto-generated topic schemas and JSON validation  
-✅ **Time-Series Database** - TimescaleDB with hypertables, compression, and optimized queries  
-✅ **Type Safety** - Complete TypeScript with functional Result<T> error handling  
-✅ **Production Ready** - Docker services, schema validation, and comprehensive testing  
+### Key Features
+- **DSL as Single Source of Truth**: Auto-generates schemas, types, and validation
+- **Exchange-Aware Design**: All data includes `exchangeId` for multi-exchange support  
+- **Law-Based Combinators**: Type-safe composition with compile-time guarantees
+- **MCP Integration**: AI agent control via Model Context Protocol
+- **Functional Error Handling**: Result<T> pattern throughout
+- **Production Ready**: Real TimescaleDB + Redpanda integrations
 
 ## 🚀 Quick Start
 
-### Initial Setup
+### Prerequisites
+- **Bun** (latest)
+- **Docker & Docker Compose**
+- **TimescaleDB** (via Docker)
+- **Redpanda** (via Docker)
+
+### Installation
+
 ```bash
+# Clone repository
+git clone <repository-url>
+cd qi-v2-dp-ts-actor
+
 # Install dependencies
 bun install
 
-# Verify installation with type checking
-bun run typecheck
+# Start infrastructure
+cd services
+docker-compose up -d
+
+# Generate schemas
+cd ../lib
+bun run generate:schemas
+
+# Run tests
+bun test
 ```
 
-### Schema Generation (Core Workflow)
-```bash
-# Generate all schemas from DSL types
-bun run scripts/generate-schema.ts
+## 📁 Project Structure
 
-# Start services with generated schemas
-cd services && docker-compose up -d
-
-# Test end-to-end pipeline
-bun run app/demos/layer2/end-to-end-pipeline-demo.ts
+```
+qi-v2-dp-ts-actor/
+├── lib/src/                      # Core library
+│   ├── dsl/                      # Layer 2: DSL definitions
+│   │   ├── MarketDataTypes.ts    # Core types with exchangeId
+│   │   ├── MarketDataReadingDSL.ts
+│   │   ├── MarketDataWritingDSL.ts
+│   │   └── laws/                 # Combinator laws
+│   ├── actors/                   # Layer 2: Actor implementations
+│   │   ├── abstract/             # BaseReader/BaseWriter
+│   │   ├── sources/              # Data readers
+│   │   │   ├── coingecko/        # CoinGecko API
+│   │   │   ├── redpanda/         # Redpanda consumer
+│   │   │   ├── redpanda-mcp/     # Redpanda MCP reader
+│   │   │   └── timescale-mcp/    # TimescaleDB MCP reader
+│   │   └── targets/              # Data writers
+│   │       ├── redpanda/         # Redpanda producer
+│   │       ├── timescale/        # TimescaleDB writer
+│   │       └── *-mcp/            # MCP writers (TODO)
+│   ├── base/                     # Layer 1: Infrastructure
+│   │   ├── database/             # TimescaleDB integration
+│   │   └── streaming/            # Redpanda integration
+│   └── qicore/                   # Core utilities
+├── app/demos/                    # Usage examples
+├── services/                     # Docker infrastructure
+└── docs/                         # Documentation
 ```
 
-### Development Commands
-```bash
-# Type checking
-bun run typecheck
+## 🔄 Data Flow
 
-# Testing
-bun run test:basic                    # Core architecture tests
-bun run test:integration             # Full system tests
+### Exchange-Aware Architecture
 
-# Code quality
-bun run biome check --fix
-
-# Individual demos
-bun run app/demos/layer1/base/result-type-demo.ts
-bun run app/demos/layer2/sources/coingecko-source-demo.ts
-bun run app/demos/layer2/sources/redpanda-source-demo.ts
-bun run app/demos/layer2/targets/redpanda-target-demo.ts
-bun run app/demos/layer2/targets/timescale-target-demo.ts
-```
-
-For end to-end demo, run
-
-```bash
-bun run app/demos/layer2/end-to-end-pipeline-demo.ts
-```
-
-### System Architecture
-
-**DSL Types (Single Source of Truth)**:
-- `CryptoPriceData` - Real-time cryptocurrency prices
-- `CryptoOHLCVData` - OHLCV candlestick data for technical analysis  
-- `CryptoMarketAnalytics` - Global market metrics and analytics
-- `Level1Data` - Order book top-of-book data
-
-**Layer 2 Actors (Auto-Generated from DSL)**:
-
-*Sources (Data Input)*:
-- `CoinGeckoMarketDataReader` - External MCP server (46 tools, live data)
-- `RedpandaMarketDataReader` - Stream consumption with DSL validation
-
-*Targets (Data Output)*:
-- `TimescaleMarketDataWriter` - Time-series database with auto-generated schema
-- `RedpandaMarketDataWriter` - Stream production with topic management
-
-## 📊 Schema Management Workflow
-
-**The Core Innovation**: DSL types automatically generate all storage and streaming schemas
-
-```bash
-# 1. Update DSL types in lib/src/abstract/dsl/MarketDataTypes.ts
-# 2. Generate schemas from DSL
-bun run scripts/generate-schema.ts
-
-# 3. Restart services with new schemas  
-cd services && docker-compose down && docker-compose up -d
-
-# 4. All actors automatically use the updated schemas
-```
-
-**Generated Artifacts**:
-- `services/database/init-timescale-generated.sql` - TimescaleDB schema
-- `services/redpanda/topics.yml` - Redpanda topic configuration
-- `services/redpanda/schemas.json` - JSON Schema validation
-- `services/redpanda/generated-mappings.ts` - TypeScript serialization
-
-## Live Data Results
-
-All actors work with real cryptocurrency data:
-- Bitcoin: $109,426 (live CoinGecko MCP)
-- Market Cap: $3.45T total
-- Performance: 200-600ms API calls, sub-second analytics
-
-## Usage Pattern
+All data includes `exchangeId` for multi-exchange support:
 
 ```typescript
-// Create actors
-const source = createCoinGeckoMarketDataReader({name: "crypto-source"});
-const target = createTimescaleMarketDataWriter({name: "crypto-db"});
-
-// Unified DSL interface - same across all technologies
-const prices = await source.getCurrentPrices(["bitcoin", "ethereum"]);
-await target.publishPrices(prices.data);
+interface CryptoPriceData {
+  coinId: string;
+  symbol: string;
+  exchangeId: string;  // NEW: Required field
+  usdPrice: number;
+  lastUpdated: Date;
+  // ... other fields
+}
 ```
 
-## Prerequisites
+### DSL-Driven Schema Generation
 
-- **Bun v1.2+**: JavaScript/TypeScript runtime
-- **Docker**: For infrastructure services (optional)
-- **Internet**: For external MCP server access
+```bash
+# Single command updates everything
+bun run generate:schemas
 
-## Documentation
+# Automatically updates:
+# - Database schemas (Drizzle)
+# - Kafka topics & schemas (Redpanda)  
+# - JSON validation
+# - TypeScript types
+```
 
-- [Complete Architecture](./docs/impl/architecture.md)
-- [Layer 1 Infrastructure](./docs/impl/layer1/base.md)
-- [Layer 2 DSL Actors](./docs/impl/layer2/architecture.md)
+## 🎯 Core Components
 
----
+### 1. DSL Foundation
 
-**Scope**: This project provides reusable actor building blocks. The parallel MCP Server project handles app-level business logic and service composition.
+**Unified interfaces** for all data operations:
+
+```typescript
+// Reading DSL
+interface MarketDataReadingDSL {
+  getCurrentPrice(coinId: string): Promise<Result<number>>;
+  getCurrentPrices(coinIds: string[]): Promise<Result<CryptoPriceData[]>>;
+  getCurrentOHLCV(coinId: string): Promise<Result<CryptoOHLCVData>>;
+  getMarketAnalytics(): Promise<Result<CryptoMarketAnalytics>>;
+}
+
+// Writing DSL  
+interface MarketDataWritingDSL {
+  publishPrice(data: CryptoPriceData): Promise<Result<PublishResult>>;
+  publishPrices(data: CryptoPriceData[]): Promise<Result<BatchPublishResult>>;
+  publishOHLCV(data: CryptoOHLCVData): Promise<Result<PublishResult>>;
+}
+```
+
+### 2. Actor Pattern
+
+**Clean separation** with BaseReader/BaseWriter:
+
+```typescript
+class CoinGeckoMarketDataReader extends BaseReader {
+  // Inherits full DSL interface
+  // Implements only CoinGecko-specific logic
+}
+
+class TimescaleMarketDataWriter extends BaseWriter {
+  // Inherits full DSL interface  
+  // Implements only TimescaleDB-specific logic
+}
+```
+
+### 3. Law-Based Combinators
+
+**Type-safe composition** with compile-time guarantees:
+
+```typescript
+const pipeline = createLawfulDSLCombinator(
+  coinGeckoReader.getCurrentPrices,
+  timescaleWriter.publishPrices
+);
+
+// Enforces 5 fundamental laws:
+// 1. Type Coherence: Read output = Write input
+// 2. Error Propagation: Result<T> throughout
+// 3. Data Flow: Unidirectional 
+// 4. Temporal Execution: Sequential
+// 5. Method Compatibility: Valid DSL only
+```
+
+### 4. MCP Integration
+
+**AI agent control** via Model Context Protocol:
+
+```typescript
+// MCP Actor (IS an MCP client)
+class TimescaleMCPReader extends BaseReader {
+  async getCurrentPrice(coinId: string): Promise<Result<number>> {
+    const result = await this.mcpClient.callTool({
+      name: "query_timescale",
+      arguments: { 
+        query: "SELECT usd_price FROM crypto_prices WHERE coin_id = $1",
+        params: [coinId]
+      }
+    });
+    return success(result.data.rows[0].usd_price);
+  }
+}
+```
+
+## 📊 Implementation Status
+
+### ✅ Completed (Items 1-5)
+
+1. **Directory Reorganization**: DSL moved to Layer 2, actors structure created
+2. **Exchange ID Integration**: Added throughout data model and database  
+3. **Schema Consistency**: Drizzle schemas match DSL exactly
+4. **Kafka Topic Design**: Updated with exchangeId partitioning
+5. **Layer 2 Laws**: Combinator laws with compile-time enforcement
+
+### 🔄 In Progress (Item 6)
+
+6. **MCP Actors**: 2 of 4 completed
+   - ✅ TimescaleDB MCP Reader
+   - ✅ Redpanda MCP Reader
+   - ⏳ TimescaleDB MCP Writer  
+   - ⏳ Redpanda MCP Writer
+
+## 🧪 Usage Examples
+
+### Basic Pipeline
+
+```typescript
+import { createCoinGeckoMarketDataReader } from "@qi/dp/actors/sources/coingecko";
+import { createTimescaleMarketDataWriter } from "@qi/dp/actors/targets/timescale";
+
+const reader = createCoinGeckoMarketDataReader({
+  name: "coingecko-reader",
+  useRemoteServer: true
+});
+
+const writer = createTimescaleMarketDataWriter({
+  name: "timescale-writer", 
+  connectionString: "postgresql://user:pass@localhost:5432/crypto"
+});
+
+// Initialize actors
+await reader.initialize();
+await writer.initialize();
+
+// Fetch and store data
+const prices = await reader.getCurrentPrices(["bitcoin", "ethereum"]);
+if (isSuccess(prices)) {
+  await writer.publishPrices(getData(prices));
+}
+```
+
+### Law-Based Composition
+
+```typescript
+import { createLawfulDSLCombinator } from "@qi/dp/dsl/laws";
+
+const pipeline = createLawfulDSLCombinator(
+  reader.getCurrentPrices,
+  writer.publishPrices
+);
+
+// Type-safe, law-enforced execution
+const result = await pipeline.execute(["bitcoin", "ethereum"]);
+```
+
+## 🔧 Development
+
+### Generate Schemas
+
+```bash
+cd lib
+bun run generate:schemas
+```
+
+### Run Tests
+
+```bash
+bun test                    # All tests
+bun test integration        # Integration tests only
+bun test --watch           # Watch mode
+```
+
+### Type Checking
+
+```bash
+bun run typecheck
+```
+
+### Demos
+
+```bash
+cd app/demos/layer2
+
+# Source demos
+bun run sources/coingecko-source-demo.ts
+bun run sources/redpanda-source-demo.ts
+
+# Target demos  
+bun run targets/timescale-target-demo.ts
+bun run targets/redpanda-target-demo.ts
+
+# End-to-end pipeline
+bun run end-to-end-pipeline-demo.ts
+```
+
+## 🏛️ Architecture Benefits
+
+### Type Safety
+- **Compile-time law enforcement**
+- **Automatic schema propagation** 
+- **Result<T> error handling**
+
+### Scalability  
+- **Exchange-aware partitioning**
+- **Clean actor separation**
+- **MCP-driven automation**
+
+### Maintainability
+- **Single source of truth (DSL)**
+- **Law-based composition**
+- **Clear directory structure**
+
+## 📚 Documentation
+
+- [Layer 2 Architecture](docs/impl/layer2/architecture.md)
+- [DSL Laws](docs/impl/layer2/abstract/README.md)
+- [MCP Integration](docs/mcp/README.md)
+- [Todo Progress](docs/todo-progress-1-6.md)
+
+## 🤝 Contributing
+
+1. Follow the DSL-driven architecture
+2. Maintain Result<T> error handling
+3. Add tests for new actors
+4. Update schemas when changing data types
+
+## 📄 License
+
+MIT License - see LICENSE file for details.

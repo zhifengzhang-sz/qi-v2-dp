@@ -18,7 +18,7 @@ import type {
   DateRangeOHLCVQuery,
   Level1Data,
   Level1Query,
-} from "../../abstract/dsl";
+} from "../../../dsl";
 import { BaseReader } from "../../abstract/readers/BaseReader";
 
 // Direct MCP imports for external server
@@ -207,6 +207,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       lastUpdated: new Date(),
       source: "coingecko-mcp",
       attribution: "Data provided by CoinGecko API via MCP",
+      exchangeId: "coingecko", // Added required field
     }));
   }
 
@@ -242,6 +243,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       timeframe: "daily",
       source: "coingecko-mcp",
       attribution: "Data provided by CoinGecko API via MCP",
+      exchangeId: "coingecko", // Added required field
     };
   }
 
@@ -284,6 +286,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
         timeframe: timeframe || "daily",
         source: "coingecko-mcp",
         attribution: "Data provided by CoinGecko API via MCP",
+        exchangeId: "coingecko", // Added required field
       }));
       results.push(...ohlcvData);
     }
@@ -324,6 +327,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       lastUpdated: new Date(timestamp),
       source: "coingecko-mcp",
       attribution: "Data provided by CoinGecko API via MCP",
+      exchangeId: "coingecko", // Added required field
     }));
   }
 
@@ -355,6 +359,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       timeframe: "daily",
       source: "coingecko-mcp",
       attribution: "Data provided by CoinGecko API via MCP",
+      exchangeId: "coingecko", // Added required field
     }));
   }
 
@@ -379,6 +384,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       lastUpdated: new Date(),
       source: "coingecko-mcp",
       attribution: "Data provided by CoinGecko API via MCP",
+      exchangeId: "coingecko", // Added required field
     }));
   }
 
@@ -405,6 +411,7 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       market: query.market || "coingecko",
       source: "coingecko-mcp",
       attribution: "Approximated from CoinGecko current price",
+      exchange: "coingecko", // Added required field
     };
   }
 
