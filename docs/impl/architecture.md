@@ -88,7 +88,7 @@ This eliminates manual schema synchronization and ensures DSL changes automatica
 
 ### DSL as Single Source of Truth
 
-The platform uses **DSL types** defined in `lib/src/abstract/dsl/MarketDataTypes.ts` as the authoritative schema definition. All database tables, Redpanda topics, and data transformations are automatically generated from these types.
+The platform uses **DSL types** defined in `lib/src/dsl/MarketDataTypes.ts` as the authoritative schema definition. All database tables, Redpanda topics, and data transformations are automatically generated from these types.
 
 **Core DSL Types**:
 ```typescript
@@ -240,7 +240,7 @@ graph TB
 **Components**:
 - **Database Clients**: TimescaleDB (90% compression), Drizzle ORM, Schema management
 - **Streaming Clients**: Redpanda/Kafka client wrappers (sub-50ms latency)
-- **Base Agent Framework**: Core agent lifecycle and error handling
+- **QiCore Base**: Result<T> error handling and core utilities
 
 **Characteristics**:
 - Raw infrastructure only (no DSL abstractions)
@@ -248,24 +248,26 @@ graph TB
 - High-performance components (53% faster than Node.js with Bun runtime)
 - Foundation for Layer 2 abstractions
 
-**Documentation**: [Layer 1 Details](./layer1/base.md)
+**Documentation**: [Layer 1 Details](./base/README.md)
 
-### Layer 2: DSL Layer (`lib/src/abstract/`, `lib/src/sources/`, `lib/src/targets/`)
+### Layer 2: Actor System (`lib/src/actors/`, `lib/src/dsl/`)
 
-**Purpose**: Domain-specific language for cryptocurrency data operations
+**Purpose**: Domain-specific language for cryptocurrency data operations with actor implementations
 
 **Components**:
-- **Abstract DSL**: Unified interfaces, data types, workflow abstractions
-- **Sources**: Data input actors (CoinGecko MCP, Redpanda streaming)
-- **Targets**: Data output actors (TimescaleDB persistence, Redpanda streaming)
+- **DSL Interfaces**: Unified data types, reading/writing operations, combinator laws
+- **Abstract Actors**: BaseReader/BaseWriter with workflow abstractions
+- **Source Actors**: Data input actors (CoinGecko MCP, Redpanda streaming, TimescaleDB MCP)
+- **Target Actors**: Data output actors (TimescaleDB persistence, Redpanda streaming, MCP writers)
 
 **Characteristics**:
 - Technology-agnostic DSL interfaces enabling seamless source/target migration
 - Plugin pattern implementation eliminating code duplication
 - Zero code duplication across the entire platform
 - MCP integration support for AI-powered data sources
+- Law-based combinators for type-safe data flow
 
-**Documentation**: [Layer 2 Details](./layer2/architecture.md)
+**Documentation**: [Layer 2 Details](./actors/README.md)
 
 ### External Integration: Data Platform MCP Server (Parallel Project)
 
