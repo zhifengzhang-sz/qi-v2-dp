@@ -1,8 +1,50 @@
-# Message Schema Design Tutorial
+# Message Schema Design Tutorial (Layer 2)
 
 ## Overview
 
 This tutorial covers how to design, implement, and manage message schemas for the QiCore cryptocurrency data platform. Message schemas ensure data consistency, enable evolution, and provide validation across the streaming pipeline.
+
+**Architecture Context**: This is a **Layer 2** concern - schemas are defined by the DSL and implemented by actors, not by Layer 1 infrastructure.
+
+## Layer 1 vs Layer 2 vs MCP Server Approaches
+
+### **Layer 1 (Base Infrastructure)**
+- **Responsibility**: Provides serialization/deserialization primitives and schema registry infrastructure
+- **Files**: `lib/src/base/streaming/serialization/`, `lib/src/base/streaming/schema-registry.ts`
+- **What it does**: JSON/Avro serializers, basic validation, schema storage
+- **What it doesn't do**: Business schema design, message routing logic
+
+### **Layer 2 (Actor System)**
+- **Responsibility**: Defines message schemas based on DSL types and business requirements
+- **Files**: `lib/src/dsl/MarketDataTypes.ts`, actor implementations
+- **What it does**: Exchange-aware message design, schema evolution, business validation
+- **What it doesn't do**: Low-level serialization (delegates to Layer 1)
+
+### **MCP Server Approach**
+- **Responsibility**: AI agent control over schema management and validation through MCP protocol
+- **Files**: `lib/src/actors/sources/*-mcp/`, `lib/src/actors/targets/*-mcp/`
+- **What it does**: Dynamic schema validation via MCP tools, AI-controlled message transformation
+- **What it doesn't do**: Static schema definition (schemas come from DSL)
+
+## Choosing the Right Approach
+
+### **Use Layer 1 When:**
+- Building custom serialization formats
+- Implementing schema registry functionality
+- Need direct control over message encoding
+- **Example**: Adding support for Protocol Buffers serialization
+
+### **Use Layer 2 Actors When:**
+- Implementing business message processing
+- Need exchange-aware message routing
+- Building data transformation pipelines
+- **Example**: Converting CoinGecko API responses to internal schema
+
+### **Use MCP Server When:**
+- Need AI agent control over message validation
+- Want dynamic message transformation
+- Building external tool integration
+- **Example**: AI agent deciding how to handle schema validation failures
 
 ## Schema Design Principles
 

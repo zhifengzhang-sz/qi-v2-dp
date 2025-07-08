@@ -1,8 +1,50 @@
-# Database Table Schema Design Tutorial
+# Database Table Schema Design Tutorial (Layer 2)
 
 ## Overview
 
 This tutorial covers how to design, implement, and manage database table schemas for the QiCore cryptocurrency data platform using TimescaleDB (PostgreSQL with time-series extensions).
+
+**Architecture Context**: This is a **Layer 2** concern - database schemas are designed based on DSL types and implemented by actors, not by Layer 1 infrastructure.
+
+## Layer 1 vs Layer 2 vs MCP Server Approaches
+
+### **Layer 1 (Base Infrastructure)**
+- **Responsibility**: Provides database connection management and basic table operations
+- **Files**: `lib/src/base/database/drizzle-client.ts`, `lib/src/base/database/timescale-client.ts`
+- **What it does**: Connection pooling, transaction management, basic CRUD operations
+- **What it doesn't do**: Business schema design, data model decisions
+
+### **Layer 2 (Actor System)**
+- **Responsibility**: Defines table schemas based on DSL types and business requirements
+- **Files**: `lib/src/base/database/schema.ts`, actor implementations
+- **What it does**: Exchange-aware table design, hypertable configuration, business queries
+- **What it doesn't do**: Low-level connection management (delegates to Layer 1)
+
+### **MCP Server Approach**
+- **Responsibility**: AI agent control over database operations through MCP protocol
+- **Files**: `lib/src/actors/sources/timescale-mcp/`, `lib/src/actors/targets/timescale-mcp/`
+- **What it does**: Dynamic query execution via MCP tools, AI-controlled data operations
+- **What it doesn't do**: Schema definition (schemas come from DSL)
+
+## Choosing the Right Approach
+
+### **Use Layer 1 When:**
+- Building custom database utilities
+- Implementing new connection management
+- Need direct SQL control
+- **Example**: Creating a custom backup utility
+
+### **Use Layer 2 Actors When:**
+- Implementing business data operations
+- Need exchange-aware data storage
+- Building data processing pipelines
+- **Example**: Storing crypto prices with proper partitioning
+
+### **Use MCP Server When:**
+- Need AI agent control over database queries
+- Want dynamic query generation
+- Building external tool integration
+- **Example**: AI agent generating custom analytics queries
 
 ## Schema Design Principles
 

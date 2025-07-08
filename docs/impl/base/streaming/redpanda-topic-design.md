@@ -1,8 +1,50 @@
-# Redpanda Topic Design and Management
+# Redpanda Topic Design and Management (Layer 2)
 
 ## Overview
 
 This guide covers how to design, create, and manage Redpanda topics for the QiCore cryptocurrency data platform. Topics are the fundamental unit of data organization in Redpanda/Kafka streaming systems.
+
+**Architecture Context**: This is a **Layer 2** concern - topics are designed and managed by actors based on DSL requirements, not by Layer 1 infrastructure.
+
+## Layer 1 vs Layer 2 vs MCP Server Approaches
+
+### **Layer 1 (Base Infrastructure)**
+- **Responsibility**: Provides basic Redpanda client connection and topic creation primitives
+- **Files**: `lib/src/base/streaming/redpanda/`
+- **What it does**: Raw Kafka/Redpanda client operations, basic topic management
+- **What it doesn't do**: Business logic, schema design, exchange-specific routing
+
+### **Layer 2 (Actor System)**  
+- **Responsibility**: Defines topic structure based on DSL requirements and business needs
+- **Files**: `lib/src/actors/sources/redpanda/`, `lib/src/actors/targets/redpanda/`
+- **What it does**: Exchange-aware topic design, schema-driven topic creation, business logic routing
+- **What it doesn't do**: Low-level client management (delegates to Layer 1)
+
+### **MCP Server Approach**
+- **Responsibility**: AI agent control over topic management through MCP protocol
+- **Files**: `lib/src/actors/sources/redpanda-mcp/`, `lib/src/actors/targets/redpanda-mcp/`
+- **What it does**: Dynamic topic creation via MCP tools, AI-controlled routing decisions
+- **What it doesn't do**: Manual topic configuration (everything through MCP interface)
+
+## Choosing the Right Approach
+
+### **Use Layer 1 When:**
+- Building custom streaming infrastructure
+- Need direct Kafka/Redpanda client control
+- Implementing new base functionality
+- **Example**: Creating a custom topic manager utility
+
+### **Use Layer 2 Actors When:**
+- Implementing business logic with streaming
+- Need exchange-aware topic routing
+- Building data processing pipelines
+- **Example**: Publishing crypto prices to exchange-specific topics
+
+### **Use MCP Server When:**
+- Need AI agent control over topic management
+- Want dynamic, decision-based topic creation
+- Building external tool integration
+- **Example**: AI agent deciding which topics to create based on market conditions
 
 ## Topic Design Principles
 

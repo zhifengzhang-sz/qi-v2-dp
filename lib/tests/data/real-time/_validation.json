@@ -1,0 +1,42 @@
+{
+  "validationTime": "2025-07-08T12:29:59.441Z",
+  "success": true,
+  "requiredServicesUp": 3,
+  "totalRequiredServices": 3,
+  "services": [
+    {
+      "name": "CoinGecko MCP API",
+      "type": "external-api",
+      "required": true,
+      "available": true,
+      "endpoint": "https://mcp.api.coingecko.com/sse",
+      "responseTime": 5253
+    },
+    {
+      "name": "Redpanda Kafka Cluster",
+      "type": "message-broker",
+      "required": true,
+      "available": true,
+      "endpoint": "localhost:19092",
+      "responseTime": 51
+    },
+    {
+      "name": "TimescaleDB",
+      "type": "database",
+      "required": true,
+      "available": true,
+      "endpoint": "localhost:5432",
+      "responseTime": 20
+    },
+    {
+      "name": "Redpanda MCP Server",
+      "type": "mcp-server",
+      "required": false,
+      "available": false,
+      "endpoint": "local process",
+      "error": "Executable not found in $PATH: \"rpk\""
+    }
+  ],
+  "phase": "phase2-service-validation",
+  "readyForTesting": true
+}

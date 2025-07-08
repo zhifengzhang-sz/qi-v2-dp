@@ -1,3 +1,4 @@
+## Complted tasks
 1. ✅ COMPLETED - data schema should be in layer 2, defined by dsl, should momve abstract/dsl to dsl, create actors, and move abstract, sources and targets to actors
    - DSL moved from `lib/src/abstract/dsl` to `lib/src/dsl` ✅
    - Created `lib/src/actors` directory ✅
@@ -38,15 +39,113 @@
    - 🔄 Redpanda MCP Writer: `lib/src/actors/targets/redpanda-mcp/` (in progress)
    - MCP launcher infrastructure in `lib/src/base/streaming/redpanda/redpanda-mcp-launcher.ts` ✅
    - Documentation with MCP server mappings completed ✅
-7. add twelvedata as data source, and add corresponding actors by using the twelvedata mcp server, see docs/mcp.
-8. add clickhouse database, find the hight quality mcp server and build the actors
-9. redefine actor
-    - generic actor = a class that implements the dsl interfaces
-        - generic market data reader = generic actor implementing MarketDataReadingDSL
-        - generic market data writer = generic actor implementing MarketDataWritingDSL
-    - mcp actor = a generic actor that associate with a mcp client
-10. real time feed in dsl
-11. how to handle multiple mcp client in actor impl, currently we can handle zero or one
+7. ⚠️ v-0.1.0 NEEDS INFRASTRUCTURE FIXES
+   - Complete 2-layer architecture ✅
+   - Working CoinGecko integration ✅
+   - Full DSL foundation ✅
+   - Production-grade testing system ✅
+   - No-mocking validation framework ✅
+   - 🔧 **CRITICAL**: Fix @qi/ import aliases (blocks all development)
+   - 🔧 **CRITICAL**: Implement RedpandaClient infrastructure  
+   - 🔧 **CRITICAL**: Standardize factory exports
+   - 🔧 **CRITICAL**: Fix test import aliases
+
+## Incomplete tasks
+
+### Conceptual Clarity & Documentation (v-0.2.0)
+
+#### Redefine Actor Concepts (after infrastructure fixes)
+1. **generic actor** = a class that implements the dsl interfaces
+   - generic market data reader = generic actor implementing MarketDataReadingDSL
+   - generic market data writer = generic actor implementing MarketDataWritingDSL
+2. **mcp actor** = a generic actor that associate with a mcp client
+   - Inherits all DSL methods from generic actor
+   - Uses MCP tools to implement the DSL interfaces (no additional capabilities beyond DSL)
+
+#### Documentation Updates
+- Update CLAUDE.md with corrected import patterns
+- Document generic vs MCP actor distinction
+- Update all demo examples with working imports
+
+### Missing dsl interfaces from v-0.1.0
+
+#### Redpanda Source Actor (v-0.3.0)
+```typescript
+  // Missing streaming methods:
+  listTopics(): Promise<string[]>
+  getConsumerStatus(): ConsumerStatus
+  subscribe(topic: string, callback: Function): Subscription
+  startConsuming(): Promise<void>
+  getConsumerLag(): Promise<LagInfo>
+```
+
+### Redpanda Target Actor (v-0.4.0)
+```typescript
+  // Missing validation/verification:
+  verifyTopics(): Promise<boolean>
+  flush(): Promise<PublishResult>
+  validateSchema(data: any): ValidationResult
+```
+
+### TimescaleDB Source Actor (v-0.5.0)
+```typescript
+  // Missing database-specific methods:
+  verifyDataAccess(): Promise<boolean>
+  getTimeBucketAnalytics(): Promise<AnalyticsData>
+  queryMaterializedView(query: string): Promise<QueryResult>
+```
+
+### TimescaleDB Target Actor (v-0.6.0)
+```typescript
+  // Missing time-series features:
+  verifyTables(): Promise<boolean>
+  checkExtensions(): Promise<ExtensionStatus>
+  getPartitionInfo(): Promise<PartitionInfo>
+  createHypertable(config: HypertableConfig): Promise<boolean>
+```
+
+### MCP Actors (All) (v-0.7.0)
+```typescript
+  // Missing MCP protocol methods:
+  listMCPTools(): Promise<MCPTool[]>
+  callMCPTool(name: string, args: any): Promise<MCPResult>
+```
+
+### Integration & Testing (v-0.8.0)
+#### Platform Integration
+- All Integrations: Complete the platform-specific implementations
+- End-to-end data flow validation (CoinGecko → Redpanda → TimescaleDB)
+
+#### Testing Infrastructure  
+- Fix all integration tests to pass (remove artificial exclusions)
+- Validate real external service connections
+- Test data consistency across actor chains
+- Performance testing with real data volumes
+
+## Twelvedata (v-0.9.0)
+
+ - add twelvedata as data source, and add corresponding actors by using the twelvedata mcp server, see docs/mcp.
+
+## Clickhouse (v-0.9.5)
+ - add clickhouse database, find the hight quality mcp server and build the actors
+
+## Production Release (v-1.0.0)
+#### Quality Control
+- Comprehensive unit test coverage (>90%)
+- Integration test suite covering all actor combinations  
+- Performance benchmarks and optimization
+- Security audit (credential handling, data validation)
+- Error handling and recovery testing
+
+#### Production Readiness
+- Documentation complete (API docs, deployment guides)
+- Monitoring and logging integration
+- Container/deployment configurations
+- Schema migration strategies
+- Backward compatibility guarantees
+
+## Real time feed in dsl
+
 
 ---
 

@@ -84,17 +84,10 @@ export class CoinGeckoMarketDataReader extends BaseReader {
         console.log("🎭 Initializing CoinGecko Actor...");
       }
 
-      // Connect directly to external CoinGecko MCP server
-      if (this.mcpClient) {
-        try {
-          if (this.config.debug) {
-            console.log("🚀 Connecting to external CoinGecko MCP server...");
-          }
-
-          const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
-          await this.mcpClient.connect(transport);
-          this.mcpClientInitialized = true;
-
+      // Connect to external CoinGecko MCP server only if useRemoteServer is true
+      if (this.config.useRemoteServer && this.mcpClient) {
+        const connected = await this.connectToMCPWithRetry();
+        if (connected) {
           // Add MCP client to BaseReader's client management
           this.addClient("coingecko-mcp", this.mcpClient, {
             name: "coingecko-mcp",
@@ -110,11 +103,17 @@ export class CoinGeckoMarketDataReader extends BaseReader {
           if (this.config.debug) {
             console.log("✅ Connected to external CoinGecko MCP server");
           }
-        } catch (error) {
+        } else {
           if (this.config.debug) {
-            console.log("⚠️ MCP server connection failed:", error);
+            console.log("⚠️ MCP server connection failed after retries");
           }
           this.mcpClientInitialized = false;
+        }
+      } else if (!this.config.useRemoteServer) {
+        // Local mode - no MCP connection needed
+        this.mcpClientInitialized = false;
+        if (this.config.debug) {
+          console.log("📍 Running in local mode (useRemoteServer=false)");
         }
       }
 
@@ -131,6 +130,40 @@ export class CoinGeckoMarketDataReader extends BaseReader {
       this.errorCount++;
       return failure(qiError);
     }
+  }
+
+  private async connectToMCPWithRetry(maxRetries = 3): Promise<boolean> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (this.config.debug) {
+          console.log(`🚀 Connecting to external CoinGecko MCP server (attempt ${attempt}/${maxRetries})...`);
+        }
+
+        const transport = new SSEClientTransport(new URL("https://mcp.api.coingecko.com/sse"));
+        await this.mcpClient!.connect(transport);
+        this.mcpClientInitialized = true;
+        return true;
+        
+      } catch (error) {
+        const errorMsg = error instanceof Error ? error.message : String(error);
+        
+        if (errorMsg.includes("429") || errorMsg.includes("Non-200 status code (429)")) {
+          const delay = Math.pow(2, attempt) * 2000; // 2s, 4s, 8s
+          if (this.config.debug) {
+            console.log(`⏳ Rate limited (attempt ${attempt}/${maxRetries}), waiting ${delay}ms...`);
+          }
+          await new Promise(resolve => setTimeout(resolve, delay));
+        } else {
+          // Non-rate-limit error, don't retry
+          if (this.config.debug) {
+            console.log(`❌ MCP connection error: ${errorMsg}`);
+          }
+          break;
+        }
+      }
+    }
+    
+    return false;
   }
 
   async cleanup(): Promise<Result<void>> {

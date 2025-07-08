@@ -1,0 +1,166 @@
+name: CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  unit-tests:
+    name: Unit Tests (Fast)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Run type checking
+        run: bun run typecheck
+        
+      - name: Run linting
+        run: bun run lint
+        
+      - name: Run unit tests
+        run: bun run test:unit
+        
+      - name: Upload unit test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: unit-test-results
+          path: test-results/unit-results.json
+
+  integration-tests:
+    name: Integration Tests (External APIs)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    needs: unit-tests
+    if: github.event_name == 'push' || github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Run integration tests
+        run: bun run test:integration
+        env:
+          # Add environment variables for external services
+          CI: true
+          
+      - name: Upload integration test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: integration-test-results
+          path: test-results/integration-results.json
+
+  system-tests:
+    name: System Tests (End-to-End)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    needs: [unit-tests, integration-tests]
+    if: github.ref == 'refs/heads/main'
+    
+    services:
+      postgres:
+        image: timescale/timescaledb:latest-pg15
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: qicore_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+          
+      redpanda:
+        image: redpandadata/redpanda:latest
+        ports:
+          - 9092:9092
+          - 19092:19092
+        options: >-
+          --health-cmd "rpk cluster health"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Wait for services
+        run: |
+          # Wait for PostgreSQL
+          until pg_isready -h localhost -p 5432; do sleep 1; done
+          # Wait for Redpanda
+          until bun -e "console.log('Redpanda ready')"; do sleep 1; done
+        
+      - name: Run system tests
+        run: bun run test:system
+        env:
+          DATABASE_URL: postgresql://postgres:test@localhost:5432/qicore_test
+          REDPANDA_BROKERS: localhost:19092
+          CI: true
+          
+      - name: Upload system test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: system-test-results
+          path: test-results/system-results.json
+
+  # Daily full test run including external services
+  nightly-tests:
+    name: Nightly Full Test Suite
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+          
+      - name: Install dependencies
+        run: bun install
+        
+      - name: Run full test suite
+        run: bun run test:full
+        
+      - name: Upload all test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: nightly-test-results
+          path: test-results/

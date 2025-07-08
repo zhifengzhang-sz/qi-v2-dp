@@ -45,7 +45,7 @@ cd ../lib
 bun run generate:schemas
 
 # Run tests
-bun test
+bun run test:full
 ```
 
 ## 📁 Project Structure
@@ -258,9 +258,17 @@ bun run generate:schemas
 ### Run Tests
 
 ```bash
-bun test                    # All tests
-bun test integration        # Integration tests only
-bun test --watch           # Watch mode
+# v1.0 Production Tests (recommended)
+bun run test:unit                    # Fast unit tests (< 1s)
+bun run test:integration:v1          # Integration tests with real APIs (10-15s)
+bun run test:full                    # Complete v1.0 test suite
+
+# Development Tests  
+bun run test:watch                   # Watch mode for unit tests
+bun run test:setup:phase1            # Collect real data from APIs (one-time)
+bun run test:setup:phase2            # Validate external services
+
+# See docs/tests/ for comprehensive testing guide
 ```
 
 ### Type Checking

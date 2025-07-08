@@ -1,0 +1,1450 @@
+{
+  "tools": [
+    {
+      "name": "get_asset_platforms",
+      "description": "This endpoint allows you to **query all the asset platforms on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "filter": {
+            "type": "string",
+            "description": "apply relevant filters to results",
+            "enum": [
+              "nft"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_id_coins",
+      "description": "This endpoint allows you to **query all the metadata (image, websites, socials, description, contract address, etc.) and market data (price, ATH, exchange tickers, etc.) of a coin from the CoinGecko coin page based on a particular coin ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "community_data": {
+            "type": "boolean",
+            "description": "include community data, default: true"
+          },
+          "developer_data": {
+            "type": "boolean",
+            "description": "include developer data, default: true"
+          },
+          "dex_pair_format": {
+            "type": "string",
+            "description": "set to `symbol` to display DEX pair base and target as symbols, default: `contract_address`",
+            "enum": [
+              "contract_address",
+              "symbol"
+            ]
+          },
+          "localization": {
+            "type": "boolean",
+            "description": "include all the localized languages in the response, default: true"
+          },
+          "market_data": {
+            "type": "boolean",
+            "description": "include market data, default: true"
+          },
+          "sparkline": {
+            "type": "boolean",
+            "description": "include sparkline 7 days data, default: false"
+          },
+          "tickers": {
+            "type": "boolean",
+            "description": "include tickers data, default: true"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_list_coins_categories",
+      "description": "This endpoint allows you to **query all the coins categories on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_coins_list",
+      "description": "This endpoint allows you to **query all the supported coins on CoinGecko with coins ID, name and symbol**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include_platform": {
+            "type": "boolean",
+            "description": "include platform and token's contract addresses, default: false"
+          },
+          "status": {
+            "type": "string",
+            "description": "filter by status of coins, default: active",
+            "enum": [
+              "active",
+              "inactive"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_new_coins_list",
+      "description": "This endpoint allows you to **query the latest 200 coins that recently listed on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_coins_markets",
+      "description": "This endpoint allows you to **query all the supported coins with price, market cap, volume and market related data**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "vs_currency": {
+            "type": "string",
+            "description": "target currency of coins and market data <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "category": {
+            "type": "string",
+            "description": "filter based on coins' category <br> *refers to [`/coins/categories/list`](/reference/coins-categories-list)."
+          },
+          "ids": {
+            "type": "string",
+            "description": "coins' IDs, comma-separated if querying more than 1 coin. <br> *refers to [`/coins/list`](/reference/coins-list)."
+          },
+          "include_tokens": {
+            "type": "string",
+            "description": "for `symbols` lookups, specify `all` to include all matching tokens <br> Default `top` returns top-ranked tokens (by market cap or volume)",
+            "enum": [
+              "top",
+              "all"
+            ]
+          },
+          "locale": {
+            "type": "string",
+            "description": "language background, default: en",
+            "enum": [
+              "ar",
+              "bg",
+              "cs",
+              "da",
+              "de",
+              "el",
+              "en",
+              "es",
+              "fi",
+              "fr",
+              "he",
+              "hi",
+              "hr",
+              "hu",
+              "id",
+              "it",
+              "ja",
+              "ko",
+              "lt",
+              "nl",
+              "no",
+              "pl",
+              "pt",
+              "ro",
+              "ru",
+              "sk",
+              "sl",
+              "sv",
+              "th",
+              "tr",
+              "uk",
+              "vi",
+              "zh",
+              "zh-tw"
+            ]
+          },
+          "names": {
+            "type": "string",
+            "description": "coins' names, comma-separated if querying more than 1 coin."
+          },
+          "order": {
+            "type": "string",
+            "description": "sort result by field, default: market_cap_desc",
+            "enum": [
+              "market_cap_asc",
+              "market_cap_desc",
+              "volume_asc",
+              "volume_desc",
+              "id_asc",
+              "id_desc"
+            ]
+          },
+          "page": {
+            "type": "number",
+            "description": "page through results, default: 1"
+          },
+          "per_page": {
+            "type": "number",
+            "description": "total results per page, default: 100 <br> Valid values: 1...250"
+          },
+          "precision": {
+            "type": "string",
+            "description": "decimal place for currency price value",
+            "enum": [
+              "full",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18"
+            ]
+          },
+          "price_change_percentage": {
+            "type": "string",
+            "description": "include price change percentage timeframe, comma-separated if query more than 1 price change percentage timeframe <br> Valid values: 1h, 24h, 7d, 14d, 30d, 200d, 1y"
+          },
+          "sparkline": {
+            "type": "boolean",
+            "description": "include sparkline 7 days data, default: false"
+          },
+          "symbols": {
+            "type": "string",
+            "description": "coins' symbols, comma-separated if querying more than 1 coin."
+          }
+        }
+      }
+    },
+    {
+      "name": "get_coins_top_gainers_losers",
+      "description": "This endpoint allows you to **query the top 30 coins with largest price gain and loss by a specific time duration**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "vs_currency": {
+            "type": "string",
+            "description": "target currency of coins <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "duration": {
+            "type": "string",
+            "description": "filter result by time range <br> Default value: `24h`",
+            "enum": [
+              "1h",
+              "24h",
+              "7d",
+              "14d",
+              "30d",
+              "60d",
+              "1y"
+            ]
+          },
+          "top_coins": {
+            "type": "string",
+            "description": "filter result by market cap ranking (top 300 to 1000) or all coins (including coins that do not have market cap) <br> Default value: `1000`",
+            "enum": [
+              "300",
+              "500",
+              "1000",
+              "all"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_coins_contract",
+      "description": "This endpoint allows you to **query all the metadata (image, websites, socials, description, contract address, etc.) and market data (price, ATH, exchange tickers, etc.) of a coin from the CoinGecko coin page based on an asset platform and a particular token contract address**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contract_address": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_range_contract_coins_market_chart",
+      "description": "This endpoint allows you to **get the historical chart data within certain time range in UNIX along with price, market cap and 24hr volume based on asset platform and particular token contract address**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contract_address": {
+            "type": "string"
+          },
+          "from": {
+            "type": "number",
+            "description": "starting date in UNIX timestamp"
+          },
+          "to": {
+            "type": "number",
+            "description": "ending date in UNIX timestamp"
+          },
+          "vs_currency": {
+            "type": "string",
+            "description": "target currency of market data <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "interval": {
+            "type": "string",
+            "description": "data interval, leave empty for auto granularity",
+            "enum": [
+              "5m",
+              "hourly",
+              "daily"
+            ]
+          },
+          "precision": {
+            "type": "string",
+            "description": "decimal place for currency price value",
+            "enum": [
+              "full",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_coins_history",
+      "description": "This endpoint allows you to **query the historical data (price, market cap, 24hrs volume, ...) at a given date for a coin based on a particular coin ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "date": {
+            "type": "string",
+            "description": "the date of data snapshot <br> Format: `dd-mm-yyyy`"
+          },
+          "localization": {
+            "type": "boolean",
+            "description": "include all the localized languages in response, default: true"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_range_coins_market_chart",
+      "description": "This endpoint allows you to **get the historical chart data of a coin within certain time range in UNIX along with price, market cap and 24hr volume based on particular coin ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "number",
+            "description": "starting date in UNIX timestamp "
+          },
+          "to": {
+            "type": "number",
+            "description": "ending date in UNIX timestamp"
+          },
+          "vs_currency": {
+            "type": "string",
+            "description": "target currency of market data <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "interval": {
+            "type": "string",
+            "description": "data interval, leave empty for auto granularity",
+            "enum": [
+              "5m",
+              "hourly",
+              "daily"
+            ]
+          },
+          "precision": {
+            "type": "string",
+            "description": "decimal place for currency price value",
+            "enum": [
+              "full",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_range_coins_ohlc",
+      "description": "This endpoint allows you to **get the OHLC chart (Open, High, Low, Close) of a coin within a range of timestamp based on particular coin ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "from": {
+            "type": "number",
+            "description": "starting date in UNIX timestamp"
+          },
+          "interval": {
+            "type": "string",
+            "description": "data interval",
+            "enum": [
+              "daily",
+              "hourly"
+            ]
+          },
+          "to": {
+            "type": "number",
+            "description": "ending date in UNIX timestamp"
+          },
+          "vs_currency": {
+            "type": "string",
+            "description": "target currency of price data <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          }
+        }
+      }
+    },
+    {
+      "name": "get_global",
+      "description": "This endpoint allows you **query cryptocurrency global data including active cryptocurrencies, markets, total crypto market cap and etc**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_id_nfts",
+      "description": "This endpoint allows you to **query all the NFT data (name, floor price, 24hr volume ...) based on the NFT collection ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_list_nfts",
+      "description": "This endpoint allows you to **query all supported NFTs with ID, contract address, name, asset platform ID and symbol on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "order": {
+            "type": "string",
+            "description": "use this to sort the order of responses",
+            "enum": [
+              "h24_volume_usd_asc",
+              "h24_volume_usd_desc",
+              "h24_volume_native_asc",
+              "h24_volume_native_desc",
+              "floor_price_native_asc",
+              "floor_price_native_desc",
+              "market_cap_native_asc",
+              "market_cap_native_desc",
+              "market_cap_usd_asc",
+              "market_cap_usd_desc"
+            ]
+          },
+          "page": {
+            "type": "number",
+            "description": "page through results"
+          },
+          "per_page": {
+            "type": "number",
+            "description": "total results per page <br> Valid values: 1...250"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_nfts_market_chart",
+      "description": "This endpoint allows you **query historical market data of a NFT collection, including floor price, market cap, and 24hr volume, by number of days away from now**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "days": {
+            "type": "string",
+            "description": "data up to number of days <br> Valid values: any integer or max"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_onchain_categories",
+      "description": "This endpoint allows you to **query all the supported categories on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: `1`"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the categories by field <br> Default value: `h6_volume_percentage_desc`",
+            "enum": [
+              "h1_volume_percentage_desc",
+              "h6_volume_percentage_desc",
+              "h12_volume_percentage_desc",
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc",
+              "fdv_usd_desc",
+              "reserve_in_usd_desc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_onchain_categories",
+      "description": "This endpoint allows you to **query all the pools based on the provided category ID**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "category_id": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`, `network`. <br> Example: `base_token` or `base_token,dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: `1`"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the pools by field <br> Default value: `pool_created_at_desc`",
+            "enum": [
+              "m5_trending",
+              "h1_trending",
+              "h6_trending",
+              "h24_trending",
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc",
+              "pool_created_at_desc",
+              "h24_price_change_percentage_desc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_onchain_networks",
+      "description": "This endpoint allows you to **query all the supported networks on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_networks_onchain_new_pools",
+      "description": "This endpoint allows you to **query all the latest pools across all networks on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`, `network`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_network_networks_onchain_new_pools",
+      "description": "This endpoint allows you to **query all the latest pools based on provided network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_networks_onchain_trending_pools",
+      "description": "This endpoint allows you to **query all the trending pools across all networks on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "duration": {
+            "type": "string",
+            "description": "duration to sort trending list by <br> Default value: 24h",
+            "enum": [
+              "5m",
+              "1h",
+              "6h",
+              "24h"
+            ]
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`, `network`. <br> Example: `base_token` or `base_token,dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_network_networks_onchain_trending_pools",
+      "description": "This endpoint allows you to **query the trending pools based on the provided network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "string",
+            "description": "duration to sort trending list by <br> Default value: 24h",
+            "enum": [
+              "5m",
+              "1h",
+              "6h",
+              "24h"
+            ]
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_networks_onchain_dexes",
+      "description": "This endpoint allows you to **query all the supported decentralized exchanges (DEXs) based on the provided network on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_networks_onchain_dexes",
+      "description": "This endpoint allows you to **query all the top pools based on the provided network and decentralized exchange (DEX)**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "dex": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the pools by field <br> Default value: h24_tx_count_desc",
+            "enum": [
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_networks_onchain_pools",
+      "description": "This endpoint allows you to **query all the top pools based on the provided network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the pools by field <br> Default value: h24_tx_count_desc",
+            "enum": [
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_address_networks_onchain_pools",
+      "description": "This endpoint allows you to **query the specific pool based on the provided network and pool address**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "include_volume_breakdown": {
+            "type": "boolean",
+            "description": "include volume breakdown, default: false"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_networks_onchain_info",
+      "description": "This endpoint allows you to **query pool metadata (base and quote token details, image, socials, websites, description, contract address, etc.) based on a provided pool contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "pool_address": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_timeframe_pools_networks_onchain_ohlcv",
+      "description": "This endpoint allows you to **get the OHLCV chart (Open, High, Low, Close, Volume) of a pool based on the provided pool address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "pool_address": {
+            "type": "string"
+          },
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "day",
+              "hour",
+              "minute"
+            ]
+          },
+          "token": {
+            "type": "string",
+            "description": "return OHLCV for token <br> use this to invert the chart <br> Available values: 'base', 'quote' or token address <br> Default value: 'base'"
+          },
+          "aggregate": {
+            "type": "string",
+            "description": "time period to aggregate each OHLCV <br> Available values (day): `1` <br> Available values (hour): `1` , `4` , `12` <br> Available values (minute): `1` , `5` , `15` <br> Default value: 1"
+          },
+          "before_timestamp": {
+            "type": "integer",
+            "description": "return OHLCV data before this timestamp (integer seconds since epoch)"
+          },
+          "currency": {
+            "type": "string",
+            "description": "return OHLCV in USD or quote token <br> Default value: usd",
+            "enum": [
+              "usd",
+              "token"
+            ]
+          },
+          "include_empty_intervals": {
+            "type": "boolean",
+            "description": "include empty intervals with no trade data, default: false"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "number of OHLCV results to return, maximum 1000 <br> Default value: 100"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_networks_onchain_trades",
+      "description": "This endpoint allows you to **query the last 300 trades in the past 24 hours based on the provided pool address**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "pool_address": {
+            "type": "string"
+          },
+          "token": {
+            "type": "string",
+            "description": "return trades for token <br> use this to invert the chart <br> Available values: 'base', 'quote' or token address <br> Default value: 'base'"
+          },
+          "trade_volume_in_usd_greater_than": {
+            "type": "number",
+            "description": "filter trades by trade volume in USD greater than this value <br> Default value: 0"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_address_networks_onchain_tokens",
+      "description": "This endpoint allows you to **query specific token data based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include",
+            "enum": [
+              "top_pools"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_tokens_networks_onchain_info",
+      "description": "This endpoint allows you to **query token metadata (name, symbol,  CoinGecko ID, image, socials, websites, description, etc.) based on a provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_tokens_networks_onchain_top_holders",
+      "description": "This endpoint allows you to **query top token holders based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "holders": {
+            "type": "string",
+            "description": "number of top token holders to return, you may use any integer or `max` <br> Default value: 10"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_tokens_networks_onchain_holders_chart",
+      "description": "This endpoint allows you to **get the historical token holders chart based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "token_address": {
+            "type": "string"
+          },
+          "days": {
+            "type": "string",
+            "description": "number of days to return the historical token holders chart <br> Default value: 7",
+            "enum": [
+              "7",
+              "30",
+              "max"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_timeframe_tokens_networks_onchain_ohlcv",
+      "description": "This endpoint allows you to **get the OHLCV chart (Open, High, Low, Close, Volume) of a token based on the provided token address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "token_address": {
+            "type": "string"
+          },
+          "timeframe": {
+            "type": "string",
+            "enum": [
+              "day",
+              "hour",
+              "minute"
+            ]
+          },
+          "aggregate": {
+            "type": "string",
+            "description": "time period to aggregate each OHLCV <br> Available values (day): `1` <br> Available values (hour): `1` , `4` , `12` <br> Available values (minute): `1` , `5` , `15` <br> Default value: 1"
+          },
+          "before_timestamp": {
+            "type": "integer",
+            "description": "return OHLCV data before this timestamp (integer seconds since epoch)"
+          },
+          "currency": {
+            "type": "string",
+            "description": "return OHLCV in USD or quote token <br> Default value: usd",
+            "enum": [
+              "usd",
+              "token"
+            ]
+          },
+          "include_empty_intervals": {
+            "type": "boolean",
+            "description": "include empty intervals with no trade data, default: false"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "number of OHLCV results to return, maximum 1000 <br> Default value: 100"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_tokens_networks_onchain_pools",
+      "description": "This endpoint allows you to **query top pools based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "token_address": {
+            "type": "string"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the pools by field <br> Default value: h24_volume_usd_liquidity_desc",
+            "enum": [
+              "h24_volume_usd_liquidity_desc",
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc"
+            ]
+          }
+        }
+      }
+    },
+    {
+      "name": "get_tokens_networks_onchain_trades",
+      "description": "This endpoint allows you to **query the last 300 trades in the past 24 hours, across all pools, based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "token_address": {
+            "type": "string"
+          },
+          "trade_volume_in_usd_greater_than": {
+            "type": "number",
+            "description": "filter trades by trade volume in USD greater than this value <br> Default value: 0"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_onchain_megafilter",
+      "description": "This endpoint allows you to **query pools based on various filters across all networks on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "buy_tax_percentage_max": {
+            "type": "number",
+            "description": "maximum buy tax percentage"
+          },
+          "buy_tax_percentage_min": {
+            "type": "number",
+            "description": "minimum buy tax percentage"
+          },
+          "buys_duration": {
+            "type": "string",
+            "description": "duration for buy transactions metric <br> Default value: 24h",
+            "enum": [
+              "5m",
+              "1h",
+              "6h",
+              "24h"
+            ]
+          },
+          "buys_max": {
+            "type": "integer",
+            "description": "maximum number of buy transactions"
+          },
+          "buys_min": {
+            "type": "integer",
+            "description": "minimum number of buy transactions"
+          },
+          "checks": {
+            "type": "string",
+            "description": "filter options for various checks, comma-separated if more than one <br> Available values: `no_honeypot`, `good_gt_score`, `on_coingecko`, `has_social`"
+          },
+          "dexes": {
+            "type": "string",
+            "description": "filter pools by DEXes, comma-separated if more than one <br> DEX ID refers to [/networks/{network}/dexes](/reference/dexes-list)"
+          },
+          "fdv_usd_max": {
+            "type": "number",
+            "description": "maximum fully diluted value in USD"
+          },
+          "fdv_usd_min": {
+            "type": "number",
+            "description": "minimum fully diluted value in USD"
+          },
+          "h24_volume_usd_max": {
+            "type": "number",
+            "description": "maximum 24hr volume in USD"
+          },
+          "h24_volume_usd_min": {
+            "type": "number",
+            "description": "minimum 24hr volume in USD"
+          },
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`, `network`"
+          },
+          "networks": {
+            "type": "string",
+            "description": "filter pools by networks, comma-separated if more than one <br> Network ID refers to [/networks](/reference/networks-list)"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          },
+          "pool_created_hour_max": {
+            "type": "number",
+            "description": "maximum pool age in hours"
+          },
+          "pool_created_hour_min": {
+            "type": "number",
+            "description": "minimum pool age in hours"
+          },
+          "reserve_in_usd_max": {
+            "type": "number",
+            "description": "maximum reserve in USD"
+          },
+          "reserve_in_usd_min": {
+            "type": "number",
+            "description": "minimum reserve in USD"
+          },
+          "sell_tax_percentage_max": {
+            "type": "number",
+            "description": "maximum sell tax percentage"
+          },
+          "sell_tax_percentage_min": {
+            "type": "number",
+            "description": "minimum sell tax percentage"
+          },
+          "sells_duration": {
+            "type": "string",
+            "description": "duration for sell transactions metric <br> Default value: 24h",
+            "enum": [
+              "5m",
+              "1h",
+              "6h",
+              "24h"
+            ]
+          },
+          "sells_max": {
+            "type": "integer",
+            "description": "maximum number of sell transactions"
+          },
+          "sells_min": {
+            "type": "integer",
+            "description": "minimum number of sell transactions"
+          },
+          "sort": {
+            "type": "string",
+            "description": "sort the pools by field <br> Default value: h6_trending",
+            "enum": [
+              "m5_trending",
+              "h1_trending",
+              "h6_trending",
+              "h24_trending",
+              "h24_tx_count_desc",
+              "h24_volume_usd_desc",
+              "h24_price_change_percentage_desc",
+              "pool_created_at_desc"
+            ]
+          },
+          "tx_count_duration": {
+            "type": "string",
+            "description": "duration for transaction count metric <br> Default value: 24h",
+            "enum": [
+              "5m",
+              "1h",
+              "6h",
+              "24h"
+            ]
+          },
+          "tx_count_max": {
+            "type": "integer",
+            "description": "maximum transaction count"
+          },
+          "tx_count_min": {
+            "type": "integer",
+            "description": "minimum transaction count"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_pools_onchain_trending_search",
+      "description": "This endpoint allows you to **query all the trending search pools across all networks on GeckoTerminal**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`, `network`"
+          },
+          "pools": {
+            "type": "integer",
+            "description": "number of pools to return, maximum 10 <br> Default value: 4"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_search_onchain_pools",
+      "description": "This endpoint allows you to **search for pools on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "string",
+            "description": "attributes to include, comma-separated if more than one to include <br> Available values: `base_token`, `quote_token`, `dex`"
+          },
+          "network": {
+            "type": "string",
+            "description": "network ID <br> *refers to [/networks](/reference/networks-list)"
+          },
+          "page": {
+            "type": "integer",
+            "description": "page through results <br> Default value: 1"
+          },
+          "query": {
+            "type": "string",
+            "description": "search query"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_addresses_networks_simple_onchain_token_price",
+      "description": "This endpoint allows you to **get token price based on the provided token contract address on a network**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "addresses": {
+            "type": "string"
+          },
+          "include_24hr_price_change": {
+            "type": "boolean",
+            "description": "include 24hr price change, default: false"
+          },
+          "include_24hr_vol": {
+            "type": "boolean",
+            "description": "include 24hr volume, default: false"
+          },
+          "include_market_cap": {
+            "type": "boolean",
+            "description": "include market capitalization, default: false"
+          },
+          "include_total_reserve_in_usd": {
+            "type": "boolean",
+            "description": "include total reserve in USD, default: false"
+          },
+          "mcap_fdv_fallback": {
+            "type": "boolean",
+            "description": "return FDV if market cap is not available, default: false"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_search",
+      "description": "This endpoint allows you to **search for coins, categories and markets listed on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "search query"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_search_trending",
+      "description": "This endpoint allows you **query trending search coins, NFTs and categories on CoinGecko in the last 24 hours**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "show_max": {
+            "type": "string",
+            "description": "show max number of results available for the given type <br> Available values: `coins`, `nfts`, `categories` <br> Example: `coins` or `coins,nfts,categories`"
+          }
+        }
+      }
+    },
+    {
+      "name": "get_simple_price",
+      "description": "This endpoint allows you to **query the prices of one or more coins by using their unique Coin API IDs**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "vs_currencies": {
+            "type": "string",
+            "description": "target currency of coins, comma-separated if querying more than 1 currency. <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "ids": {
+            "type": "string",
+            "description": "coins' IDs, comma-separated if querying more than 1 coin. <br> *refers to [`/coins/list`](/reference/coins-list)."
+          },
+          "include_24hr_change": {
+            "type": "boolean",
+            "description": "include 24hr change, default: false"
+          },
+          "include_24hr_vol": {
+            "type": "boolean",
+            "description": "include 24hr volume, default: false"
+          },
+          "include_last_updated_at": {
+            "type": "boolean",
+            "description": "include last updated price time in UNIX, default: false"
+          },
+          "include_market_cap": {
+            "type": "boolean",
+            "description": "include market capitalization, default: false"
+          },
+          "include_tokens": {
+            "type": "string",
+            "description": "for `symbols` lookups, specify `all` to include all matching tokens <br> Default `top` returns top-ranked tokens (by market cap or volume)",
+            "enum": [
+              "top",
+              "all"
+            ]
+          },
+          "names": {
+            "type": "string",
+            "description": "coins' names, comma-separated if querying more than 1 coin."
+          },
+          "precision": {
+            "type": "string",
+            "description": "decimal place for currency price value",
+            "enum": [
+              "full",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18"
+            ]
+          },
+          "symbols": {
+            "type": "string",
+            "description": "coins' symbols, comma-separated if querying more than 1 coin."
+          }
+        }
+      }
+    },
+    {
+      "name": "get_simple_supported_vs_currencies",
+      "description": "This endpoint allows you to **query all the supported currencies on CoinGecko**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {}
+      }
+    },
+    {
+      "name": "get_id_simple_token_price",
+      "description": "This endpoint allows you to **query one or more token prices using their token contract addresses**",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contract_addresses": {
+            "type": "string",
+            "description": "the contract addresses of tokens, comma-separated if querying more than 1 token's contract address"
+          },
+          "vs_currencies": {
+            "type": "string",
+            "description": "target currency of coins, comma-separated if querying more than 1 currency. <br> *refers to [`/simple/supported_vs_currencies`](/reference/simple-supported-currencies)."
+          },
+          "include_24hr_change": {
+            "type": "boolean",
+            "description": "include 24hr change <br> default: false"
+          },
+          "include_24hr_vol": {
+            "type": "boolean",
+            "description": "include 24hr volume, default: false"
+          },
+          "include_last_updated_at": {
+            "type": "boolean",
+            "description": "include last updated price time in UNIX , default: false"
+          },
+          "include_market_cap": {
+            "type": "boolean",
+            "description": "include market capitalization, default: false"
+          },
+          "precision": {
+            "type": "string",
+            "description": "decimal place for currency price value",
+            "enum": [
+              "full",
+              "0",
+              "1",
+              "2",
+              "3",
+              "4",
+              "5",
+              "6",
+              "7",
+              "8",
+              "9",
+              "10",
+              "11",
+              "12",
+              "13",
+              "14",
+              "15",
+              "16",
+              "17",
+              "18"
+            ]
+          }
+        }
+      }
+    }
+  ]
+}

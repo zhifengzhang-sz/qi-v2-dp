@@ -1,0 +1,36 @@
+[
+  {
+    "topic": "crypto-prices",
+    "partition": 0,
+    "offset": "1001",
+    "key": "bitcoin",
+    "value": {
+      "coinId": "bitcoin",
+      "symbol": "BTC",
+      "usdPrice": 50000,
+      "timestamp": "2025-07-08T12:21:21.976Z",
+      "source": "test-fixture"
+    },
+    "headers": {
+      "messageType": "price-update",
+      "version": "1.0"
+    }
+  },
+  {
+    "topic": "crypto-prices",
+    "partition": 0,
+    "offset": "1002",
+    "key": "ethereum",
+    "value": {
+      "coinId": "ethereum",
+      "symbol": "ETH",
+      "usdPrice": 3000,
+      "timestamp": "2025-07-08T12:21:21.976Z",
+      "source": "test-fixture"
+    },
+    "headers": {
+      "messageType": "price-update",
+      "version": "1.0"
+    }
+  }
+]

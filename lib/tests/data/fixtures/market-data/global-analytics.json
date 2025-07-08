@@ -1,0 +1,13 @@
+{
+  "timestamp": "2025-07-08T12:21:21.975Z",
+  "totalMarketCap": 2500000000000,
+  "totalVolume": 50000000000,
+  "btcDominance": 45.5,
+  "ethDominance": 18.2,
+  "marketCapChange24h": 2.5,
+  "volumeChange24h": -5.2,
+  "activeCryptocurrencies": 12500,
+  "markets": 850,
+  "source": "test-fixture",
+  "attribution": "Phase 1 Data Collection"
+}
