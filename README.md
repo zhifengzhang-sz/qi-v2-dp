@@ -67,6 +67,12 @@ bun run app/demos/layer2/targets/redpanda-target-demo.ts
 bun run app/demos/layer2/targets/timescale-target-demo.ts
 ```
 
+For end to-end demo, run
+
+```bash
+bun run app/demos/layer2/end-to-end-pipeline-demo.ts
+```
+
 ### System Architecture
 
 **DSL Types (Single Source of Truth)**:
