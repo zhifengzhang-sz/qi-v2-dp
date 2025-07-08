@@ -195,13 +195,13 @@ class TimescaleMCPReader extends BaseReader {
 4. **Kafka Topic Design**: Updated with exchangeId partitioning
 5. **Layer 2 Laws**: Combinator laws with compile-time enforcement
 
-### 🔄 In Progress (Item 6)
+### ✅ Completed (Item 6)
 
-6. **MCP Actors**: 2 of 4 completed
-   - ✅ TimescaleDB MCP Reader
-   - ✅ Redpanda MCP Reader
-   - ⏳ TimescaleDB MCP Writer  
-   - ⏳ Redpanda MCP Writer
+6. **MCP Actors**: 4 of 4 completed
+   - ✅ TimescaleDB MCP Reader: `lib/src/actors/sources/timescale-mcp/`
+   - ✅ Redpanda MCP Reader: `lib/src/actors/sources/redpanda-mcp/`
+   - ✅ TimescaleDB MCP Writer: `lib/src/actors/targets/timescale-mcp/`
+   - ✅ Redpanda MCP Writer: `lib/src/actors/targets/redpanda-mcp/`
 
 ## 🧪 Usage Examples
 
