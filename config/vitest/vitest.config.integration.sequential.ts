@@ -45,7 +45,11 @@ export default defineConfig({
       // Phase 4: MCP server management
       resolve(rootDir, "lib/tests/integration/mcp-servers/redpanda-mcp-launcher.test.ts"),
     ],
-    exclude: [resolve(rootDir, "node_modules/**"), resolve(rootDir, "dist/**"), resolve(rootDir, "lib/tests/integration/setup/**")],
+    exclude: [
+      resolve(rootDir, "node_modules/**"),
+      resolve(rootDir, "dist/**"),
+      resolve(rootDir, "lib/tests/integration/setup/**"),
+    ],
     isolate: false, // Tests share data flow state
     pool: "forks",
     poolOptions: {

@@ -1,1 +1,652 @@
-{"numTotalTestSuites":42,"numPassedTestSuites":42,"numFailedTestSuites":0,"numPendingTestSuites":0,"numTotalTests":60,"numPassedTests":60,"numFailedTests":0,"numPendingTests":0,"numTodoTests":0,"snapshot":{"added":0,"failure":false,"filesAdded":0,"filesRemoved":0,"filesRemovedList":[],"filesUnmatched":0,"filesUpdated":0,"matched":0,"total":0,"unchecked":0,"uncheckedKeysByFile":[],"unmatched":0,"updated":0,"didUpdate":false},"startTime":1751984781815,"success":true,"testResults":[{"assertionResults":[{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should have abstract DSL interfaces","status":"passed","title":"should have abstract DSL interfaces","duration":6.616911999999985,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should have base reader implementation","status":"passed","title":"should have base reader implementation","duration":38.56197,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should have CoinGecko actor implementation","status":"passed","title":"should have CoinGecko actor implementation","duration":26.581860000000034,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should have Result type system","status":"passed","title":"should have Result type system","duration":0.30945400000001655,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should create CoinGecko reader successfully","status":"passed","title":"should create CoinGecko reader successfully","duration":11.743315999999993,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should verify handler architecture pattern","status":"passed","title":"should verify handler architecture pattern","duration":2.647989999999993,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should have proper Result type integration","status":"passed","title":"should have proper Result type integration","duration":0.32389599999999064,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should verify data types are properly exported","status":"passed","title":"should verify data types are properly exported","duration":2.3138849999999707,"failureMessages":[],"meta":{}},{"ancestorTitles":["QiCore 2-Layer Architecture"],"fullName":"QiCore 2-Layer Architecture should verify factory functions work","status":"passed","title":"should verify factory functions work","duration":1.7212509999999952,"failureMessages":[],"meta":{}}],"startTime":1751984782011,"endTime":1751984782101.7212,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/basic-architecture.test.ts"},{"assertionResults":[{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Client Management (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should add and retrieve clients","status":"passed","title":"should add and retrieve clients","duration":13.23028899999997,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Client Management (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should remove clients","status":"passed","title":"should remove clients","duration":1.3800840000000107,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Client Management (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should get clients by type","status":"passed","title":"should get clients by type","duration":0.7883899999999926,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Client Management (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should get all clients","status":"passed","title":"should get all clients","duration":0.30529300000000603,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","DSL Method Implementation (BaseReader workflow)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should have all DSL methods available from BaseReader","status":"passed","title":"should have all DSL methods available from BaseReader","duration":0.39981599999998707,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","DSL Method Implementation (BaseReader workflow)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should return Result<T> types from DSL methods","status":"passed","title":"should return Result<T> types from DSL methods","duration":0.8098840000000109,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","DSL Method Implementation (BaseReader workflow)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should handle no active client gracefully","status":"passed","title":"should handle no active client gracefully","duration":0.3266879999999901,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Activity Tracking (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Activity Tracking (BaseReader functionality) should track query count and last activity","status":"passed","title":"should track query count and last activity","duration":0.2747160000000122,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Lifecycle Management (BaseReader functionality)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Lifecycle Management (BaseReader functionality) should initialize and cleanup properly","status":"passed","title":"should initialize and cleanup properly","duration":0.6420399999999518,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Error Handling (BaseReader workflow)"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Error Handling (BaseReader workflow) should handle error cases gracefully","status":"passed","title":"should handle error cases gracefully","duration":0.259503000000052,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Inheritance Verification"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Inheritance Verification should verify CoinGecko reader extends BaseReader","status":"passed","title":"should verify CoinGecko reader extends BaseReader","duration":0.2902019999999652,"failureMessages":[],"meta":{}},{"ancestorTitles":["BaseReader (tested via CoinGeckoMarketDataReader)","Inheritance Verification"],"fullName":"BaseReader (tested via CoinGeckoMarketDataReader) Inheritance Verification should have proper status reporting","status":"passed","title":"should have proper status reporting","duration":0.2869010000000003,"failureMessages":[],"meta":{}}],"startTime":1751984782085,"endTime":1751984782104.2903,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/base/BaseReader.test.ts"},{"assertionResults":[{"ancestorTitles":["RedpandaConfigManager","getInstance"],"fullName":"RedpandaConfigManager getInstance should return singleton instance","status":"passed","title":"should return singleton instance","duration":0.8555560000000071,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getConfig"],"fullName":"RedpandaConfigManager getConfig should return default configuration","status":"passed","title":"should return default configuration","duration":0.4370130000000074,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getConfig"],"fullName":"RedpandaConfigManager getConfig should use environment variables when provided","status":"passed","title":"should use environment variables when provided","duration":0.20058599999998705,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getConfig"],"fullName":"RedpandaConfigManager getConfig should handle invalid numeric environment variables","status":"passed","title":"should handle invalid numeric environment variables","duration":0.1736190000000022,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","updateConfig"],"fullName":"RedpandaConfigManager updateConfig should update configuration partially","status":"passed","title":"should update configuration partially","duration":0.1363760000000127,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","updateConfig"],"fullName":"RedpandaConfigManager updateConfig should not mutate original config","status":"passed","title":"should not mutate original config","duration":0.0866049999999916,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getMCPConfig"],"fullName":"RedpandaConfigManager getMCPConfig should return MCP server configuration","status":"passed","title":"should return MCP server configuration","duration":0.1164760000000058,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getMCPConfig"],"fullName":"RedpandaConfigManager getMCPConfig should use custom broker configuration","status":"passed","title":"should use custom broker configuration","duration":0.15013799999999833,"failureMessages":[],"meta":{}},{"ancestorTitles":["RedpandaConfigManager","getMCPConfig"],"fullName":"RedpandaConfigManager getMCPConfig should use environment variables for MCP settings","status":"passed","title":"should use environment variables for MCP settings","duration":0.1673849999999959,"failureMessages":[],"meta":{}}],"startTime":1751984782019,"endTime":1751984782022.1675,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/base/redpanda-config.test.ts"},{"assertionResults":[{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentPrice"],"fullName":"MarketDataReadingDSL Interface getCurrentPrice should return current price for a cryptocurrency","status":"passed","title":"should return current price for a cryptocurrency","duration":1.7673039999999958,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentPrice"],"fullName":"MarketDataReadingDSL Interface getCurrentPrice should use USD as default currency","status":"passed","title":"should use USD as default currency","duration":0.09115399999998886,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentPrices"],"fullName":"MarketDataReadingDSL Interface getCurrentPrices should return prices for multiple cryptocurrencies","status":"passed","title":"should return prices for multiple cryptocurrencies","duration":0.41202099999998154,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentPrices"],"fullName":"MarketDataReadingDSL Interface getCurrentPrices should handle options parameter","status":"passed","title":"should handle options parameter","duration":0.07785299999997619,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentOHLCV"],"fullName":"MarketDataReadingDSL Interface getCurrentOHLCV should return OHLCV data for a cryptocurrency","status":"passed","title":"should return OHLCV data for a cryptocurrency","duration":0.3726690000000019,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getCurrentOHLCV"],"fullName":"MarketDataReadingDSL Interface getCurrentOHLCV should default to daily interval","status":"passed","title":"should default to daily interval","duration":0.09096099999999296,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getLatestOHLCV"],"fullName":"MarketDataReadingDSL Interface getLatestOHLCV should return multiple OHLCV candles","status":"passed","title":"should return multiple OHLCV candles","duration":0.1330780000000118,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getLatestOHLCV"],"fullName":"MarketDataReadingDSL Interface getLatestOHLCV should default to 10 candles and daily interval","status":"passed","title":"should default to 10 candles and daily interval","duration":0.09858499999998571,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getPriceHistory"],"fullName":"MarketDataReadingDSL Interface getPriceHistory should return price history for date range","status":"passed","title":"should return price history for date range","duration":0.19693799999998873,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getOHLCVByDateRange"],"fullName":"MarketDataReadingDSL Interface getOHLCVByDateRange should return OHLCV data for date range","status":"passed","title":"should return OHLCV data for date range","duration":0.09759099999999421,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getAvailableTickers"],"fullName":"MarketDataReadingDSL Interface getAvailableTickers should return available cryptocurrency tickers","status":"passed","title":"should return available cryptocurrency tickers","duration":0.116991999999982,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getAvailableTickers"],"fullName":"MarketDataReadingDSL Interface getAvailableTickers should default to 100 tickers","status":"passed","title":"should default to 100 tickers","duration":0.04018299999998476,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getLevel1Data"],"fullName":"MarketDataReadingDSL Interface getLevel1Data should return Level 1 market data","status":"passed","title":"should return Level 1 market data","duration":0.16261800000000903,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","getMarketAnalytics"],"fullName":"MarketDataReadingDSL Interface getMarketAnalytics should return global market analytics","status":"passed","title":"should return global market analytics","duration":0.18486400000000458,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataReadingDSL Interface","Result<T> Pattern Compliance"],"fullName":"MarketDataReadingDSL Interface Result<T> Pattern Compliance should return Result<T> from all methods","status":"passed","title":"should return Result<T> from all methods","duration":0.9436129999999991,"failureMessages":[],"meta":{}}],"startTime":1751984782059,"endTime":1751984782064.9436,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/dsl/MarketDataReadingDSL.test.ts"},{"assertionResults":[{"ancestorTitles":["MarketDataWritingDSL Interface","publishPrice"],"fullName":"MarketDataWritingDSL Interface publishPrice should publish single cryptocurrency price","status":"passed","title":"should publish single cryptocurrency price","duration":0.9695440000000133,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishPrices"],"fullName":"MarketDataWritingDSL Interface publishPrices should publish multiple cryptocurrency prices","status":"passed","title":"should publish multiple cryptocurrency prices","duration":0.4102969999999857,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishPrices"],"fullName":"MarketDataWritingDSL Interface publishPrices should handle empty array","status":"passed","title":"should handle empty array","duration":0.07104699999999298,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishOHLCV"],"fullName":"MarketDataWritingDSL Interface publishOHLCV should publish single OHLCV data","status":"passed","title":"should publish single OHLCV data","duration":0.15085300000001212,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishOHLCVBatch"],"fullName":"MarketDataWritingDSL Interface publishOHLCVBatch should publish multiple OHLCV data","status":"passed","title":"should publish multiple OHLCV data","duration":0.12638499999999908,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishMarketAnalytics"],"fullName":"MarketDataWritingDSL Interface publishMarketAnalytics should publish market analytics data","status":"passed","title":"should publish market analytics data","duration":0.1388330000000053,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishLevel1Data"],"fullName":"MarketDataWritingDSL Interface publishLevel1Data should publish Level 1 market data","status":"passed","title":"should publish Level 1 market data","duration":0.10054699999997752,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishPriceHistory"],"fullName":"MarketDataWritingDSL Interface publishPriceHistory should publish price history data","status":"passed","title":"should publish price history data","duration":0.11496600000000967,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishCustomData"],"fullName":"MarketDataWritingDSL Interface publishCustomData should publish custom data without schema","status":"passed","title":"should publish custom data without schema","duration":0.1332969999999989,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishCustomData"],"fullName":"MarketDataWritingDSL Interface publishCustomData should publish custom data with schema","status":"passed","title":"should publish custom data with schema","duration":0.08846600000001104,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","publishBatch"],"fullName":"MarketDataWritingDSL Interface publishBatch should publish mixed batch data","status":"passed","title":"should publish mixed batch data","duration":0.08352000000002135,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","flush"],"fullName":"MarketDataWritingDSL Interface flush should flush pending data","status":"passed","title":"should flush pending data","duration":0.0595599999999763,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","Result<T> Pattern Compliance"],"fullName":"MarketDataWritingDSL Interface Result<T> Pattern Compliance should return Result<T> from all methods","status":"passed","title":"should return Result<T> from all methods","duration":0.9048619999999801,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","Data Validation"],"fullName":"MarketDataWritingDSL Interface Data Validation should handle required fields in CryptoPriceData","status":"passed","title":"should handle required fields in CryptoPriceData","duration":0.06766200000001277,"failureMessages":[],"meta":{}},{"ancestorTitles":["MarketDataWritingDSL Interface","Data Validation"],"fullName":"MarketDataWritingDSL Interface Data Validation should handle required fields in CryptoOHLCVData","status":"passed","title":"should handle required fields in CryptoOHLCVData","duration":0.09158099999999081,"failureMessages":[],"meta":{}}],"startTime":1751984782059,"endTime":1751984782064.0916,"status":"passed","message":"","name":"/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/dsl/MarketDataWritingDSL.test.ts"}]}
+{
+  "numTotalTestSuites": 42,
+  "numPassedTestSuites": 42,
+  "numFailedTestSuites": 0,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 60,
+  "numPassedTests": 60,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1752061116988,
+  "success": true,
+  "testResults": [
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should have abstract DSL interfaces",
+          "status": "passed",
+          "title": "should have abstract DSL interfaces",
+          "duration": 6.021550999999988,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should have base reader implementation",
+          "status": "passed",
+          "title": "should have base reader implementation",
+          "duration": 36.295253,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should have CoinGecko actor implementation",
+          "status": "passed",
+          "title": "should have CoinGecko actor implementation",
+          "duration": 39.516422999999975,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should have Result type system",
+          "status": "passed",
+          "title": "should have Result type system",
+          "duration": 0.2610569999999939,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should create CoinGecko reader successfully",
+          "status": "passed",
+          "title": "should create CoinGecko reader successfully",
+          "duration": 10.460201999999981,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should verify handler architecture pattern",
+          "status": "passed",
+          "title": "should verify handler architecture pattern",
+          "duration": 1.5171789999999987,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should have proper Result type integration",
+          "status": "passed",
+          "title": "should have proper Result type integration",
+          "duration": 0.3260779999999954,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should verify data types are properly exported",
+          "status": "passed",
+          "title": "should verify data types are properly exported",
+          "duration": 3.009928000000002,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["QiCore 2-Layer Architecture"],
+          "fullName": "QiCore 2-Layer Architecture should verify factory functions work",
+          "status": "passed",
+          "title": "should verify factory functions work",
+          "duration": 1.773856999999964,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1752061117196,
+      "endTime": 1752061117295.774,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/basic-architecture.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Client Management (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should add and retrieve clients",
+          "status": "passed",
+          "title": "should add and retrieve clients",
+          "duration": 12.807610000000011,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Client Management (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should remove clients",
+          "status": "passed",
+          "title": "should remove clients",
+          "duration": 1.4908570000000054,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Client Management (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should get clients by type",
+          "status": "passed",
+          "title": "should get clients by type",
+          "duration": 0.7973650000000134,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Client Management (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Client Management (BaseReader functionality) should get all clients",
+          "status": "passed",
+          "title": "should get all clients",
+          "duration": 0.42009799999999586,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "DSL Method Implementation (BaseReader workflow)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should have all DSL methods available from BaseReader",
+          "status": "passed",
+          "title": "should have all DSL methods available from BaseReader",
+          "duration": 0.49386399999997366,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "DSL Method Implementation (BaseReader workflow)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should return Result<T> types from DSL methods",
+          "status": "passed",
+          "title": "should return Result<T> types from DSL methods",
+          "duration": 0.8665060000000153,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "DSL Method Implementation (BaseReader workflow)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) DSL Method Implementation (BaseReader workflow) should handle no active client gracefully",
+          "status": "passed",
+          "title": "should handle no active client gracefully",
+          "duration": 0.34493699999995897,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Activity Tracking (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Activity Tracking (BaseReader functionality) should track query count and last activity",
+          "status": "passed",
+          "title": "should track query count and last activity",
+          "duration": 0.31786699999997836,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Lifecycle Management (BaseReader functionality)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Lifecycle Management (BaseReader functionality) should initialize and cleanup properly",
+          "status": "passed",
+          "title": "should initialize and cleanup properly",
+          "duration": 1.2334069999999997,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Error Handling (BaseReader workflow)"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Error Handling (BaseReader workflow) should handle error cases gracefully",
+          "status": "passed",
+          "title": "should handle error cases gracefully",
+          "duration": 0.3610659999999939,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Inheritance Verification"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Inheritance Verification should verify CoinGecko reader extends BaseReader",
+          "status": "passed",
+          "title": "should verify CoinGecko reader extends BaseReader",
+          "duration": 0.2915219999999863,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": [
+            "BaseReader (tested via CoinGeckoMarketDataReader)",
+            "Inheritance Verification"
+          ],
+          "fullName": "BaseReader (tested via CoinGeckoMarketDataReader) Inheritance Verification should have proper status reporting",
+          "status": "passed",
+          "title": "should have proper status reporting",
+          "duration": 0.3505599999999731,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1752061117281,
+      "endTime": 1752061117300.361,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/base/BaseReader.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getInstance"],
+          "fullName": "RedpandaConfigManager getInstance should return singleton instance",
+          "status": "passed",
+          "title": "should return singleton instance",
+          "duration": 0.8510809999999935,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getConfig"],
+          "fullName": "RedpandaConfigManager getConfig should return default configuration",
+          "status": "passed",
+          "title": "should return default configuration",
+          "duration": 0.43135699999999133,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getConfig"],
+          "fullName": "RedpandaConfigManager getConfig should use environment variables when provided",
+          "status": "passed",
+          "title": "should use environment variables when provided",
+          "duration": 0.171543000000014,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getConfig"],
+          "fullName": "RedpandaConfigManager getConfig should handle invalid numeric environment variables",
+          "status": "passed",
+          "title": "should handle invalid numeric environment variables",
+          "duration": 0.17757999999997764,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "updateConfig"],
+          "fullName": "RedpandaConfigManager updateConfig should update configuration partially",
+          "status": "passed",
+          "title": "should update configuration partially",
+          "duration": 0.14460499999998433,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "updateConfig"],
+          "fullName": "RedpandaConfigManager updateConfig should not mutate original config",
+          "status": "passed",
+          "title": "should not mutate original config",
+          "duration": 0.10996499999998832,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getMCPConfig"],
+          "fullName": "RedpandaConfigManager getMCPConfig should return MCP server configuration",
+          "status": "passed",
+          "title": "should return MCP server configuration",
+          "duration": 0.13772800000000984,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getMCPConfig"],
+          "fullName": "RedpandaConfigManager getMCPConfig should use custom broker configuration",
+          "status": "passed",
+          "title": "should use custom broker configuration",
+          "duration": 0.1376199999999983,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["RedpandaConfigManager", "getMCPConfig"],
+          "fullName": "RedpandaConfigManager getMCPConfig should use environment variables for MCP settings",
+          "status": "passed",
+          "title": "should use environment variables for MCP settings",
+          "duration": 0.16416699999999196,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1752061117203,
+      "endTime": 1752061117205.164,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/base/redpanda-config.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentPrice"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentPrice should return current price for a cryptocurrency",
+          "status": "passed",
+          "title": "should return current price for a cryptocurrency",
+          "duration": 1.4894130000000132,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentPrice"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentPrice should use USD as default currency",
+          "status": "passed",
+          "title": "should use USD as default currency",
+          "duration": 0.10890299999999797,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentPrices"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentPrices should return prices for multiple cryptocurrencies",
+          "status": "passed",
+          "title": "should return prices for multiple cryptocurrencies",
+          "duration": 0.43534199999999146,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentPrices"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentPrices should handle options parameter",
+          "status": "passed",
+          "title": "should handle options parameter",
+          "duration": 0.08512999999999238,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentOHLCV"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentOHLCV should return OHLCV data for a cryptocurrency",
+          "status": "passed",
+          "title": "should return OHLCV data for a cryptocurrency",
+          "duration": 0.3397410000000036,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getCurrentOHLCV"],
+          "fullName": "MarketDataReadingDSL Interface getCurrentOHLCV should default to daily interval",
+          "status": "passed",
+          "title": "should default to daily interval",
+          "duration": 0.08613099999999463,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getLatestOHLCV"],
+          "fullName": "MarketDataReadingDSL Interface getLatestOHLCV should return multiple OHLCV candles",
+          "status": "passed",
+          "title": "should return multiple OHLCV candles",
+          "duration": 0.14090000000001623,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getLatestOHLCV"],
+          "fullName": "MarketDataReadingDSL Interface getLatestOHLCV should default to 10 candles and daily interval",
+          "status": "passed",
+          "title": "should default to 10 candles and daily interval",
+          "duration": 0.11669700000001626,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getPriceHistory"],
+          "fullName": "MarketDataReadingDSL Interface getPriceHistory should return price history for date range",
+          "status": "passed",
+          "title": "should return price history for date range",
+          "duration": 0.2262010000000032,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getOHLCVByDateRange"],
+          "fullName": "MarketDataReadingDSL Interface getOHLCVByDateRange should return OHLCV data for date range",
+          "status": "passed",
+          "title": "should return OHLCV data for date range",
+          "duration": 0.10274900000001708,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getAvailableTickers"],
+          "fullName": "MarketDataReadingDSL Interface getAvailableTickers should return available cryptocurrency tickers",
+          "status": "passed",
+          "title": "should return available cryptocurrency tickers",
+          "duration": 0.11662900000001741,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getAvailableTickers"],
+          "fullName": "MarketDataReadingDSL Interface getAvailableTickers should default to 100 tickers",
+          "status": "passed",
+          "title": "should default to 100 tickers",
+          "duration": 0.04668599999999401,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getLevel1Data"],
+          "fullName": "MarketDataReadingDSL Interface getLevel1Data should return Level 1 market data",
+          "status": "passed",
+          "title": "should return Level 1 market data",
+          "duration": 1.4361190000000192,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "getMarketAnalytics"],
+          "fullName": "MarketDataReadingDSL Interface getMarketAnalytics should return global market analytics",
+          "status": "passed",
+          "title": "should return global market analytics",
+          "duration": 0.3045180000000016,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataReadingDSL Interface", "Result<T> Pattern Compliance"],
+          "fullName": "MarketDataReadingDSL Interface Result<T> Pattern Compliance should return Result<T> from all methods",
+          "status": "passed",
+          "title": "should return Result<T> from all methods",
+          "duration": 0.8299120000000073,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1752061117242,
+      "endTime": 1752061117248.8298,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/dsl/MarketDataReadingDSL.test.ts"
+    },
+    {
+      "assertionResults": [
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishPrice"],
+          "fullName": "MarketDataWritingDSL Interface publishPrice should publish single cryptocurrency price",
+          "status": "passed",
+          "title": "should publish single cryptocurrency price",
+          "duration": 0.9004040000000089,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishPrices"],
+          "fullName": "MarketDataWritingDSL Interface publishPrices should publish multiple cryptocurrency prices",
+          "status": "passed",
+          "title": "should publish multiple cryptocurrency prices",
+          "duration": 0.22966399999998544,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishPrices"],
+          "fullName": "MarketDataWritingDSL Interface publishPrices should handle empty array",
+          "status": "passed",
+          "title": "should handle empty array",
+          "duration": 0.05565400000000409,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishOHLCV"],
+          "fullName": "MarketDataWritingDSL Interface publishOHLCV should publish single OHLCV data",
+          "status": "passed",
+          "title": "should publish single OHLCV data",
+          "duration": 0.08778499999999667,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishOHLCVBatch"],
+          "fullName": "MarketDataWritingDSL Interface publishOHLCVBatch should publish multiple OHLCV data",
+          "status": "passed",
+          "title": "should publish multiple OHLCV data",
+          "duration": 0.09405399999999986,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishMarketAnalytics"],
+          "fullName": "MarketDataWritingDSL Interface publishMarketAnalytics should publish market analytics data",
+          "status": "passed",
+          "title": "should publish market analytics data",
+          "duration": 0.08249599999999191,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishLevel1Data"],
+          "fullName": "MarketDataWritingDSL Interface publishLevel1Data should publish Level 1 market data",
+          "status": "passed",
+          "title": "should publish Level 1 market data",
+          "duration": 0.08373100000000022,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishPriceHistory"],
+          "fullName": "MarketDataWritingDSL Interface publishPriceHistory should publish price history data",
+          "status": "passed",
+          "title": "should publish price history data",
+          "duration": 0.08215400000000272,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishCustomData"],
+          "fullName": "MarketDataWritingDSL Interface publishCustomData should publish custom data without schema",
+          "status": "passed",
+          "title": "should publish custom data without schema",
+          "duration": 0.11216600000000199,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishCustomData"],
+          "fullName": "MarketDataWritingDSL Interface publishCustomData should publish custom data with schema",
+          "status": "passed",
+          "title": "should publish custom data with schema",
+          "duration": 0.059915000000017926,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "publishBatch"],
+          "fullName": "MarketDataWritingDSL Interface publishBatch should publish mixed batch data",
+          "status": "passed",
+          "title": "should publish mixed batch data",
+          "duration": 0.06514699999999607,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "flush"],
+          "fullName": "MarketDataWritingDSL Interface flush should flush pending data",
+          "status": "passed",
+          "title": "should flush pending data",
+          "duration": 0.046278999999998405,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "Result<T> Pattern Compliance"],
+          "fullName": "MarketDataWritingDSL Interface Result<T> Pattern Compliance should return Result<T> from all methods",
+          "status": "passed",
+          "title": "should return Result<T> from all methods",
+          "duration": 0.7772809999999879,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "Data Validation"],
+          "fullName": "MarketDataWritingDSL Interface Data Validation should handle required fields in CryptoPriceData",
+          "status": "passed",
+          "title": "should handle required fields in CryptoPriceData",
+          "duration": 0.06154200000000287,
+          "failureMessages": [],
+          "meta": {}
+        },
+        {
+          "ancestorTitles": ["MarketDataWritingDSL Interface", "Data Validation"],
+          "fullName": "MarketDataWritingDSL Interface Data Validation should handle required fields in CryptoOHLCVData",
+          "status": "passed",
+          "title": "should handle required fields in CryptoOHLCVData",
+          "duration": 0.04048000000000229,
+          "failureMessages": [],
+          "meta": {}
+        }
+      ],
+      "startTime": 1752061117245,
+      "endTime": 1752061117249.0615,
+      "status": "passed",
+      "message": "",
+      "name": "/home/zzhang/dev/qi/github/qi-v2-dp-ts-actor/lib/tests/unit/dsl/MarketDataWritingDSL.test.ts"
+    }
+  ]
+}

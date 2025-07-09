@@ -20,7 +20,11 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
-    include: [resolve(rootDir, "lib/tests/**/*.test.ts"), resolve(rootDir, "app/tests/**/*.test.ts"), resolve(rootDir, "tests/**/*.test.ts")],
+    include: [
+      resolve(rootDir, "lib/tests/**/*.test.ts"),
+      resolve(rootDir, "app/tests/**/*.test.ts"),
+      resolve(rootDir, "tests/**/*.test.ts"),
+    ],
     exclude: [resolve(rootDir, "node_modules/**"), resolve(rootDir, "dist/**")],
     isolate: true,
     pool: "forks",

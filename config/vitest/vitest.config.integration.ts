@@ -22,7 +22,11 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: [resolve(rootDir, "lib/tests/integration/**/*.test.ts")],
-    exclude: [resolve(rootDir, "node_modules/**"), resolve(rootDir, "dist/**"), resolve(rootDir, "lib/tests/integration/setup/**")],
+    exclude: [
+      resolve(rootDir, "node_modules/**"),
+      resolve(rootDir, "dist/**"),
+      resolve(rootDir, "lib/tests/integration/setup/**"),
+    ],
     isolate: true,
     pool: "forks",
     testTimeout: 30000,
