@@ -29,7 +29,12 @@
       "@qi/dp/actors/sources/*": ["lib/src/actors/sources/*"],
       "@qi/dp/actors/targets/*": ["lib/src/actors/targets/*"],
       "@qi/dp/base/*": ["lib/src/base/*"],
-      "@qi/dp/generators/*": ["lib/src/generators/*"]
+      "@qi/dp/generators/*": ["lib/src/generators/*"],
+      "@qi/fp": ["lib/src/fp/index.ts"],
+      "@qi/fp/*": ["lib/src/fp/*"],
+      "@qi/fp/dsl": ["lib/src/fp/dsl/index.ts"],
+      "@qi/fp/dsl/*": ["lib/src/fp/dsl/*"],
+      "@qi/fp/market/*": ["lib/src/fp/market/*"]
     }
   },
   "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],
