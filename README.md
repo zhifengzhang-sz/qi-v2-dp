@@ -284,6 +284,9 @@ bun run app/demos/coingecko.live-data.ts
 # CCXT actor implementation (exchange data simulation)  
 bun run app/demos/ccxt.exchange-data.ts
 
+# TwelveData actor (multi-asset: crypto, stocks, forex)
+bun run app/demos/twelvedata.multi-asset.ts
+
 # Platform validation (all three actors)
 bun run app/demos/platform.validation.ts
 ```
@@ -301,6 +304,9 @@ bun run app/demos/coingecko.live-data.ts
 
 # CCXT MCP actor (exchange integration patterns)
 bun run app/demos/ccxt.exchange-data.ts
+
+# TwelveData MCP actor (multi-asset: crypto, stocks, forex)
+bun run app/demos/twelvedata.multi-asset.ts
 
 # Platform validation (complete v-0.2.0 architecture)
 bun run app/demos/platform.validation.ts

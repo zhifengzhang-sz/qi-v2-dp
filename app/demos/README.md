@@ -15,6 +15,7 @@ Demos follow the pattern: `[component].[feature].ts`
 ### MCP Actor Demonstrations  
 - **`coingecko.live-data.ts`** - CoinGecko MCP actor with real external server integration, live Bitcoin/Ethereum prices
 - **`ccxt.exchange-data.ts`** - CCXT MCP actor implementation patterns for 100+ cryptocurrency exchanges
+- **`twelvedata.multi-asset.ts`** - TwelveData MCP actor supporting crypto, stocks, forex, and commodities
 
 ### Platform Validation
 - **`platform.validation.ts`** - Complete v-0.2.0 architecture validation testing all three MCP actors (CoinGecko, CCXT, TwelveData)
@@ -30,6 +31,9 @@ bun run app/demos/coingecko.live-data.ts
 
 # Exchange integration patterns
 bun run app/demos/ccxt.exchange-data.ts
+
+# Multi-asset data from TwelveData
+bun run app/demos/twelvedata.multi-asset.ts
 
 # Complete platform validation
 bun run app/demos/platform.validation.ts
@@ -49,6 +53,7 @@ bun run app/demos/platform.validation.ts
 | `dsl.basic-usage.ts` | DSL foundation showcase | None | ✅ Working |
 | `coingecko.live-data.ts` | Live market data | CoinGecko MCP Server | ✅ Working |
 | `ccxt.exchange-data.ts` | Exchange patterns | Simulated CCXT | ✅ Ready |
+| `twelvedata.multi-asset.ts` | Multi-asset data | Simulated TwelveData | ✅ Ready |
 | `platform.validation.ts` | Complete validation | CoinGecko + Simulated | ✅ Working |
 
 ---
