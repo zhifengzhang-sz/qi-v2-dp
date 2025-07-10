@@ -26,7 +26,8 @@ export * from "./dsl";
 // Source Actors (Readers)
 export * from "./market/crypto/actors/sources/CoinGeckoMCPReader";
 export * from "./market/crypto/actors/sources/CCXTMCPReader";
-export * from "./market/crypto/actors/sources/TwelveDataMCPReader";
+export * from "./market/multi-asset/actors/sources/TwelveDataMCPReader";
+export * from "./market/stock/actors/sources/AlphaVantageMCPReader";
 export * from "./market/crypto/actors/sources";
 
 // =============================================================================

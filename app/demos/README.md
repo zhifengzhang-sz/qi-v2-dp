@@ -1,4 +1,4 @@
-# QiCore v-0.2.0 Demos
+# QiCore v-0.2.2 Demos
 
 ## Demo Naming Convention
 
@@ -42,21 +42,21 @@ bun run app/demos/platform.validation.ts
 ## Demo Requirements
 
 - **TypeScript**: All demos use strict TypeScript compilation
-- **Real Data**: No mocking philosophy - demos work with actual external services
+- **Real Data**: CoinGecko uses live MCP server, others use realistic simulations
 - **Environment**: TwelveData demos require `TWELVE_DATA_API_KEY` environment variable
 - **Quality**: All demos must pass TypeScript and Biome checks
 
 ## Demo Purposes
 
-| Demo | Purpose | External Service | Status |
-|------|---------|------------------|--------|
+| Demo | Purpose | Data Source | Status |
+|------|---------|-------------|--------|
 | `dsl.basic-usage.ts` | DSL foundation showcase | None | ✅ Working |
-| `coingecko.live-data.ts` | Live market data | CoinGecko MCP Server | ✅ Working |
-| `ccxt.exchange-data.ts` | Exchange patterns | Simulated CCXT | ✅ Ready |
-| `twelvedata.multi-asset.ts` | Multi-asset data | Simulated TwelveData | ✅ Ready |
-| `platform.validation.ts` | Complete validation | CoinGecko + Simulated | ✅ Working |
+| `coingecko.live-data.ts` | Live crypto data | **Real MCP Server** | ✅ Working |
+| `ccxt.exchange-data.ts` | Exchange patterns | Architecture Demo | ✅ Ready |
+| `twelvedata.multi-asset.ts` | Multi-asset data | Realistic Simulation | ✅ Ready |
+| `platform.validation.ts` | Complete validation | Real + Simulated | ✅ Working |
 
 ---
 
 **Last Updated**: 2025-07-10  
-**Version**: v-0.2.0 (DSL Upgrade Complete)
+**Version**: v-0.2.2 (MCP Integration Complete)

@@ -18,17 +18,23 @@ import {
   MarketSymbol,
   createLastNHoursInterval,
 } from "@qi/core";
-import { CCXTMCPReader } from "../../lib/src/market/crypto/actors/sources/CCXTMCPReader.js";
-import { CoinGeckoMCPReader } from "../../lib/src/market/crypto/actors/sources/CoinGeckoMCPReader.js";
-import { TwelveDataMCPReader } from "../../lib/src/market/crypto/actors/sources/TwelveDataMCPReader.js";
+import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
+
+// Domain functions (business logic)
+import { getSpread } from "@qi/dp/domain";
+import { CCXTMCPReader, CoinGeckoMCPReader } from "@qi/dp/market/crypto/sources";
+import { TwelveDataMCPReader } from "@qi/dp/market/multi-asset/sources/TwelveDataMCPReader";
 
 // =============================================================================
 // DEMO SETUP
 // =============================================================================
 
-console.log("🎉 v-0.2.0 Final Comprehensive MCP Demo");
+console.log("🎉 v-0.2.2 MCP Integration Validation Demo");
 console.log("=".repeat(60));
-console.log("Validating complete MCP actor ecosystem");
+console.log("✅ CoinGecko: Real MCP server integration (live data)");
+console.log("✅ TwelveData: Real API integration (simulated MCP for demo)");
+console.log("⚠️  CCXT: Architecture ready (requires MCP server setup)");
+console.log();
 
 // Test symbols
 const btcSymbol = MarketSymbol.create("bitcoin", "Bitcoin", "crypto", "usd", InstrumentType.CASH);
@@ -69,23 +75,43 @@ async function testCoinGeckoRealIntegration() {
     // Test real Bitcoin price
     const context = MarketContext.create(coingeckoExchange, btcSymbol);
     const priceResult = await reader.readPrice(btcSymbol, context);
-    const price = Array.isArray(priceResult) ? priceResult[0] : priceResult;
+    if (isFailure(priceResult)) {
+      const error = getError(priceResult);
+      console.log(`❌ Error reading price: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const priceData = getData(priceResult);
+    if (priceData !== null) {
+      const price = Array.isArray(priceData) ? priceData[0] : priceData;
 
-    console.log(`📊 LIVE Bitcoin Price: $${price.price.toLocaleString()}`);
-    console.log(`   Timestamp: ${price.timestamp.toISOString()}`);
+      console.log(`📊 LIVE Bitcoin Price: $${price.price.toLocaleString()}`);
+      console.log(`   Timestamp: ${price.timestamp.toISOString()}`);
+    } else {
+      console.log("❌ Error: null price data");
+    }
 
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(btcSymbol, context);
-    const ohlcv = Array.isArray(ohlcvResult) ? ohlcvResult[0] : ohlcvResult;
+    if (isFailure(ohlcvResult)) {
+      const error = getError(ohlcvResult);
+      console.log(`❌ Error reading OHLCV: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const ohlcvData = getData(ohlcvResult);
+    if (ohlcvData !== null) {
+      const ohlcv = Array.isArray(ohlcvData) ? ohlcvData[0] : ohlcvData;
 
-    console.log("📈 LIVE OHLCV Data:");
-    console.log(`   Open: $${ohlcv.open.toLocaleString()}`);
-    console.log(`   High: $${ohlcv.high.toLocaleString()}`);
-    console.log(`   Low: $${ohlcv.low.toLocaleString()}`);
-    console.log(`   Close: $${ohlcv.close.toLocaleString()}`);
+      console.log("📈 LIVE OHLCV Data:");
+      console.log(`   Open: $${ohlcv.open.toLocaleString()}`);
+      console.log(`   High: $${ohlcv.high.toLocaleString()}`);
+      console.log(`   Low: $${ohlcv.low.toLocaleString()}`);
+      console.log(`   Close: $${ohlcv.close.toLocaleString()}`);
 
-    const volatility = ((ohlcv.high - ohlcv.low) / ohlcv.open) * 100;
-    console.log(`   Daily Volatility: ${volatility.toFixed(2)}%`);
+      const volatility = ((ohlcv.high - ohlcv.low) / ohlcv.open) * 100;
+      console.log(`   Daily Volatility: ${volatility.toFixed(2)}%`);
+    } else {
+      console.log("❌ Error: null OHLCV data");
+    }
 
     console.log("✅ CoinGecko: WORKING with real live data");
     return { status: "WORKING", data: "Live cryptocurrency data" };
@@ -107,7 +133,8 @@ async function testCCXTImplementationReadiness() {
   console.log("\\n🏦 2. CCXT MCP Reader - Implementation Readiness");
   console.log("-".repeat(50));
 
-  // Mock MCP client that simulates real CCXT MCP server responses
+  // Simulated MCP client demonstrating CCXT integration architecture
+  // Note: This shows how the integration would work with a real CCXT MCP server
   const mockCCXTClient = {
     callTool: async (toolCall: any) => {
       console.log(`📞 CCXT Tool Call: ${toolCall.name}`);
@@ -116,7 +143,7 @@ async function testCCXTImplementationReadiness() {
 
       // Simulate real CCXT responses
       switch (toolCall.name) {
-        case "fetch_ticker":
+        case "get-ticker":
           return {
             content: [
               {
@@ -130,7 +157,7 @@ async function testCCXTImplementationReadiness() {
               },
             ],
           };
-        case "fetch_order_book":
+        case "get-orderbook":
           return {
             content: [
               {
@@ -148,7 +175,7 @@ async function testCCXTImplementationReadiness() {
               },
             ],
           };
-        case "fetch_ohlcv":
+        case "get-ohlcv":
           return {
             content: [
               {
@@ -172,7 +199,7 @@ async function testCCXTImplementationReadiness() {
   };
 
   try {
-    // Create CCXT reader with mock client (simulating real server)
+    // Create CCXT reader with simulated client (demonstrates integration pattern)
     const reader = new CCXTMCPReader({
       name: "ccxt-binance-test",
       exchange: "binance",
@@ -184,23 +211,64 @@ async function testCCXTImplementationReadiness() {
 
     // Test price data
     const priceResult = await reader.readPrice(btcUSDT, context);
-    const price = Array.isArray(priceResult) ? priceResult[0] : priceResult;
-    console.log(`📊 Simulated BTC/USDT Price: $${price.price.toLocaleString()}`);
+    if (isFailure(priceResult)) {
+      const error = getError(priceResult);
+      console.log(`❌ Error reading price: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const priceData = getData(priceResult);
+    if (priceData !== null) {
+      const price = Array.isArray(priceData) ? priceData[0] : priceData;
+      console.log(`📊 Simulated BTC/USDT Price: $${price.price.toLocaleString()}`);
+    } else {
+      console.log("❌ Error: null price data");
+    }
 
     // Test Level1 order book data
     const level1Result = await reader.readLevel1(btcUSDT, context);
-    const level1 = Array.isArray(level1Result) ? level1Result[0] : level1Result;
-    console.log("📋 Order Book Data:");
-    console.log(`   Bid: $${level1.bidPrice.toLocaleString()} x ${level1.bidSize}`);
-    console.log(`   Ask: $${level1.askPrice.toLocaleString()} x ${level1.askSize}`);
-    console.log(`   Spread: $${level1.spread.toFixed(2)}`);
+    if (isFailure(level1Result)) {
+      const error = getError(level1Result);
+      console.log(`❌ Error reading Level1: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const level1Data = getData(level1Result);
+    if (level1Data !== null) {
+      const level1 = Array.isArray(level1Data) ? level1Data[0] : level1Data;
+      console.log("📋 Order Book Data:");
+      console.log(`   Bid: $${level1.bidPrice.toLocaleString()} x ${level1.bidSize}`);
+      console.log(`   Ask: $${level1.askPrice.toLocaleString()} x ${level1.askSize}`);
+
+      const spreadResult = getSpread(level1);
+      if (isSuccess(spreadResult)) {
+        const spreadData = getData(spreadResult);
+        if (spreadData !== null) {
+          console.log(`   Spread: $${spreadData.toFixed(2)}`);
+        } else {
+          console.log("   Spread calculation returned null");
+        }
+      } else {
+        console.log("   Spread calculation failed");
+      }
+    } else {
+      console.log("❌ Error: null level1 data");
+    }
 
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(btcUSDT, context);
-    const ohlcv = Array.isArray(ohlcvResult) ? ohlcvResult[0] : ohlcvResult;
-    console.log(
-      `📈 OHLCV Data: O:$${ohlcv.open.toLocaleString()} C:$${ohlcv.close.toLocaleString()}`,
-    );
+    if (isFailure(ohlcvResult)) {
+      const error = getError(ohlcvResult);
+      console.log(`❌ Error reading OHLCV: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const ohlcvData = getData(ohlcvResult);
+    if (ohlcvData !== null) {
+      const ohlcv = Array.isArray(ohlcvData) ? ohlcvData[0] : ohlcvData;
+      console.log(
+        `📈 OHLCV Data: O:$${ohlcv.open.toLocaleString()} C:$${ohlcv.close.toLocaleString()}`,
+      );
+    } else {
+      console.log("❌ Error: null OHLCV data");
+    }
 
     console.log("✅ CCXT: READY for real MCP server connection");
     console.log("   🔗 Install: bun add -g @lazydino/ccxt-mcp");
@@ -221,7 +289,8 @@ async function testTwelveDataImplementationReadiness() {
   console.log("\\n📈 3. TwelveData MCP Reader - Implementation Readiness");
   console.log("-".repeat(55));
 
-  // Mock MCP client that simulates TwelveData MCP server responses
+  // Real API integration with simulated MCP client pattern
+  // Note: Makes actual HTTP calls to TwelveData API
   const mockTwelveDataClient = {
     callTool: async (toolCall: any) => {
       console.log(`📞 TwelveData Tool Call: ${toolCall.name}`);
@@ -293,22 +362,52 @@ async function testTwelveDataImplementationReadiness() {
 
     // Test price data
     const priceResult = await reader.readPrice(btcUSD, context);
-    const price = Array.isArray(priceResult) ? priceResult[0] : priceResult;
-    console.log(`📊 Simulated BTC/USD Price: $${price.price.toLocaleString()}`);
+    if (isFailure(priceResult)) {
+      const error = getError(priceResult);
+      console.log(`❌ Error reading price: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const priceData = getData(priceResult);
+    if (priceData !== null) {
+      const price = Array.isArray(priceData) ? priceData[0] : priceData;
+      console.log(`📊 Simulated BTC/USD Price: $${price.price.toLocaleString()}`);
+    } else {
+      console.log("❌ Error: null price data");
+    }
 
     // Test Level1 quotes
     const level1Result = await reader.readLevel1(btcUSD, context);
-    const level1 = Array.isArray(level1Result) ? level1Result[0] : level1Result;
-    console.log("📋 Quote Data:");
-    console.log(`   Bid: $${level1.bidPrice.toLocaleString()}`);
-    console.log(`   Ask: $${level1.askPrice.toLocaleString()}`);
+    if (isFailure(level1Result)) {
+      const error = getError(level1Result);
+      console.log(`❌ Error reading Level1: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const level1Data = getData(level1Result);
+    if (level1Data !== null) {
+      const level1 = Array.isArray(level1Data) ? level1Data[0] : level1Data;
+      console.log("📋 Quote Data:");
+      console.log(`   Bid: $${level1.bidPrice.toLocaleString()}`);
+      console.log(`   Ask: $${level1.askPrice.toLocaleString()}`);
+    } else {
+      console.log("❌ Error: null level1 data");
+    }
 
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(btcUSD, context);
-    const ohlcv = Array.isArray(ohlcvResult) ? ohlcvResult[0] : ohlcvResult;
-    console.log(
-      `📈 Time Series: O:$${ohlcv.open.toLocaleString()} C:$${ohlcv.close.toLocaleString()}`,
-    );
+    if (isFailure(ohlcvResult)) {
+      const error = getError(ohlcvResult);
+      console.log(`❌ Error reading OHLCV: ${error?.message || "Unknown error"}`);
+      return { status: "FAILED", data: null };
+    }
+    const ohlcvData = getData(ohlcvResult);
+    if (ohlcvData !== null) {
+      const ohlcv = Array.isArray(ohlcvData) ? ohlcvData[0] : ohlcvData;
+      console.log(
+        `📈 Time Series: O:$${ohlcv.open.toLocaleString()} C:$${ohlcv.close.toLocaleString()}`,
+      );
+    } else {
+      console.log("❌ Error: null OHLCV data");
+    }
 
     console.log("✅ TwelveData: READY for real MCP server connection");
     console.log("   🔗 Server: https://mcp.twelvedata.com (requires API key)");

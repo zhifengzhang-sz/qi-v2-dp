@@ -22,22 +22,23 @@
       "@qi/core": ["lib/src/index.ts"],
       "@qi/core/base": ["lib/src/qicore/base/index.ts"],
       "@qi/core/*": ["lib/src/qicore/*"],
-      "@qi/mcp": ["lib/src/qimcp/client"],
+      "@qi/dp/domain": ["lib/src/domain/index.ts"],
+      "@qi/dp/domain/*": ["lib/src/domain/*"],
+      "@qi/dp/market/crypto/sources": ["lib/src/market/crypto/actors/sources/index.ts"],
+      "@qi/dp/market/crypto/sources/*": ["lib/src/market/crypto/actors/sources/*"],
+      "@qi/dp/market/crypto/targets": ["lib/src/market/crypto/actors/targets/index.ts"],
+      "@qi/dp/market/crypto/targets/*": ["lib/src/market/crypto/actors/targets/*"],
+      "@qi/dp/market/multi-asset/sources": ["lib/src/market/multi-asset/actors/sources/index.ts"],
+      "@qi/dp/market/multi-asset/sources/*": ["lib/src/market/multi-asset/actors/sources/*"],
+      "@qi/dp/market/stock/sources": ["lib/src/market/stock/actors/sources/index.ts"],
+      "@qi/dp/market/stock/sources/*": ["lib/src/market/stock/actors/sources/*"],
       "@qi/dp/dsl": ["lib/src/dsl/index.ts"],
+      "@qi/dp/dsl/interfaces": ["lib/src/dsl/interfaces.ts"],
       "@qi/dp/dsl/*": ["lib/src/dsl/*"],
-      "@qi/dp/actors/*": ["lib/src/actors/*"],
-      "@qi/dp/actors/abstract/*": ["lib/src/actors/abstract/*"],
-      "@qi/dp/actors/sources/*": ["lib/src/actors/sources/*"],
-      "@qi/dp/actors/targets/*": ["lib/src/actors/targets/*"],
-      "@qi/dp/base/*": ["lib/src/base/*"],
-      "@qi/dp/generators/*": ["lib/src/generators/*"],
-      "@qi/fp": ["lib/src/fp/index.ts"],
-      "@qi/fp/*": ["lib/src/fp/*"],
-      "@qi/fp/dsl": ["lib/src/fp/dsl/index.ts"],
-      "@qi/fp/dsl/*": ["lib/src/fp/dsl/*"],
-      "@qi/fp/market/*": ["lib/src/fp/market/*"]
+      "@qi/dp/utils": ["lib/src/utils/index.ts"],
+      "@qi/dp/utils/*": ["lib/src/utils/*"]
     }
   },
-  "include": ["lib/src/**/*", "tests/**/*", "app/**/*", "*.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts"]
+  "include": ["lib/src/**/*", "lib/tests/**/*", "tests/**/*", "app/**/*", "*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

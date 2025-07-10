@@ -8,6 +8,15 @@
  * Connects to 100+ cryptocurrency exchanges through unified CCXT interface.
  */
 
+import {
+  type ResultType as Result,
+  createQiError,
+  failure,
+  getData,
+  getError,
+  isFailure,
+  success,
+} from "@qi/core/base";
 import type { MarketDataReader } from "../../../../dsl/interfaces";
 import {
   Exchange,
@@ -19,12 +28,7 @@ import {
   Price,
 } from "../../../../dsl/types";
 import type { TimeInterval } from "../../../../dsl/utils";
-import {
-  type ResultType as Result,
-  createQiError,
-  failure,
-  success,
-} from "../../../../qicore/base";
+import { validateTimeInterval } from "../../../../utils/time-intervals";
 
 // =============================================================================
 // CCXT MCP READER
@@ -67,73 +71,106 @@ export class CCXTMCPReader implements MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<Price | Price[]> {
+  ): Promise<Result<Price | Price[]>> {
     if (symbol.assetClass !== "crypto") {
-      throw new Error(`Only crypto assets are supported, got ${symbol.assetClass}`);
+      return failure(
+        createQiError(
+          "UNSUPPORTED_ASSET_CLASS",
+          `Only crypto assets are supported, got ${symbol.assetClass}`,
+          "VALIDATION",
+        ),
+      );
     }
 
     const formattedSymbol = this.formatSymbol(symbol);
 
     // For historical data, use OHLCV and extract close prices
     if (interval) {
-      this.validateTimeInterval(interval);
+      const validationResult = validateTimeInterval(interval);
+      if (isFailure(validationResult)) {
+        return validationResult;
+      }
 
       // Get OHLCV data and convert to Price array
-      const ohlcvData = (await this.readOHLCV(symbol, context, interval)) as OHLCV[];
-      return ohlcvData.map((ohlcv) => Price.create(ohlcv.timestamp, ohlcv.close, ohlcv.volume));
+      const ohlcvResult = await this.readOHLCV(symbol, context, interval);
+      if (isFailure(ohlcvResult)) {
+        return ohlcvResult;
+      }
+
+      const ohlcvData = getData(ohlcvResult);
+      const ohlcvArray = Array.isArray(ohlcvData) ? ohlcvData : [ohlcvData];
+      return success(
+        ohlcvArray
+          .filter((ohlcv) => ohlcv !== null)
+          .map((ohlcv) => Price.create(ohlcv.timestamp, ohlcv.close, ohlcv.volume)),
+      );
     }
 
-    // Current price - use ticker data
-    const result = await this.client.callTool({
-      name: "fetch_ticker",
-      arguments: {
-        exchange: this.exchangeName,
-        symbol: formattedSymbol,
-        credentials: this.apiCredentials,
-        sandbox: this.sandbox,
-      },
-    });
+    try {
+      // Current price - use ticker data
+      const result = await this.client.callTool({
+        name: "get-ticker",
+        arguments: {
+          exchange: this.exchangeName,
+          symbol: formattedSymbol,
+        },
+      });
 
-    if (!result.content || !result.content[0] || !result.content[0].text) {
-      throw new Error("Invalid response from CCXT MCP");
+      if (!result.content || !result.content[0] || !result.content[0].text) {
+        return failure(
+          createQiError("INVALID_RESPONSE", "Invalid response from CCXT MCP", "NETWORK"),
+        );
+      }
+
+      const tickerData = JSON.parse(result.content[0].text);
+      if (!tickerData || !tickerData.last) {
+        return failure(createQiError("NO_DATA", "No price data available", "BUSINESS"));
+      }
+
+      return success(
+        Price.create(
+          new Date(tickerData.timestamp || Date.now()),
+          tickerData.last,
+          tickerData.baseVolume || 0,
+        ),
+      );
+    } catch (error) {
+      return failure(
+        createQiError("FETCH_ERROR", `Failed to fetch price data: ${error}`, "NETWORK"),
+      );
     }
-
-    const tickerData = JSON.parse(result.content[0].text);
-    if (!tickerData || !tickerData.last) {
-      throw new Error("No price data available");
-    }
-
-    return Price.create(
-      new Date(tickerData.timestamp || Date.now()),
-      tickerData.last,
-      tickerData.baseVolume || 0,
-    );
   }
 
   async readLevel1(
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<Level1 | Level1[]> {
+  ): Promise<Result<Level1 | Level1[]>> {
     if (symbol.assetClass !== "crypto") {
-      throw new Error(`Only crypto assets are supported, got ${symbol.assetClass}`);
+      return failure(
+        createQiError(
+          "UNSUPPORTED_ASSET_CLASS",
+          `Only crypto assets are supported, got ${symbol.assetClass}`,
+          "VALIDATION",
+        ),
+      );
     }
 
     const formattedSymbol = this.formatSymbol(symbol);
 
     // CCXT provides real Level1 order book data
     const result = await this.client.callTool({
-      name: "fetch_order_book",
+      name: "get-orderbook",
       arguments: {
         exchange: this.exchangeName,
         symbol: formattedSymbol,
-        credentials: this.apiCredentials,
-        sandbox: this.sandbox,
       },
     });
 
     if (!result.content || !result.content[0] || !result.content[0].text) {
-      throw new Error("Invalid response from CCXT MCP");
+      return failure(
+        createQiError("INVALID_RESPONSE", "Invalid response from CCXT MCP", "NETWORK"),
+      );
     }
 
     const orderBook = JSON.parse(result.content[0].text);
@@ -144,19 +181,21 @@ export class CCXTMCPReader implements MarketDataReader {
       orderBook.bids.length === 0 ||
       orderBook.asks.length === 0
     ) {
-      throw new Error("No order book data available");
+      return failure(createQiError("NO_DATA", "No order book data available", "BUSINESS"));
     }
 
     // Get best bid and ask
     const bestBid = orderBook.bids[0];
     const bestAsk = orderBook.asks[0];
 
-    return Level1.create(
-      new Date(orderBook.timestamp || Date.now()),
-      bestBid[0], // bid price
-      bestBid[1], // bid size
-      bestAsk[0], // ask price
-      bestAsk[1], // ask size
+    return success(
+      Level1.create(
+        new Date(orderBook.timestamp || Date.now()),
+        bestBid[0], // bid price
+        bestBid[1], // bid size
+        bestAsk[0], // ask price
+        bestAsk[1], // ask size
+      ),
     );
   }
 
@@ -164,9 +203,15 @@ export class CCXTMCPReader implements MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<OHLCV | OHLCV[]> {
+  ): Promise<Result<OHLCV | OHLCV[]>> {
     if (symbol.assetClass !== "crypto") {
-      throw new Error(`Only crypto assets are supported, got ${symbol.assetClass}`);
+      return failure(
+        createQiError(
+          "UNSUPPORTED_ASSET_CLASS",
+          `Only crypto assets are supported, got ${symbol.assetClass}`,
+          "VALIDATION",
+        ),
+      );
     }
 
     const formattedSymbol = this.formatSymbol(symbol);
@@ -176,13 +221,14 @@ export class CCXTMCPReader implements MarketDataReader {
       exchange: this.exchangeName,
       symbol: formattedSymbol,
       timeframe: "1d", // Default timeframe
-      credentials: this.apiCredentials,
-      sandbox: this.sandbox,
     };
 
     // Add time range for historical data
     if (interval) {
-      this.validateTimeInterval(interval);
+      const validationResult = validateTimeInterval(interval);
+      if (isFailure(validationResult)) {
+        return validationResult;
+      }
       params.since = interval.startDate.getTime();
       params.limit = this.calculateLimit(interval, "1d");
     } else {
@@ -191,17 +237,19 @@ export class CCXTMCPReader implements MarketDataReader {
     }
 
     const result = await this.client.callTool({
-      name: "fetch_ohlcv",
+      name: "get-ohlcv",
       arguments: params,
     });
 
     if (!result.content || !result.content[0] || !result.content[0].text) {
-      throw new Error("Invalid response from CCXT MCP");
+      return failure(
+        createQiError("INVALID_RESPONSE", "Invalid response from CCXT MCP", "NETWORK"),
+      );
     }
 
     const ohlcvData = JSON.parse(result.content[0].text);
     if (!ohlcvData || !Array.isArray(ohlcvData)) {
-      throw new Error("No OHLCV data available");
+      return failure(createQiError("NO_DATA", "No OHLCV data available", "BUSINESS"));
     }
 
     // Convert to OHLCV data classes
@@ -221,39 +269,57 @@ export class CCXTMCPReader implements MarketDataReader {
       const filtered = convertedData.filter(
         (ohlcv) => ohlcv.timestamp >= interval.startDate && ohlcv.timestamp <= interval.endDate,
       );
-      return filtered;
+      return success(filtered);
     }
 
     // Return single latest OHLCV if no time interval
-    return convertedData.length > 0 ? convertedData[convertedData.length - 1] : convertedData[0];
+    return success(
+      convertedData.length > 0 ? convertedData[convertedData.length - 1] : convertedData[0],
+    );
   }
 
   async readHistoricalPrices(
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<Price[]> {
+  ): Promise<Result<Price[]>> {
     const result = await this.readPrice(symbol, context, interval);
-    return Array.isArray(result) ? result : [result];
+    if (isFailure(result)) {
+      return result;
+    }
+    const data = getData(result);
+    const dataArray = Array.isArray(data) ? data : [data];
+    return success(dataArray.filter((item) => item !== null));
   }
 
   async readHistoricalLevel1(
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<Level1[]> {
+  ): Promise<Result<Level1[]>> {
     // Level1 historical data is typically not available through CCXT
     // This would require polling at intervals, which is not practical
-    throw new Error("Historical Level1 data not supported by CCXT MCP Server");
+    return failure(
+      createQiError(
+        "UNSUPPORTED_OPERATION",
+        "Historical Level1 data not supported by CCXT MCP Server",
+        "BUSINESS",
+      ),
+    );
   }
 
   async readHistoricalOHLCV(
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<OHLCV[]> {
+  ): Promise<Result<OHLCV[]>> {
     const result = await this.readOHLCV(symbol, context, interval);
-    return Array.isArray(result) ? result : [result];
+    if (isFailure(result)) {
+      return result;
+    }
+    const data = getData(result);
+    const dataArray = Array.isArray(data) ? data : [data];
+    return success(dataArray.filter((item) => item !== null));
   }
 
   // =============================================================================
@@ -285,15 +351,6 @@ export class CCXTMCPReader implements MarketDataReader {
         return Math.min(days, 1000);
       default:
         return Math.min(days, 1000);
-    }
-  }
-
-  private validateTimeInterval(timeInterval: TimeInterval): void {
-    if (timeInterval.startDate >= timeInterval.endDate) {
-      throw new Error("Start date must be before end date");
-    }
-    if (timeInterval.endDate > new Date()) {
-      throw new Error("End date cannot be in the future");
     }
   }
 }
