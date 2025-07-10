@@ -28,6 +28,15 @@ import {
   validateTimeInterval,
 } from "@qi/core";
 
+// Domain functions (business logic)
+import {
+  getMarketId,
+  getMidPrice,
+  getSpread,
+  isCash,
+  isDerivative,
+} from "../../lib/src/domain/index.js";
+
 // =============================================================================
 // DEMO SETUP
 // =============================================================================
@@ -78,8 +87,8 @@ const level1Data = Level1.create(
   0.3, // ask size
 );
 console.log("📊 Level1:", level1Data.toString());
-console.log(`   Spread: $${level1Data.spread.toFixed(2)}`);
-console.log(`   Mid Price: $${level1Data.midPrice.toFixed(2)}`);
+console.log(`   Spread: $${getSpread(level1Data).toFixed(2)}`);
+console.log(`   Mid Price: $${getMidPrice(level1Data).toFixed(2)}`);
 
 // =============================================================================
 // IMMUTABILITY DEMO
@@ -161,8 +170,8 @@ console.log("-".repeat(30));
 
 // Demonstrate instrument type checking
 console.log("Instrument type checking:");
-console.log("  BTC is cash instrument:", btcSymbol.isCash() ? "✅ Yes" : "❌ No");
-console.log("  BTC is derivative:", btcSymbol.isDerivative() ? "❌ Yes" : "✅ No");
+console.log("  BTC is cash instrument:", isCash(btcSymbol) ? "✅ Yes" : "❌ No");
+console.log("  BTC is derivative:", isDerivative(btcSymbol) ? "❌ Yes" : "✅ No");
 
 // Create a derivative instrument
 const btcFuture = MarketSymbol.create(
@@ -178,7 +187,7 @@ const btcFuture = MarketSymbol.create(
   },
 );
 
-console.log("  BTC Future is derivative:", btcFuture.isDerivative() ? "✅ Yes" : "❌ No");
+console.log("  BTC Future is derivative:", isDerivative(btcFuture) ? "✅ Yes" : "❌ No");
 console.log("  BTC Future expiration:", btcFuture.contractDetails?.expirationDate?.toDateString());
 
 // =============================================================================
@@ -197,8 +206,8 @@ const coinbaseContext = MarketContext.create(
 const binanceContext = MarketContext.create(binanceExchange, btcSymbol);
 
 console.log("Market contexts:");
-console.log("  Coinbase:", coinbaseContext.getMarketId());
-console.log("  Binance:", binanceContext.getMarketId());
+console.log("  Coinbase:", getMarketId(coinbaseContext));
+console.log("  Binance:", getMarketId(binanceContext));
 console.log("  Same context:", coinbaseContext.equals(binanceContext) ? "✅ Yes" : "❌ No");
 
 // =============================================================================

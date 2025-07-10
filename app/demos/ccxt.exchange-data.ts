@@ -18,6 +18,9 @@ import {
 } from "@qi/core";
 import { CCXTMCPReader } from "../../lib/src/market/crypto/actors/sources/CCXTMCPReader.js";
 
+// Domain functions (business logic)
+import { getMidPrice, getSpread } from "../../lib/src/domain/index.js";
+
 // =============================================================================
 // DEMO SETUP
 // =============================================================================
@@ -144,9 +147,9 @@ async function testCCXTActorWithRealServer() {
       console.log(`   Bid: $${btcLevel1.bidPrice.toFixed(2)} x ${btcLevel1.bidSize}`);
       console.log(`   Ask: $${btcLevel1.askPrice.toFixed(2)} x ${btcLevel1.askSize}`);
       console.log(
-        `   Spread: $${btcLevel1.spread.toFixed(2)} (${((btcLevel1.spread / btcLevel1.midPrice) * 100).toFixed(4)}%)`,
+        `   Spread: $${getSpread(btcLevel1).toFixed(2)} (${((getSpread(btcLevel1) / getMidPrice(btcLevel1)) * 100).toFixed(4)}%)`,
       );
-      console.log(`   Mid Price: $${btcLevel1.midPrice.toFixed(2)}`);
+      console.log(`   Mid Price: $${getMidPrice(btcLevel1).toFixed(2)}`);
     } catch (error) {
       console.error("❌ Level1 test failed:", error);
       console.log("ℹ️  This might be expected if the server doesn't support order book data");

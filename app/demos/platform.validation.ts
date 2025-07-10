@@ -18,6 +18,9 @@ import {
   MarketSymbol,
   createLastNHoursInterval,
 } from "@qi/core";
+
+// Domain functions (business logic)
+import { getSpread } from "../../lib/src/domain/index.js";
 import { CCXTMCPReader } from "../../lib/src/market/crypto/actors/sources/CCXTMCPReader.js";
 import { CoinGeckoMCPReader } from "../../lib/src/market/crypto/actors/sources/CoinGeckoMCPReader.js";
 import { TwelveDataMCPReader } from "../../lib/src/market/crypto/actors/sources/TwelveDataMCPReader.js";
@@ -193,7 +196,7 @@ async function testCCXTImplementationReadiness() {
     console.log("📋 Order Book Data:");
     console.log(`   Bid: $${level1.bidPrice.toLocaleString()} x ${level1.bidSize}`);
     console.log(`   Ask: $${level1.askPrice.toLocaleString()} x ${level1.askSize}`);
-    console.log(`   Spread: $${level1.spread.toFixed(2)}`);
+    console.log(`   Spread: $${getSpread(level1).toFixed(2)}`);
 
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(btcUSDT, context);

@@ -101,14 +101,6 @@ export class Level1 {
     return new Level1(timestamp, bidPrice, bidSize, askPrice, askSize);
   }
 
-  get spread(): number {
-    return this.askPrice - this.bidPrice;
-  }
-
-  get midPrice(): number {
-    return (this.bidPrice + this.askPrice) / 2;
-  }
-
   equals(other: Level1): boolean {
     return (
       this.timestamp.getTime() === other.timestamp.getTime() &&
@@ -214,34 +206,6 @@ export class MarketSymbol {
     return new MarketSymbol(ticker, name, assetClass, currency, instrumentType, contractDetails);
   }
 
-  /**
-   * Check if this is a cash/spot instrument
-   */
-  isCash(): boolean {
-    return this.instrumentType === InstrumentType.CASH;
-  }
-
-  /**
-   * Check if this is a derivative instrument
-   */
-  isDerivative(): boolean {
-    return [
-      InstrumentType.FUTURE,
-      InstrumentType.OPTION,
-      InstrumentType.SWAP,
-      InstrumentType.FORWARD,
-      InstrumentType.CFD,
-      InstrumentType.WARRANT,
-    ].includes(this.instrumentType);
-  }
-
-  /**
-   * Check if this is a futures contract
-   */
-  isFuture(): boolean {
-    return this.instrumentType === InstrumentType.FUTURE;
-  }
-
   equals(other: MarketSymbol): boolean {
     return (
       this.ticker === other.ticker &&
@@ -273,14 +237,6 @@ export class MarketContext {
 
   static create(exchange: Exchange, symbol: MarketSymbol): MarketContext {
     return new MarketContext(exchange, symbol);
-  }
-
-  /**
-   * Generate a unique market identifier
-   * Format: exchange_id:symbol_ticker:instrument_type
-   */
-  getMarketId(): string {
-    return `${this.exchange.id}:${this.symbol.ticker}:${this.symbol.instrumentType}`;
   }
 
   /**
