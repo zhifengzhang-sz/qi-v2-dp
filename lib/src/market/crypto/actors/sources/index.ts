@@ -12,6 +12,3 @@ export * from "./CoinGeckoMCPReader";
 
 // CCXT MCP Reader
 export * from "./CCXTMCPReader";
-
-// Twelve Data MCP Reader
-export * from "./TwelveDataMCPReader";

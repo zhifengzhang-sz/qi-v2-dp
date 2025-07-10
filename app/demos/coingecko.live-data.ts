@@ -17,7 +17,8 @@ import {
   createLastNHoursInterval,
   createTimeInterval,
 } from "@qi/core";
-import { CoinGeckoMCPReader } from "../../lib/src/market/crypto/actors/sources/CoinGeckoMCPReader.js";
+import { getData, getError, isFailure, isSuccess } from "@qi/core/base";
+import { CoinGeckoMCPReader } from "@qi/dp/market/crypto/sources";
 
 // =============================================================================
 // DEMO SETUP
@@ -108,17 +109,37 @@ async function testCoinGeckoActor() {
     try {
       console.log("Fetching Bitcoin current price...");
       const btcPriceResult = await reader.readPrice(btcSymbol, btcContext);
-      const btcPrice = Array.isArray(btcPriceResult) ? btcPriceResult[0] : btcPriceResult;
-      console.log(
-        `✅ BTC Price: $${btcPrice.price.toFixed(2)} at ${btcPrice.timestamp.toISOString()}`,
-      );
+
+      if (isFailure(btcPriceResult)) {
+        console.error("❌ BTC price fetch failed:", getError(btcPriceResult));
+      } else {
+        const btcPriceData = getData(btcPriceResult);
+        if (btcPriceData !== null) {
+          const btcPrice = Array.isArray(btcPriceData) ? btcPriceData[0] : btcPriceData;
+          console.log(
+            `✅ BTC Price: $${btcPrice.price.toFixed(2)} at ${btcPrice.timestamp.toISOString()}`,
+          );
+        } else {
+          console.log("❌ Error: null BTC price data");
+        }
+      }
 
       console.log("Fetching Ethereum current price...");
       const ethPriceResult = await reader.readPrice(ethSymbol, ethContext);
-      const ethPrice = Array.isArray(ethPriceResult) ? ethPriceResult[0] : ethPriceResult;
-      console.log(
-        `✅ ETH Price: $${ethPrice.price.toFixed(2)} at ${ethPrice.timestamp.toISOString()}`,
-      );
+
+      if (isFailure(ethPriceResult)) {
+        console.error("❌ ETH price fetch failed:", getError(ethPriceResult));
+      } else {
+        const ethPriceData = getData(ethPriceResult);
+        if (ethPriceData !== null) {
+          const ethPrice = Array.isArray(ethPriceData) ? ethPriceData[0] : ethPriceData;
+          console.log(
+            `✅ ETH Price: $${ethPrice.price.toFixed(2)} at ${ethPrice.timestamp.toISOString()}`,
+          );
+        } else {
+          console.log("❌ Error: null ETH price data");
+        }
+      }
     } catch (error) {
       console.error("❌ Current price test failed:", error);
     }
@@ -134,17 +155,27 @@ async function testCoinGeckoActor() {
       const last7Days = createLastNHoursInterval(7 * 24);
       console.log("Fetching Bitcoin prices for last 7 days...");
 
-      const historicalPrices = await reader.readPrice(btcSymbol, btcContext, last7Days);
-      if (Array.isArray(historicalPrices)) {
-        console.log(`✅ Fetched ${historicalPrices.length} historical price points`);
-        console.log(
-          `   First: $${historicalPrices[0].price.toFixed(2)} at ${historicalPrices[0].timestamp.toISOString()}`,
-        );
-        console.log(
-          `   Last: $${historicalPrices[historicalPrices.length - 1].price.toFixed(2)} at ${historicalPrices[historicalPrices.length - 1].timestamp.toISOString()}`,
-        );
+      const historicalPricesResult = await reader.readPrice(btcSymbol, btcContext, last7Days);
+
+      if (isFailure(historicalPricesResult)) {
+        console.error("❌ Historical prices fetch failed:", getError(historicalPricesResult));
       } else {
-        console.log(`✅ Single price point: $${historicalPrices.price.toFixed(2)}`);
+        const historicalPrices = getData(historicalPricesResult);
+        if (historicalPrices !== null) {
+          if (Array.isArray(historicalPrices)) {
+            console.log(`✅ Fetched ${historicalPrices.length} historical price points`);
+            console.log(
+              `   First: $${historicalPrices[0].price.toFixed(2)} at ${historicalPrices[0].timestamp.toISOString()}`,
+            );
+            console.log(
+              `   Last: $${historicalPrices[historicalPrices.length - 1].price.toFixed(2)} at ${historicalPrices[historicalPrices.length - 1].timestamp.toISOString()}`,
+            );
+          } else {
+            console.log(`✅ Single price point: $${historicalPrices.price.toFixed(2)}`);
+          }
+        } else {
+          console.log("❌ Error: null historical price data");
+        }
       }
     } catch (error) {
       console.error("❌ Historical price test failed:", error);
@@ -159,18 +190,27 @@ async function testCoinGeckoActor() {
 
     try {
       console.log("Fetching Bitcoin OHLCV data...");
-      const ohlcvData = await reader.readOHLCV(btcSymbol, btcContext);
+      const ohlcvResult = await reader.readOHLCV(btcSymbol, btcContext);
 
-      if (Array.isArray(ohlcvData)) {
-        console.log(`✅ Fetched ${ohlcvData.length} OHLCV data points`);
-        const latest = ohlcvData[ohlcvData.length - 1];
-        console.log(
-          `   Latest: O:$${latest.open.toFixed(2)} H:$${latest.high.toFixed(2)} L:$${latest.low.toFixed(2)} C:$${latest.close.toFixed(2)}`,
-        );
+      if (isFailure(ohlcvResult)) {
+        console.error("❌ OHLCV data fetch failed:", getError(ohlcvResult));
       } else {
-        console.log(
-          `✅ OHLCV: O:$${ohlcvData.open.toFixed(2)} H:$${ohlcvData.high.toFixed(2)} L:$${ohlcvData.low.toFixed(2)} C:$${ohlcvData.close.toFixed(2)}`,
-        );
+        const ohlcvData = getData(ohlcvResult);
+        if (ohlcvData !== null) {
+          if (Array.isArray(ohlcvData)) {
+            console.log(`✅ Fetched ${ohlcvData.length} OHLCV data points`);
+            const latest = ohlcvData[ohlcvData.length - 1];
+            console.log(
+              `   Latest: O:$${latest.open.toFixed(2)} H:$${latest.high.toFixed(2)} L:$${latest.low.toFixed(2)} C:$${latest.close.toFixed(2)}`,
+            );
+          } else {
+            console.log(
+              `✅ OHLCV: O:$${ohlcvData.open.toFixed(2)} H:$${ohlcvData.high.toFixed(2)} L:$${ohlcvData.low.toFixed(2)} C:$${ohlcvData.close.toFixed(2)}`,
+            );
+          }
+        } else {
+          console.log("❌ Error: null OHLCV data");
+        }
       }
     } catch (error) {
       console.error("❌ OHLCV test failed:", error);
@@ -184,8 +224,15 @@ async function testCoinGeckoActor() {
     console.log("-".repeat(30));
 
     try {
-      const level1Data = await reader.readLevel1(btcSymbol, btcContext);
-      console.log("❌ Unexpected: Level1 data should not be available for CoinGecko");
+      const level1Result = await reader.readLevel1(btcSymbol, btcContext);
+
+      if (isFailure(level1Result)) {
+        console.log("✅ Expected: Level1 data not available for CoinGecko");
+        const error = getError(level1Result);
+        console.log(`   Error: ${error?.message || "Unknown error"}`);
+      } else {
+        console.log("❌ Unexpected: Level1 data should not be available for CoinGecko");
+      }
     } catch (error) {
       console.log("✅ Expected: Level1 data not available for CoinGecko");
       console.log(`   Error: ${(error as Error).message}`);
@@ -200,26 +247,38 @@ async function testCoinGeckoActor() {
 
     try {
       const currentPriceResult = await reader.readPrice(btcSymbol, btcContext);
-      const currentPrice = Array.isArray(currentPriceResult)
-        ? currentPriceResult[0]
-        : currentPriceResult;
 
-      // Validate data structure
-      console.log("✅ Price data validation:");
-      console.log(`   Has timestamp: ${currentPrice.timestamp instanceof Date ? "Yes" : "No"}`);
-      console.log(`   Price is number: ${typeof currentPrice.price === "number" ? "Yes" : "No"}`);
-      console.log(`   Price > 0: ${currentPrice.price > 0 ? "Yes" : "No"}`);
-      console.log(
-        `   Has toString(): ${typeof currentPrice.toString === "function" ? "Yes" : "No"}`,
-      );
+      if (isFailure(currentPriceResult)) {
+        console.error("❌ Price data fetch failed for validation:", getError(currentPriceResult));
+      } else {
+        const currentPriceData = getData(currentPriceResult);
+        if (currentPriceData !== null) {
+          const currentPrice = Array.isArray(currentPriceData)
+            ? currentPriceData[0]
+            : currentPriceData;
 
-      // Test immutability
-      const originalPrice = currentPrice.price;
-      try {
-        (currentPrice as any).price = 99999;
-        console.log("❌ Immutability test failed - price was modified");
-      } catch {
-        console.log("✅ Immutability enforced - price cannot be modified");
+          // Validate data structure
+          console.log("✅ Price data validation:");
+          console.log(`   Has timestamp: ${currentPrice.timestamp instanceof Date ? "Yes" : "No"}`);
+          console.log(
+            `   Price is number: ${typeof currentPrice.price === "number" ? "Yes" : "No"}`,
+          );
+          console.log(`   Price > 0: ${currentPrice.price > 0 ? "Yes" : "No"}`);
+          console.log(
+            `   Has toString(): ${typeof currentPrice.toString === "function" ? "Yes" : "No"}`,
+          );
+
+          // Test immutability
+          const originalPrice = currentPrice.price;
+          try {
+            (currentPrice as any).price = 99999;
+            console.log("❌ Immutability test failed - price was modified");
+          } catch {
+            console.log("✅ Immutability enforced - price cannot be modified");
+          }
+        } else {
+          console.log("❌ Error: null current price data for validation");
+        }
       }
     } catch (error) {
       console.error("❌ Data validation failed:", error);

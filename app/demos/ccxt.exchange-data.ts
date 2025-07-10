@@ -16,10 +16,11 @@ import {
   MarketSymbol,
   createLastNHoursInterval,
 } from "@qi/core";
-import { CCXTMCPReader } from "../../lib/src/market/crypto/actors/sources/CCXTMCPReader.js";
+import { getData, isSuccess } from "@qi/core/base";
+import { CCXTMCPReader } from "@qi/dp/market/crypto/sources";
 
 // Domain functions (business logic)
-import { getMidPrice, getSpread } from "../../lib/src/domain/index.js";
+import { getMidPrice, getSpread } from "@qi/dp/domain";
 
 // =============================================================================
 // DEMO SETUP
@@ -146,10 +147,23 @@ async function testCCXTActorWithRealServer() {
       console.log("✅ BTC/USDT Order Book:");
       console.log(`   Bid: $${btcLevel1.bidPrice.toFixed(2)} x ${btcLevel1.bidSize}`);
       console.log(`   Ask: $${btcLevel1.askPrice.toFixed(2)} x ${btcLevel1.askSize}`);
-      console.log(
-        `   Spread: $${getSpread(btcLevel1).toFixed(2)} (${((getSpread(btcLevel1) / getMidPrice(btcLevel1)) * 100).toFixed(4)}%)`,
-      );
-      console.log(`   Mid Price: $${getMidPrice(btcLevel1).toFixed(2)}`);
+      const spreadResult = getSpread(btcLevel1);
+      const midPriceResult = getMidPrice(btcLevel1);
+
+      if (isSuccess(spreadResult) && isSuccess(midPriceResult)) {
+        const spread = getData(spreadResult);
+        const midPrice = getData(midPriceResult);
+        if (spread !== null && midPrice !== null) {
+          console.log(
+            `   Spread: $${spread.toFixed(2)} (${((spread / midPrice) * 100).toFixed(4)}%)`,
+          );
+          console.log(`   Mid Price: $${midPrice.toFixed(2)}`);
+        } else {
+          console.log("   Error: null spread or mid price data");
+        }
+      } else {
+        console.log("   Error calculating spread or mid price");
+      }
     } catch (error) {
       console.error("❌ Level1 test failed:", error);
       console.log("ℹ️  This might be expected if the server doesn't support order book data");
@@ -192,27 +206,36 @@ async function testCCXTActorWithRealServer() {
       console.log("Fetching Bitcoin 24h historical data from Binance...");
 
       const historicalResult = await reader.readPrice(btcSymbol, btcContext, last24h);
-      if (Array.isArray(historicalResult) && historicalResult.length > 1) {
-        const firstPrice = historicalResult[0];
-        const lastPrice = historicalResult[historicalResult.length - 1];
-        const priceChange = lastPrice.price - firstPrice.price;
-        const priceChangePercent = (priceChange / firstPrice.price) * 100;
+      if (isSuccess(historicalResult)) {
+        const historicalData = getData(historicalResult);
+        if (historicalData !== null) {
+          const historicalArray = Array.isArray(historicalData) ? historicalData : [historicalData];
 
-        console.log("✅ BTC/USDT 24h Historical Data:");
-        console.log(`   Data Points: ${historicalResult.length}`);
-        console.log(
-          `   First Price: $${firstPrice.price.toFixed(2)} at ${firstPrice.timestamp.toISOString()}`,
-        );
-        console.log(
-          `   Last Price: $${lastPrice.price.toFixed(2)} at ${lastPrice.timestamp.toISOString()}`,
-        );
-        console.log(
-          `   24h Change: $${priceChange.toFixed(2)} (${priceChangePercent.toFixed(2)}%)`,
-        );
+          if (historicalArray.length > 1) {
+            const firstPrice = historicalArray[0];
+            const lastPrice = historicalArray[historicalArray.length - 1];
+            const priceChange = lastPrice.price - firstPrice.price;
+            const priceChangePercent = (priceChange / firstPrice.price) * 100;
+
+            console.log("✅ BTC/USDT 24h Historical Data:");
+            console.log(`   Data Points: ${historicalArray.length}`);
+            console.log(
+              `   First Price: $${firstPrice.price.toFixed(2)} at ${firstPrice.timestamp.toISOString()}`,
+            );
+            console.log(
+              `   Last Price: $${lastPrice.price.toFixed(2)} at ${lastPrice.timestamp.toISOString()}`,
+            );
+            console.log(
+              `   24h Change: $${priceChange.toFixed(2)} (${priceChangePercent.toFixed(2)}%)`,
+            );
+          } else {
+            console.log(`✅ Single data point: $${historicalArray[0].price.toFixed(2)}`);
+          }
+        } else {
+          console.log("❌ Error: null historical data");
+        }
       } else {
-        console.log(
-          `✅ Single data point: $${Array.isArray(historicalResult) ? historicalResult[0].price : historicalResult.price}`,
-        );
+        console.log("❌ Failed to fetch historical data");
       }
     } catch (error) {
       console.error("❌ Historical data test failed:", error);

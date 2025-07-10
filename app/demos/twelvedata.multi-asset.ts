@@ -17,10 +17,11 @@ import {
   MarketSymbol,
   createLastNHoursInterval,
 } from "@qi/core";
+import { getData, isSuccess } from "@qi/core/base";
 
 // Domain functions (business logic)
-import { getSpread } from "../../lib/src/domain/index.js";
-import { TwelveDataMCPReader } from "../../lib/src/market/crypto/actors/sources/TwelveDataMCPReader.js";
+import { getSpread } from "@qi/dp/domain";
+import { TwelveDataMCPReader } from "@qi/dp/market/multi-asset/sources/TwelveDataMCPReader";
 
 // =============================================================================
 // DEMO SETUP
@@ -78,8 +79,9 @@ async function connectToTwelveDataMCP(): Promise<Client | null> {
 // SIMULATED TWELVEDATA INTEGRATION (FOR DEMO PURPOSES)
 // =============================================================================
 
-function createMockTwelveDataClient() {
+function createSimulatedTwelveDataClient() {
   console.log("🔧 Creating simulated TwelveData MCP client for demo");
+  console.log("   Note: Uses realistic test data since this demo doesn't require API key");
 
   return {
     callTool: async (toolCall: any) => {
@@ -170,12 +172,12 @@ async function testCryptocurrencyData() {
   console.log("\n💰 Testing Cryptocurrency Data");
   console.log("-".repeat(35));
 
-  const mockClient = createMockTwelveDataClient();
+  const simulatedClient = createSimulatedTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-crypto",
     apiKey: apiKey || "",
     assetClass: "crypto",
-    mcpClient: mockClient,
+    mcpClient: simulatedClient,
   });
 
   try {
@@ -190,7 +192,17 @@ async function testCryptocurrencyData() {
     console.log("📋 BTC/USD Quotes:");
     console.log(`   Bid: $${level1.bidPrice.toLocaleString()}`);
     console.log(`   Ask: $${level1.askPrice.toLocaleString()}`);
-    console.log(`   Spread: $${getSpread(level1).toFixed(2)}`);
+    const spreadResult = getSpread(level1);
+    if (isSuccess(spreadResult)) {
+      const spreadData = getData(spreadResult);
+      if (spreadData !== null) {
+        console.log(`   Spread: $${spreadData.toFixed(2)}`);
+      } else {
+        console.log("   Spread calculation returned null");
+      }
+    } else {
+      console.log("   Spread calculation failed");
+    }
 
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(cryptoSymbol, cryptoContext);
@@ -214,12 +226,12 @@ async function testStockData() {
   console.log("\n📈 Testing Stock Market Data");
   console.log("-".repeat(30));
 
-  const mockClient = createMockTwelveDataClient();
+  const simulatedClient = createSimulatedTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-stocks",
     apiKey: apiKey || "",
     assetClass: "stocks",
-    mcpClient: mockClient,
+    mcpClient: simulatedClient,
   });
 
   try {
@@ -254,12 +266,12 @@ async function testForexData() {
   console.log("\n💱 Testing Forex Data");
   console.log("-".repeat(20));
 
-  const mockClient = createMockTwelveDataClient();
+  const simulatedClient = createSimulatedTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-forex",
     apiKey: apiKey || "",
     assetClass: "forex",
-    mcpClient: mockClient,
+    mcpClient: simulatedClient,
   });
 
   try {

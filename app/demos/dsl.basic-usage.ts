@@ -28,14 +28,11 @@ import {
   validateTimeInterval,
 } from "@qi/core";
 
+// QiCore Result pattern
+import { getData, isSuccess } from "@qi/core/base";
+
 // Domain functions (business logic)
-import {
-  getMarketId,
-  getMidPrice,
-  getSpread,
-  isCash,
-  isDerivative,
-} from "../../lib/src/domain/index.js";
+import { getMarketId, getMidPrice, getSpread, isCash, isDerivative } from "@qi/dp/domain";
 
 // =============================================================================
 // DEMO SETUP
@@ -87,8 +84,21 @@ const level1Data = Level1.create(
   0.3, // ask size
 );
 console.log("📊 Level1:", level1Data.toString());
-console.log(`   Spread: $${getSpread(level1Data).toFixed(2)}`);
-console.log(`   Mid Price: $${getMidPrice(level1Data).toFixed(2)}`);
+const spreadResult = getSpread(level1Data);
+const midPriceResult = getMidPrice(level1Data);
+
+if (isSuccess(spreadResult) && isSuccess(midPriceResult)) {
+  const spread = getData(spreadResult);
+  const midPrice = getData(midPriceResult);
+  if (spread !== null && midPrice !== null) {
+    console.log(`   Spread: $${spread.toFixed(2)}`);
+    console.log(`   Mid Price: $${midPrice.toFixed(2)}`);
+  } else {
+    console.log("   Error: null values returned");
+  }
+} else {
+  console.log("   Error calculating spread or mid price");
+}
 
 // =============================================================================
 // IMMUTABILITY DEMO

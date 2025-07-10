@@ -64,10 +64,14 @@ export function createLastNMinutesInterval(minutes: number): TimeInterval {
  */
 export function validateTimeInterval(timeInterval: TimeInterval): Result<void> {
   if (timeInterval.startDate >= timeInterval.endDate) {
-    return failure(createQiError("INVALID_INTERVAL", "Start date must be before end date", "VALIDATION"));
+    return failure(
+      createQiError("INVALID_INTERVAL", "Start date must be before end date", "VALIDATION"),
+    );
   }
   if (timeInterval.endDate > new Date()) {
-    return failure(createQiError("INVALID_INTERVAL", "End date cannot be in the future", "VALIDATION"));
+    return failure(
+      createQiError("INVALID_INTERVAL", "End date cannot be in the future", "VALIDATION"),
+    );
   }
   return success(undefined);
 }

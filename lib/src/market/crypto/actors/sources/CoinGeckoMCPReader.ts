@@ -7,6 +7,15 @@
  * Supports price and OHLCV data, but Level1 data is not available.
  */
 
+import {
+  type ResultType as Result,
+  createQiError,
+  failure,
+  getData,
+  getError,
+  isFailure,
+  success,
+} from "@qi/core/base";
 import type { MarketDataReader } from "../../../../dsl/interfaces";
 import {
   Exchange,
@@ -18,15 +27,6 @@ import {
   Price,
 } from "../../../../dsl/types";
 import type { TimeInterval } from "../../../../dsl/utils";
-import {
-  type ResultType as Result,
-  createQiError,
-  failure,
-  success,
-  isFailure,
-  getData,
-  getError,
-} from "@qi/core/base";
 
 // =============================================================================
 // COINGECKO MCP READER
@@ -49,62 +49,86 @@ export class CoinGeckoMCPReader implements MarketDataReader {
     interval?: TimeInterval,
   ): Promise<Result<Price | Price[]>> {
     if (symbol.assetClass !== "crypto") {
-      return failure(createQiError("UNSUPPORTED_ASSET_CLASS", `Only crypto assets are supported, got ${symbol.assetClass}`, "VALIDATION"));
+      return failure(
+        createQiError(
+          "UNSUPPORTED_ASSET_CLASS",
+          `Only crypto assets are supported, got ${symbol.assetClass}`,
+          "VALIDATION",
+        ),
+      );
     }
 
     // For historical data, we need to use OHLCV and extract close prices
     if (interval) {
       const validationResult = this.validateTimeInterval(interval);
       if (isFailure(validationResult)) {
-        return failure(getError(validationResult));
+        return validationResult;
       }
 
       // Get OHLCV data and convert to Price array
       const ohlcvResult = await this.readOHLCV(symbol, context, interval);
       if (isFailure(ohlcvResult)) {
-        return failure(getError(ohlcvResult));
+        return ohlcvResult;
       }
-      
+
       const ohlcvData = getData(ohlcvResult);
       const ohlcvArray = Array.isArray(ohlcvData) ? ohlcvData : [ohlcvData];
-      return success(ohlcvArray.map((ohlcv) => Price.create(ohlcv.timestamp, ohlcv.close, ohlcv.volume)));
+      return success(
+        ohlcvArray
+          .filter((ohlcv) => ohlcv !== null)
+          .map((ohlcv) => Price.create(ohlcv.timestamp, ohlcv.close, ohlcv.volume)),
+      );
     }
 
     try {
-      // Current price - use simple price endpoint
+      // Current price - use coins markets endpoint which provides more comprehensive data
       const result = await this.client.callTool({
-        name: "get_simple_price",
+        name: "get_coins_markets",
         arguments: {
           ids: symbol.ticker.toLowerCase(),
-          vs_currencies: symbol.currency.toLowerCase(),
+          vs_currency: symbol.currency.toLowerCase(),
+          order: "market_cap_desc",
+          per_page: 1,
+          page: 1,
         },
       });
 
       if (!result.content || !result.content[0] || !result.content[0].text) {
-        return failure(createQiError("INVALID_RESPONSE", "Invalid response from CoinGecko MCP", "NETWORK"));
+        return failure(
+          createQiError("INVALID_RESPONSE", "Invalid response from CoinGecko MCP", "NETWORK"),
+        );
       }
 
       const data = JSON.parse(result.content[0].text);
-      if (!data || typeof data !== "object") {
+      if (!data || !Array.isArray(data) || data.length === 0) {
         return failure(createQiError("NO_DATA", "No price data available", "BUSINESS"));
       }
 
-      // Get price from simple price response
-      const coinId = symbol.ticker.toLowerCase();
-      const currency = symbol.currency.toLowerCase();
-      const price = data[coinId]?.[currency];
+      // Get price from coins markets response (returns array of coin objects)
+      const coinData = data[0];
+      const price = coinData?.current_price;
 
       if (!price) {
-        return failure(createQiError("NO_DATA", `No price data available for ${coinId} in ${currency}`, "BUSINESS"));
+        return failure(
+          createQiError(
+            "NO_DATA",
+            `No current_price available for ${symbol.ticker.toLowerCase()}`,
+            "BUSINESS",
+          ),
+        );
       }
 
-      return success(Price.create(
-        new Date(),
-        price,
-        0, // Volume not available in price endpoint
-      ));
+      return success(
+        Price.create(
+          new Date(),
+          price,
+          0, // Volume not available in price endpoint
+        ),
+      );
     } catch (error) {
-      return failure(createQiError("FETCH_ERROR", `Failed to fetch price data: ${error}`, "NETWORK"));
+      return failure(
+        createQiError("FETCH_ERROR", `Failed to fetch price data: ${error}`, "NETWORK"),
+      );
     }
   }
 
@@ -114,11 +138,13 @@ export class CoinGeckoMCPReader implements MarketDataReader {
     interval?: TimeInterval,
   ): Promise<Result<Level1 | Level1[]>> {
     // CoinGecko MCP Server does not provide Level1 bid/ask data
-    return failure(createQiError(
-      "UNSUPPORTED_OPERATION",
-      `Level1 data not available for ${symbol.ticker}. CoinGecko MCP Server does not provide real-time bid/ask data. Consider using CCXT MCP Server or Twelve Data MCP Server for Level1 data.`,
-      "BUSINESS"
-    ));
+    return failure(
+      createQiError(
+        "UNSUPPORTED_OPERATION",
+        `Level1 data not available for ${symbol.ticker}. CoinGecko MCP Server does not provide real-time bid/ask data. Consider using CCXT MCP Server or Twelve Data MCP Server for Level1 data.`,
+        "BUSINESS",
+      ),
+    );
   }
 
   async readOHLCV(
@@ -127,7 +153,13 @@ export class CoinGeckoMCPReader implements MarketDataReader {
     interval?: TimeInterval,
   ): Promise<Result<OHLCV | OHLCV[]>> {
     if (symbol.assetClass !== "crypto") {
-      return failure(createQiError("UNSUPPORTED_ASSET_CLASS", `Only crypto assets are supported, got ${symbol.assetClass}`, "VALIDATION"));
+      return failure(
+        createQiError(
+          "UNSUPPORTED_ASSET_CLASS",
+          `Only crypto assets are supported, got ${symbol.assetClass}`,
+          "VALIDATION",
+        ),
+      );
     }
 
     // Calculate days based on timeInterval or default to 1 day
@@ -135,7 +167,7 @@ export class CoinGeckoMCPReader implements MarketDataReader {
     if (interval) {
       const validationResult = this.validateTimeInterval(interval);
       if (isFailure(validationResult)) {
-        return failure(getError(validationResult));
+        return validationResult;
       }
       const diffTime = interval.endDate.getTime() - interval.startDate.getTime();
       days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -143,18 +175,18 @@ export class CoinGeckoMCPReader implements MarketDataReader {
 
     try {
       const result = await this.client.callTool({
-        name: "get_range_coins_ohlc",
+        name: "get_coins_id_ohlc",
         arguments: {
           id: symbol.ticker.toLowerCase(),
           vs_currency: symbol.currency.toLowerCase(),
-          from: Math.floor((Date.now() - days * 24 * 60 * 60 * 1000) / 1000),
-          to: Math.floor(Date.now() / 1000),
-          interval: "daily",
+          days: days,
         },
       });
 
       if (!result.content || !result.content[0] || !result.content[0].text) {
-        return failure(createQiError("INVALID_RESPONSE", "Invalid response from CoinGecko MCP", "NETWORK"));
+        return failure(
+          createQiError("INVALID_RESPONSE", "Invalid response from CoinGecko MCP", "NETWORK"),
+        );
       }
 
       const data = JSON.parse(result.content[0].text);
@@ -184,9 +216,14 @@ export class CoinGeckoMCPReader implements MarketDataReader {
       }
 
       // Return single latest OHLCV if no time interval
-      return success(ohlcvData.length > 0 ? ohlcvData[ohlcvData.length - 1] : ohlcvData[0]);
+      if (ohlcvData.length === 0) {
+        return failure(createQiError("NO_DATA", "No OHLCV data available", "BUSINESS"));
+      }
+      return success(ohlcvData[ohlcvData.length - 1]);
     } catch (error) {
-      return failure(createQiError("FETCH_ERROR", `Failed to fetch OHLCV data: ${error}`, "NETWORK"));
+      return failure(
+        createQiError("FETCH_ERROR", `Failed to fetch OHLCV data: ${error}`, "NETWORK"),
+      );
     }
   }
 
@@ -197,10 +234,11 @@ export class CoinGeckoMCPReader implements MarketDataReader {
   ): Promise<Result<Price[]>> {
     const result = await this.readPrice(symbol, context, interval);
     if (isFailure(result)) {
-      return failure(getError(result));
+      return result;
     }
     const data = getData(result);
-    return success(Array.isArray(data) ? data : [data]);
+    const dataArray = Array.isArray(data) ? data : [data];
+    return success(dataArray.filter((item) => item !== null));
   }
 
   async readHistoricalLevel1(
@@ -208,7 +246,13 @@ export class CoinGeckoMCPReader implements MarketDataReader {
     context: MarketContext,
     interval: TimeInterval,
   ): Promise<Result<Level1[]>> {
-    return failure(createQiError("UNSUPPORTED_OPERATION", "Level1 data not supported by CoinGecko MCP Server", "BUSINESS"));
+    return failure(
+      createQiError(
+        "UNSUPPORTED_OPERATION",
+        "Level1 data not supported by CoinGecko MCP Server",
+        "BUSINESS",
+      ),
+    );
   }
 
   async readHistoricalOHLCV(
@@ -218,10 +262,11 @@ export class CoinGeckoMCPReader implements MarketDataReader {
   ): Promise<Result<OHLCV[]>> {
     const result = await this.readOHLCV(symbol, context, interval);
     if (isFailure(result)) {
-      return failure(getError(result));
+      return result;
     }
     const data = getData(result);
-    return success(Array.isArray(data) ? data : [data]);
+    const dataArray = Array.isArray(data) ? data : [data];
+    return success(dataArray.filter((item) => item !== null));
   }
 
   // =============================================================================
@@ -230,10 +275,14 @@ export class CoinGeckoMCPReader implements MarketDataReader {
 
   private validateTimeInterval(timeInterval: TimeInterval): Result<void> {
     if (timeInterval.startDate >= timeInterval.endDate) {
-      return failure(createQiError("INVALID_INTERVAL", "Start date must be before end date", "VALIDATION"));
+      return failure(
+        createQiError("INVALID_INTERVAL", "Start date must be before end date", "VALIDATION"),
+      );
     }
     if (timeInterval.endDate > new Date()) {
-      return failure(createQiError("INVALID_INTERVAL", "End date cannot be in the future", "VALIDATION"));
+      return failure(
+        createQiError("INVALID_INTERVAL", "End date cannot be in the future", "VALIDATION"),
+      );
     }
     return success(undefined);
   }

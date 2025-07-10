@@ -1,6 +1,6 @@
 {
   "name": "@qicore/crypto-data-platform",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "description": "QiCore Crypto Data Platform - Agentized cryptocurrency data processing with MCP integration",
   "type": "module",
   "main": "./src/index.ts",
@@ -26,6 +26,7 @@
     "format": "biome check . --write",
     "lint": "biome lint .",
     "check": "bun run typecheck && bun run format && bun run test",
+    "check:final": "echo '=== v-0.2.2 Final Check ===' && bun run typecheck && echo '✅ TypeCheck passed' && bun run lint && echo '✅ Lint passed' && bun run test:unit --run && echo '✅ Unit tests completed' && echo '=== Final Status ===' && echo 'Ready for v-0.2.2 check-in'",
     "lib:typecheck": "tsc --noEmit --project lib/tsconfig.build.json",
     "lib:typecheck:file": "cd lib && ./scripts/check-file.sh",
     "lib:format": "biome check lib/ --write",
@@ -84,6 +85,7 @@
     "@types/pg": "^8.11.10",
     "@types/ws": "^8.5.12",
     "typescript": "^5.7.2",
+    "vite-tsconfig-paths": "^5.1.4",
     "vitest": "^3.2.4"
   }
 }

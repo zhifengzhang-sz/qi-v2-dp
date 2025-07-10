@@ -93,6 +93,13 @@
 - Real-time data streaming with proper rate limiting and caching
 - Security-focused design with encrypted API key management
 
+### v-0.2.8: Configuration
+
+1. Using qicore config, logger and cache through out the code base
+2. Build a solid systematic build system for the project
+
+### v-0.2.9: management for local mcp servers
+
 ---
 
 ## Current Tasks
