@@ -77,13 +77,29 @@
 - 🔗 **Error Composition**: Advanced error handling chains
 - 🔗 **Performance Combinators**: Optimized actor chaining
 
+### v-0.2.7: TradingView Integration
+**Priority**: High  
+**Status**: Planned
+
+**Scope**: Professional charting and visualization layer
+- 📊 **TradingView MCP Server**: Bridge TradingView charts with CCXT exchange data
+- 📊 **Real-time Streaming**: WebSocket integration for live chart updates
+- 📊 **Multi-Exchange Support**: Unified interface across crypto exchanges
+- 📊 **Professional UI**: Trading dashboards with advanced charting
+
+**Technical Implementation**:
+- MCP server bridging TradingView JavaScript API with CCXT
+- TypeScript web server with Express.js and WebSocket support
+- Real-time data streaming with proper rate limiting and caching
+- Security-focused design with encrypted API key management
+
 ---
 
 ## Current Tasks
 
 ### Immediate (Before v-0.2.1)
-1. **TwelveData Testing**: Retrieve API key and validate actor with real server
-2. **Documentation Updates**: Complete v-0.2.0 documentation corrections
+1. ✅ **TwelveData Testing**: API key configured and validated - actor working with real integration
+2. ✅ **Quality Assurance**: TypeScript clean, Biome clean, all quality checks passing
 
 ### Ongoing Quality Assurance
 - **TypeScript**: Maintain clean compilation
@@ -138,24 +154,79 @@ To complete v-0.2.0 validation:
 
 ---
 
-## Long-term Vision (Post v-0.2.6)
+## Long-term Vision: Complete AI Trading Ecosystem
 
-### v-0.3.0: Multi-Asset Platform
+*Note: This is a draft roadmap for reference - plans may evolve based on development priorities*
+
+### v-0.3.0: Multi-Asset Platform Foundation
 - Unified platform supporting crypto, stocks, forex, commodities
-- Cross-asset analytics and reporting
+- Cross-asset analytics and reporting  
 - Professional trading system integration
 
-### v-0.4.0: Production Deployment
-- Container orchestration and deployment
-- Monitoring and observability
-- Performance optimization and scaling
-- Security audit and compliance
+### v-0.4.0: Advanced Streaming Infrastructure
+- Enhanced WebSocket integration for live data feeds
+- Event-driven architecture patterns
+- High-performance streaming processing
+- Real-time analytics and monitoring
 
-### v-1.0.0: Enterprise Release
-- Complete production-ready platform
-- Full documentation and support
-- Enterprise features and SLA
-- Backward compatibility guarantees
+### v-0.5.0: Market Simulator Actors 🎲
+- **Market Scenario Simulation**: Generate realistic crash scenarios, volatility regimes
+- **Synthetic Data Generation**: ML-generated realistic price action and market conditions
+- **Order Book Simulation**: Realistic bid/ask dynamics and market microstructure
+- **Multi-Asset Correlation**: Simulate cross-asset correlations and dependencies
+
+### v-0.6.0: Advanced Simulation Infrastructure ⚙️
+- **Economic Event Simulation**: Fed announcements, GDP releases, macro impacts
+- **Stress Testing**: Market crash scenarios, liquidity crises, black swan events
+- **Performance Benchmarking**: Strategy comparison and optimization
+- **Risk Scenario Generation**: Monte Carlo simulation infrastructure
+
+### v-0.7.0: Model DSL Framework 🧠
+- **Trading Strategy DSL**: Define entry/exit conditions, position sizing, risk rules
+- **Signal Generation**: Technical, fundamental, and alternative data signals  
+- **Feature Engineering**: Automated feature extraction and selection
+- **Strategy Composition**: Combine multiple strategies into portfolios
+
+### v-0.8.0: Model Simulator Actors 📊
+- **Strategy Backtesting**: Comprehensive historical strategy validation
+- **Portfolio Simulation**: Multi-strategy portfolio optimization
+- **Risk Analytics**: VaR, stress testing, drawdown analysis
+- **Performance Attribution**: Detailed strategy performance breakdown
+
+### v-0.9.0: Trading Execution Actors 💰
+- **Order Management**: Smart order routing, execution algorithms
+- **Portfolio Management**: Systematic rebalancing and allocation
+- **Risk Management**: Real-time position monitoring and risk controls
+- **Trade Analytics**: Execution quality analysis and optimization
+
+### v-1.0.0: Complete Trading Platform 🏗️
+- **Unified Actor Ecosystem**: Data → Models → Signals → Execution → Risk
+- **Production Trading**: Live systematic trading with full automation
+- **Professional UI**: Trading dashboards, analytics, monitoring
+- **Enterprise Features**: Multi-user, permissions, audit trails
+
+### v-2.0.0: AI-Powered Intelligence 🤖
+- **AI Market Prediction**: Deep learning price forecasting
+- **Reinforcement Learning**: Self-optimizing trading strategies  
+- **NLP Market Analysis**: Sentiment analysis from news/social data
+- **AI Portfolio Construction**: Machine learning portfolio optimization
+
+## Actor Evolution Pattern
+
+```
+Data Actors (v-0.2.x) → TradingView UI (v-0.2.7) → Multi-Asset (v-0.3.0) → Streaming (v-0.4.0) → Simulation (v-0.5.0-0.6.0) 
+    ↓
+Model DSL (v-0.7.0) → Model Testing (v-0.8.0) → Live Trading (v-0.9.0)
+    ↓  
+Complete System (v-1.0.0) → AI Intelligence (v-2.0.0)
+```
+
+### Ultimate Vision: Autonomous AI Trading Organism
+By v-2.0.0, actors will evolve from simple data handlers to intelligent agents capable of:
+- **Learning** from market conditions and adapting strategies
+- **Reasoning** about market dynamics and risk factors
+- **Collaborating** with other actors for optimal portfolio management
+- **Evolving** strategies through continuous reinforcement learning
 
 ---
 

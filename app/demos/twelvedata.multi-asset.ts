@@ -8,7 +8,7 @@
  * Requires TWELVE_DATA_API_KEY environment variable.
  */
 
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js";
 import {
   Exchange,
@@ -39,7 +39,7 @@ console.log("✅ TwelveData API key found");
 
 // Market symbols for testing different asset classes
 const cryptoSymbol = MarketSymbol.create("BTC", "Bitcoin", "crypto", "USD", InstrumentType.CASH);
-const stockSymbol = MarketSymbol.create("AAPL", "Apple Inc", "stocks", "USD", InstrumentType.CASH);
+const stockSymbol = MarketSymbol.create("AAPL", "Apple Inc", "equity", "USD", InstrumentType.CASH);
 const forexSymbol = MarketSymbol.create("EUR", "Euro", "forex", "USD", InstrumentType.CASH);
 
 // Exchanges
@@ -83,7 +83,7 @@ function createMockTwelveDataClient() {
       console.log(`📞 TwelveData Tool Call: ${toolCall.name}`);
       if (toolCall.arguments) {
         console.log(`   Symbol: ${toolCall.arguments.symbol}`);
-        console.log(`   API Key: ${toolCall.arguments.apikey ? '***' + toolCall.arguments.apikey.slice(-4) : 'not provided'}`);
+        console.log(`   API Key: ${toolCall.arguments.apikey ? `***${toolCall.arguments.apikey.slice(-4)}` : 'not provided'}`);
       }
       
       // Simulate realistic TwelveData responses based on asset class
@@ -93,7 +93,7 @@ function createMockTwelveDataClient() {
       const isForex = symbol.includes("EUR") || symbol.includes("GBP");
       
       switch (toolCall.name) {
-        case "get_price":
+        case "get_price": {
           const price = isCrypto ? "97650.50" : isStock ? "195.34" : isForex ? "1.0842" : "100.00";
           return {
             content: [{ 
@@ -102,8 +102,9 @@ function createMockTwelveDataClient() {
               }) 
             }]
           };
+        }
           
-        case "get_quote":
+        case "get_quote": {
           const bid = isCrypto ? "97645.25" : isStock ? "195.32" : isForex ? "1.0840" : "99.98";
           const ask = isCrypto ? "97655.75" : isStock ? "195.36" : isForex ? "1.0844" : "100.02";
           return {
@@ -116,8 +117,9 @@ function createMockTwelveDataClient() {
               }) 
             }]
           };
+        }
           
-        case "get_time_series":
+        case "get_time_series": {
           const open = isCrypto ? "96800.00" : isStock ? "194.50" : isForex ? "1.0820" : "99.50";
           const high = isCrypto ? "98200.00" : isStock ? "196.80" : isForex ? "1.0860" : "100.50";
           const low = isCrypto ? "96500.00" : isStock ? "194.20" : isForex ? "1.0810" : "99.20";
@@ -140,6 +142,7 @@ function createMockTwelveDataClient() {
               }) 
             }]
           };
+        }
           
         default:
           throw new Error(`Unsupported tool: ${toolCall.name}`);
@@ -159,7 +162,7 @@ async function testCryptocurrencyData() {
   const mockClient = createMockTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-crypto",
-    apiKey: apiKey,
+    apiKey: apiKey || "",
     assetClass: "crypto",
     mcpClient: mockClient,
   });
@@ -173,7 +176,7 @@ async function testCryptocurrencyData() {
     // Test Level1 quotes
     const level1Result = await reader.readLevel1(cryptoSymbol, cryptoContext);
     const level1 = Array.isArray(level1Result) ? level1Result[0] : level1Result;
-    console.log(`📋 BTC/USD Quotes:`);
+    console.log("📋 BTC/USD Quotes:");
     console.log(`   Bid: $${level1.bidPrice.toLocaleString()}`);
     console.log(`   Ask: $${level1.askPrice.toLocaleString()}`);
     console.log(`   Spread: $${level1.spread.toFixed(2)}`);
@@ -181,7 +184,7 @@ async function testCryptocurrencyData() {
     // Test OHLCV data
     const ohlcvResult = await reader.readOHLCV(cryptoSymbol, cryptoContext);
     const ohlcv = Array.isArray(ohlcvResult) ? ohlcvResult[0] : ohlcvResult;
-    console.log(`📈 BTC/USD OHLCV:`);
+    console.log("📈 BTC/USD OHLCV:");
     console.log(`   Open: $${ohlcv.open.toLocaleString()}`);
     console.log(`   High: $${ohlcv.high.toLocaleString()}`);
     console.log(`   Low: $${ohlcv.low.toLocaleString()}`);
@@ -203,7 +206,7 @@ async function testStockData() {
   const mockClient = createMockTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-stocks",
-    apiKey: apiKey,
+    apiKey: apiKey || "",
     assetClass: "stocks",
     mcpClient: mockClient,
   });
@@ -217,14 +220,14 @@ async function testStockData() {
     // Test stock quotes
     const level1Result = await reader.readLevel1(stockSymbol, stockContext);
     const level1 = Array.isArray(level1Result) ? level1Result[0] : level1Result;
-    console.log(`📋 AAPL Quotes:`);
+    console.log("📋 AAPL Quotes:");
     console.log(`   Bid: $${level1.bidPrice}`);
     console.log(`   Ask: $${level1.askPrice}`);
 
     // Test stock OHLCV
     const ohlcvResult = await reader.readOHLCV(stockSymbol, stockContext);
     const ohlcv = Array.isArray(ohlcvResult) ? ohlcvResult[0] : ohlcvResult;
-    console.log(`📈 AAPL OHLCV:`);
+    console.log("📈 AAPL OHLCV:");
     console.log(`   Close: $${ohlcv.close}`);
     console.log(`   Volume: ${ohlcv.volume.toLocaleString()}`);
 
@@ -243,7 +246,7 @@ async function testForexData() {
   const mockClient = createMockTwelveDataClient();
   const reader = new TwelveDataMCPReader({
     name: "twelvedata-forex",
-    apiKey: apiKey,
+    apiKey: apiKey || "",
     assetClass: "forex",
     mcpClient: mockClient,
   });
@@ -257,7 +260,7 @@ async function testForexData() {
     // Test forex quotes
     const level1Result = await reader.readLevel1(forexSymbol, forexContext);
     const level1 = Array.isArray(level1Result) ? level1Result[0] : level1Result;
-    console.log(`📋 EUR/USD Quotes:`);
+    console.log("📋 EUR/USD Quotes:");
     console.log(`   Bid: ${level1.bidPrice}`);
     console.log(`   Ask: ${level1.askPrice}`);
 
@@ -337,8 +340,8 @@ async function runTwelveDataDemo() {
     const totalCount = results.length;
 
     console.log(`📊 Asset Classes Tested: ${successCount}/${totalCount} successful`);
-    console.log(`🔑 API Key: Configured (${apiKey.slice(-4)})`);
-    console.log(`🌐 Server: Ready for MCP integration`);
+    console.log(`🔑 API Key: Configured (${(apiKey || "").slice(-4)})`);
+    console.log("🌐 Server: Ready for MCP integration");
 
     if (successCount === totalCount) {
       console.log("\n✅ SUCCESS: TwelveData Multi-Asset Integration Working!");
