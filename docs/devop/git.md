@@ -54,20 +54,25 @@ cd - && rm -rf /tmp/preservation
 
 ### **3. Release to Main**
 
-**GitHub Web Interface** (Recommended):
+**Command Line** (Recommended - Reliable):
+```bash
+# Reliable merge process
+git checkout main
+git pull origin main           # Get latest main
+git merge feature/fp-system-implementation --no-ff
+git push origin main
+
+# Return to feature branch immediately
+git checkout feature/fp-system-implementation
+```
+
+**Why --no-ff?**: Creates explicit merge commit showing the feature integration
+
+**GitHub Web Interface** (Alternative):
 1. Push your feature branch: `git push origin feature/fp-system-implementation`
 2. GitHub shows: "feature/fp-system-implementation had recent pushes"
 3. Click "Compare & pull request"
 4. Create and merge PR
-
-**Command Line** (Alternative):
-```bash
-# Only if you prefer command line
-git checkout main
-git pull origin main
-git merge feature/fp-system-implementation
-git push origin main
-```
 
 ### **4. Continue After Release**
 ```bash
@@ -82,9 +87,9 @@ git checkout feature/fp-system-implementation
 ### **Release Versioning**
 - **v-0.1.0**: Original 2-layer architecture (preserved)
 - **v-0.2.0**: DSL system upgrade - crypto market complete
-- **v-0.2.1**: DSL improvements (planned)
-- **v-0.2.2**: Stock market support (planned)
-- **v-0.2.3**: Kafka integration (planned)
+- **v-0.2.1**: DSL cleanup and improvements
+- **v-0.2.2**: Multi-asset market data architecture (COMPLETE)
+- **v-0.2.3**: Future enhancements (planned)
 
 ### **Branch Naming Convention**
 ```
@@ -104,25 +109,39 @@ hotfix/urgent-fix             # Emergency fixes (if needed)
 
 ### **Complete Release Process**
 ```bash
-# 1. Preserve current main (if major version)
-cd /tmp
-git clone https://github.com/username/qi-v2-dp-ts-actor.git preserve
-cd preserve
-git checkout -b v-0.1.0  # current version
-git push origin v-0.1.0
-rm -rf /tmp/preserve
-
-# 2. Ensure your work is pushed
-cd /your/working/directory
+# 1. Ensure your work is committed and pushed
 git add .
-git commit -m "Release v-0.2.0: Complete description"
+git commit -m "Release v-0.2.2: Complete description"
+git tag v-0.2.2
 git push origin feature/fp-system-implementation
+git push origin v-0.2.2
 
-# 3. Create PR on GitHub
-# Click "Compare & pull request" → "Create pull request" → "Merge"
+# 2. Merge to main (RELIABLE PROCESS)
+git checkout main
+git pull origin main           # Ensure main is up to date
+git merge feature/fp-system-implementation --no-ff
+git push origin main
 
-# 4. Continue development
-# Just keep working in feature/fp-system-implementation
+# 3. Return to feature branch immediately
+git checkout feature/fp-system-implementation
+
+# 4. Create GitHub release (manual)
+# Go to: https://github.com/username/qi-v2-dp-ts-actor/releases/new
+# Select tag: v-0.2.2, add release notes
+
+# 5. Continue development
+# Keep working in feature/fp-system-implementation
+```
+
+### **Tag and Release Process**
+```bash
+# Create annotated tag with release info
+git tag -a v-0.2.2 -m "v-0.2.2: Multi-Asset Market Data Architecture Complete"
+git push origin v-0.2.2
+
+# Or lightweight tag (simpler)
+git tag v-0.2.2
+git push origin v-0.2.2
 ```
 
 ## 📚 **Best Practices**
