@@ -9,6 +9,7 @@
 
 import type { Level1, MarketContext, MarketSymbol, OHLCV, Price } from "./types.js";
 import type { TimeInterval } from "./utils.js";
+import type { ResultType as Result } from "@qi/core/base";
 
 // =============================================================================
 // CORE READER INTERFACES
@@ -26,7 +27,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<Price | Price[]>;
+  ): Promise<Result<Price | Price[]>>;
 
   /**
    * Read Level 1 market data (best bid/ask)
@@ -35,7 +36,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<Level1 | Level1[]>;
+  ): Promise<Result<Level1 | Level1[]>>;
 
   /**
    * Read OHLCV data (candlestick data)
@@ -44,7 +45,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval?: TimeInterval,
-  ): Promise<OHLCV | OHLCV[]>;
+  ): Promise<Result<OHLCV | OHLCV[]>>;
 
   /**
    * Read historical prices
@@ -53,7 +54,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<Price[]>;
+  ): Promise<Result<Price[]>>;
 
   /**
    * Read historical Level 1 data
@@ -62,7 +63,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<Level1[]>;
+  ): Promise<Result<Level1[]>>;
 
   /**
    * Read historical OHLCV data
@@ -71,7 +72,7 @@ export interface MarketDataReader {
     symbol: MarketSymbol,
     context: MarketContext,
     interval: TimeInterval,
-  ): Promise<OHLCV[]>;
+  ): Promise<Result<OHLCV[]>>;
 }
 
 /**
@@ -82,22 +83,22 @@ export interface MarketDataWriter {
   /**
    * Write a single price point
    */
-  writePrice(price: Price, symbol: MarketSymbol, context: MarketContext): Promise<void>;
+  writePrice(price: Price, symbol: MarketSymbol, context: MarketContext): Promise<Result<void>>;
 
   /**
    * Write Level 1 market data
    */
-  writeLevel1(level1: Level1, symbol: MarketSymbol, context: MarketContext): Promise<void>;
+  writeLevel1(level1: Level1, symbol: MarketSymbol, context: MarketContext): Promise<Result<void>>;
 
   /**
    * Write OHLCV data
    */
-  writeOHLCV(ohlcv: OHLCV, symbol: MarketSymbol, context: MarketContext): Promise<void>;
+  writeOHLCV(ohlcv: OHLCV, symbol: MarketSymbol, context: MarketContext): Promise<Result<void>>;
 
   /**
    * Write batch of prices
    */
-  writePrices(prices: Price[], symbol: MarketSymbol, context: MarketContext): Promise<void>;
+  writePrices(prices: Price[], symbol: MarketSymbol, context: MarketContext): Promise<Result<void>>;
 
   /**
    * Write batch of Level 1 data
@@ -106,12 +107,12 @@ export interface MarketDataWriter {
     level1Data: Level1[],
     symbol: MarketSymbol,
     context: MarketContext,
-  ): Promise<void>;
+  ): Promise<Result<void>>;
 
   /**
    * Write batch of OHLCV data
    */
-  writeOHLCVBatch(ohlcvData: OHLCV[], symbol: MarketSymbol, context: MarketContext): Promise<void>;
+  writeOHLCVBatch(ohlcvData: OHLCV[], symbol: MarketSymbol, context: MarketContext): Promise<Result<void>>;
 }
 
 // =============================================================================
@@ -130,7 +131,7 @@ export interface StreamingReader {
     symbol: MarketSymbol,
     context: MarketContext,
     callback: (price: Price) => void,
-  ): Promise<() => void>;
+  ): Promise<Result<() => void>>;
 
   /**
    * Subscribe to real-time Level 1 updates
@@ -139,7 +140,7 @@ export interface StreamingReader {
     symbol: MarketSymbol,
     context: MarketContext,
     callback: (level1: Level1) => void,
-  ): Promise<() => void>;
+  ): Promise<Result<() => void>>;
 
   /**
    * Subscribe to real-time OHLCV updates
@@ -148,12 +149,12 @@ export interface StreamingReader {
     symbol: MarketSymbol,
     context: MarketContext,
     callback: (ohlcv: OHLCV) => void,
-  ): Promise<() => void>;
+  ): Promise<Result<() => void>>;
 
   /**
    * Unsubscribe from all subscriptions
    */
-  unsubscribeAll(): Promise<void>;
+  unsubscribeAll(): Promise<Result<void>>;
 }
 
 // =============================================================================

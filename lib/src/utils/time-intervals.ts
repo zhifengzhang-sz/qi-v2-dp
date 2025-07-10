@@ -7,6 +7,9 @@
  * Moved from DSL to maintain clean separation of concerns.
  */
 
+import type { ResultType as Result } from "@qi/core/base";
+import { createQiError, failure, success } from "@qi/core/base";
+
 // =============================================================================
 // TIME INTERVAL UTILITIES
 // =============================================================================
@@ -59,13 +62,14 @@ export function createLastNMinutesInterval(minutes: number): TimeInterval {
 /**
  * Helper function to validate time intervals
  */
-export function validateTimeInterval(timeInterval: TimeInterval): void {
+export function validateTimeInterval(timeInterval: TimeInterval): Result<void> {
   if (timeInterval.startDate >= timeInterval.endDate) {
-    throw new Error("Start date must be before end date");
+    return failure(createQiError("INVALID_INTERVAL", "Start date must be before end date", "VALIDATION"));
   }
   if (timeInterval.endDate > new Date()) {
-    throw new Error("End date cannot be in the future");
+    return failure(createQiError("INVALID_INTERVAL", "End date cannot be in the future", "VALIDATION"));
   }
+  return success(undefined);
 }
 
 /**
