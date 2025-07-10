@@ -6,7 +6,7 @@ A production-ready market data processing platform implementing a **Functional P
 
 ## 🏗️ Architecture Overview
 
-### FP DSL System (v2.0.0-fp)
+### DSL System (v-0.2.0)
 - **Data Classes**: Immutable Price, OHLCV, Level1, MarketSymbol, MarketContext, Exchange
 - **Time Intervals**: Utility functions for historical data queries
 - **MCP Actors**: Real implementations for CoinGecko, CCXT, TwelveData
