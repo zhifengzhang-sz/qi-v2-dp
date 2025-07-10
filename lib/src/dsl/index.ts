@@ -1,22 +1,14 @@
 #!/usr/bin/env bun
 
 /**
- * DSL Interface Abstractions - Unified Export
+ * FP DSL - Complete Export
  *
- * This module exports all DSL interface abstractions for market data operations.
- * Provides unified factories and types for both reading and writing operations.
+ * Unified export of all DSL types and interfaces.
+ * This is the main entry point for the FP DSL system.
  */
 
-// Independent Data Types (no dependencies)
-export * from "./MarketDataTypes";
+// Core types
+export * from "./types";
 
-// Reading DSL
-export * from "./MarketDataReadingDSL";
-
-// Writing DSL
-export * from "./MarketDataWritingDSL";
-
-// Unified exports for convenience
-export type { MarketDataReadingDSL } from "./MarketDataReadingDSL";
-
-export type { MarketDataWritingDSL } from "./MarketDataWritingDSL";
+// Core interfaces
+export * from "./interfaces";

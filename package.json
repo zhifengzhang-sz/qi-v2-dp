@@ -1,6 +1,6 @@
 {
   "name": "@qicore/crypto-data-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "QiCore Crypto Data Platform - Agentized cryptocurrency data processing with MCP integration",
   "type": "module",
   "main": "./src/index.ts",

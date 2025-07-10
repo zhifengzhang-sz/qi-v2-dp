@@ -1,0 +1,91 @@
+#!/usr/bin/env bun
+
+/**
+ * FP DSL Utilities - Helper Functions
+ *
+ * Utility functions for working with DSL types and time intervals.
+ * Separated from types.ts to keep data structures focused.
+ */
+
+// =============================================================================
+// TIME INTERVAL UTILITIES
+// =============================================================================
+
+/**
+ * Time Interval for Historical Data Queries
+ */
+export interface TimeInterval {
+  startDate: Date;
+  endDate: Date;
+}
+
+/**
+ * Helper function to create time intervals
+ */
+export function createTimeInterval(startDate: Date, endDate: Date): TimeInterval {
+  return { startDate, endDate };
+}
+
+/**
+ * Helper function to create a time interval for the last N days
+ */
+export function createLastNDaysInterval(days: number): TimeInterval {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setDate(endDate.getDate() - days);
+  return { startDate, endDate };
+}
+
+/**
+ * Helper function to create a time interval for the last N hours
+ */
+export function createLastNHoursInterval(hours: number): TimeInterval {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setHours(endDate.getHours() - hours);
+  return { startDate, endDate };
+}
+
+/**
+ * Helper function to create a time interval for the last N minutes
+ */
+export function createLastNMinutesInterval(minutes: number): TimeInterval {
+  const endDate = new Date();
+  const startDate = new Date();
+  startDate.setMinutes(endDate.getMinutes() - minutes);
+  return { startDate, endDate };
+}
+
+/**
+ * Helper function to validate time intervals
+ */
+export function validateTimeInterval(timeInterval: TimeInterval): void {
+  if (timeInterval.startDate >= timeInterval.endDate) {
+    throw new Error("Start date must be before end date");
+  }
+  if (timeInterval.endDate > new Date()) {
+    throw new Error("End date cannot be in the future");
+  }
+}
+
+/**
+ * Helper function to check if a date is within a time interval
+ */
+export function isDateInInterval(date: Date, interval: TimeInterval): boolean {
+  return date >= interval.startDate && date <= interval.endDate;
+}
+
+/**
+ * Helper function to calculate interval duration in milliseconds
+ */
+export function getIntervalDurationMs(interval: TimeInterval): number {
+  return interval.endDate.getTime() - interval.startDate.getTime();
+}
+
+/**
+ * Helper function to calculate interval duration in days
+ */
+export function getIntervalDurationDays(interval: TimeInterval): number {
+  const ms = getIntervalDurationMs(interval);
+  return Math.ceil(ms / (1000 * 60 * 60 * 24));
+}

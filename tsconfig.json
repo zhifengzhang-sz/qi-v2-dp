@@ -19,6 +19,7 @@
     "jsx": "preserve",
     "baseUrl": "./",
     "paths": {
+      "@qi/core": ["lib/src/index.ts"],
       "@qi/core/base": ["lib/src/qicore/base/index.ts"],
       "@qi/core/*": ["lib/src/qicore/*"],
       "@qi/mcp": ["lib/src/qimcp/client"],

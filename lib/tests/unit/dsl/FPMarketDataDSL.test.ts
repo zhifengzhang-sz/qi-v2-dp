@@ -1,234 +1,210 @@
 #!/usr/bin/env bun
 
 /**
- * FP Market Data DSL Tests
+ * Market Data DSL Tests
  *
- * Tests for the simplified functional programming approach to DSL.
- * Verifies context/content separation and partial application patterns.
+ * Tests for the functional programming approach to market data DSL.
+ * Verifies the new clean interfaces and data classes.
  */
 
 import { describe, expect, it } from "vitest";
+import type { MarketDataReader } from "../../../src/dsl/interfaces.js";
 import {
-  EXCHANGES,
-  type Level1,
-  type MarketContext,
-  type MarketDataReader,
-  type OHLCV,
-  type Price,
-  SYMBOLS,
-  bindContext,
-  createMarketContext,
-  createPureReader,
-  createSymbolReader,
-} from "../../../src/dsl";
-import { createQiError, failure, isFailure, isSuccess, success } from "../../../src/qicore/base";
-import type { ResultType as Result } from "../../../src/qicore/base";
+  Exchange,
+  InstrumentType,
+  MarketContext,
+  MarketSymbol,
+  OHLCV,
+  Price,
+} from "../../../src/dsl/types.js";
+import type { Level1 } from "../../../src/dsl/types.js";
+import { createTimeInterval } from "../../../src/dsl/utils.js";
 
-// Mock MarketDataReader for testing
+// Mock MarketDataReader for testing using new interfaces
 class MockMarketDataReader implements MarketDataReader {
-  async getPrice(context: MarketContext): Promise<Result<Price>> {
-    return success({
-      timestamp: context.timestamp,
-      price: 50000,
-      size: 1000,
-    });
+  async readPrice(symbol: MarketSymbol, context: MarketContext): Promise<Price> {
+    return Price.create(new Date(), 50000, 1000);
   }
 
-  async getOHLCV(context: MarketContext, timeframe: string): Promise<Result<OHLCV>> {
-    return success({
-      timestamp: context.timestamp,
-      open: 49000,
-      high: 51000,
-      low: 48000,
-      close: 50000,
-      volume: 100000,
-    });
+  async readLevel1(symbol: MarketSymbol, context: MarketContext): Promise<Level1> {
+    // Simulate the CoinGecko MCP Server behavior - Level1 data not available
+    throw new Error(
+      "Level1 bid/ask data is not available through CoinGecko MCP Server. " +
+        "CoinGecko MCP Server provides price, market data, and OHLCV, but not order book depth. " +
+        "For Level1 data, consider using exchange-specific MCP servers like Binance, Coinbase, or CCXT MCP Server.",
+    );
   }
 
-  async getLevel1(context: MarketContext): Promise<Result<Level1>> {
-    return success({
-      timestamp: context.timestamp,
-      bidPrice: 49950,
-      bidSize: 500,
-      askPrice: 50050,
-      askSize: 500,
-    });
+  async readOHLCV(symbol: MarketSymbol, context: MarketContext): Promise<OHLCV> {
+    return OHLCV.create(new Date(), 49000, 51000, 48000, 50000, 100000);
+  }
+
+  async readHistoricalPrices(
+    symbol: MarketSymbol,
+    context: MarketContext,
+    interval: any,
+  ): Promise<Price[]> {
+    return [Price.create(new Date(), 50000, 1000), Price.create(new Date(), 50100, 1500)];
+  }
+
+  async readHistoricalLevel1(
+    symbol: MarketSymbol,
+    context: MarketContext,
+    interval: any,
+  ): Promise<Level1[]> {
+    throw new Error("Level1 data not supported");
+  }
+
+  async readHistoricalOHLCV(
+    symbol: MarketSymbol,
+    context: MarketContext,
+    interval: any,
+  ): Promise<OHLCV[]> {
+    return [
+      OHLCV.create(new Date(), 49000, 51000, 48000, 50000, 100000),
+      OHLCV.create(new Date(), 50000, 52000, 49000, 51000, 120000),
+    ];
   }
 }
 
-describe("FP Market Data DSL", () => {
+describe("Market Data DSL", () => {
   const mockReader = new MockMarketDataReader();
 
-  describe("Context Creation", () => {
-    it("should create market context with all required fields", () => {
-      const context = createMarketContext(EXCHANGES.COINGECKO, SYMBOLS.BTC);
+  // Create test data using new data classes
+  const testExchange = Exchange.create("coingecko", "CoinGecko", "global", "aggregated");
+  const testSymbol = MarketSymbol.create("BTC", "Bitcoin", "crypto", "USD", InstrumentType.CASH);
+  const testContext = MarketContext.create(testExchange, testSymbol);
 
-      expect(context.exchange.id).toBe("coingecko");
-      expect(context.symbol.ticker).toBe("BTC");
-      expect(context.timestamp).toBeInstanceOf(Date);
+  describe("Data Class Creation", () => {
+    it("should create Price with factory method", () => {
+      const price = Price.create(new Date(), 50000, 1000);
+
+      expect(price.timestamp).toBeInstanceOf(Date);
+      expect(price.price).toBe(50000);
+      expect(price.size).toBe(1000);
     });
 
-    it("should create context with custom timestamp", () => {
-      const customTime = new Date("2025-01-01T00:00:00Z");
-      const context = createMarketContext(EXCHANGES.BINANCE, SYMBOLS.ETH, customTime);
+    it("should create OHLCV with factory method", () => {
+      const ohlcv = OHLCV.create(new Date(), 49000, 51000, 48000, 50000, 100000);
 
-      expect(context.timestamp).toBe(customTime);
+      expect(ohlcv.timestamp).toBeInstanceOf(Date);
+      expect(ohlcv.open).toBe(49000);
+      expect(ohlcv.high).toBe(51000);
+      expect(ohlcv.low).toBe(48000);
+      expect(ohlcv.close).toBe(50000);
+      expect(ohlcv.volume).toBe(100000);
+    });
+
+    it("should create MarketSymbol with factory method", () => {
+      const symbol = MarketSymbol.create("BTC", "Bitcoin", "crypto", "USD", InstrumentType.CASH);
+
+      expect(symbol.ticker).toBe("BTC");
+      expect(symbol.name).toBe("Bitcoin");
+      expect(symbol.assetClass).toBe("crypto");
+      expect(symbol.currency).toBe("USD");
+      expect(symbol.instrumentType).toBe(InstrumentType.CASH);
+    });
+
+    it("should create MarketContext with factory method", () => {
+      const exchange = Exchange.create("binance", "Binance", "global", "centralized");
+      const symbol = MarketSymbol.create("ETH", "Ethereum", "crypto", "USD", InstrumentType.CASH);
+      const context = MarketContext.create(exchange, symbol);
+
+      expect(context.exchange).toBe(exchange);
+      expect(context.symbol).toBe(symbol);
     });
   });
 
-  describe("Full Context Interface", () => {
-    it("should work with complete market context", async () => {
-      const context = createMarketContext(EXCHANGES.COINGECKO, SYMBOLS.BTC);
+  describe("Reader Interface Implementation", () => {
+    it("should read price data using new interface", async () => {
+      const price = await mockReader.readPrice(testSymbol, testContext);
 
-      const priceResult = await mockReader.getPrice(context);
-      expect(isSuccess(priceResult)).toBe(true);
+      expect(price).toBeInstanceOf(Price);
+      expect(price.price).toBe(50000);
+      expect(price.size).toBe(1000);
+    });
 
-      const ohlcvResult = await mockReader.getOHLCV(context, "1d");
-      expect(isSuccess(ohlcvResult)).toBe(true);
+    it("should read OHLCV data using new interface", async () => {
+      const ohlcv = await mockReader.readOHLCV(testSymbol, testContext);
 
-      const level1Result = await mockReader.getLevel1(context);
-      expect(isSuccess(level1Result)).toBe(true);
+      expect(ohlcv).toBeInstanceOf(OHLCV);
+      expect(ohlcv.open).toBe(49000);
+      expect(ohlcv.high).toBe(51000);
+      expect(ohlcv.low).toBe(48000);
+      expect(ohlcv.close).toBe(50000);
+      expect(ohlcv.volume).toBe(100000);
+    });
+
+    it("should handle unsupported operations gracefully", async () => {
+      try {
+        await mockReader.readLevel1(testSymbol, testContext);
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Level1 bid/ask data is not available");
+      }
+    });
+
+    it("should read historical data", async () => {
+      const interval = createTimeInterval(new Date(Date.now() - 24 * 60 * 60 * 1000), new Date());
+
+      const prices = await mockReader.readHistoricalPrices(testSymbol, testContext, interval);
+      expect(Array.isArray(prices)).toBe(true);
+      expect(prices.length).toBe(2);
+      expect(prices[0]).toBeInstanceOf(Price);
+
+      const ohlcvData = await mockReader.readHistoricalOHLCV(testSymbol, testContext, interval);
+      expect(Array.isArray(ohlcvData)).toBe(true);
+      expect(ohlcvData.length).toBe(2);
+      expect(ohlcvData[0]).toBeInstanceOf(OHLCV);
     });
   });
 
-  describe("Partial Application - Context Binding", () => {
-    it("should create pure reader with full context bound", async () => {
-      const pureReader = createPureReader(mockReader, EXCHANGES.COINGECKO, SYMBOLS.BTC);
+  describe("Time Interval Utilities", () => {
+    it("should create time intervals", () => {
+      const start = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const end = new Date();
+      const interval = createTimeInterval(start, end);
 
-      // Zero-argument calls
-      const priceResult = await pureReader.getPrice();
-      expect(isSuccess(priceResult)).toBe(true);
-
-      const ohlcvResult = await pureReader.getOHLCV("1d");
-      expect(isSuccess(ohlcvResult)).toBe(true);
-
-      const level1Result = await pureReader.getLevel1();
-      expect(isSuccess(level1Result)).toBe(true);
-    });
-
-    it("should create symbol reader with exchange bound", async () => {
-      const symbolReader = createSymbolReader(mockReader, EXCHANGES.BINANCE);
-
-      // Symbol-argument calls
-      const btcResult = await symbolReader.getPrice(SYMBOLS.BTC);
-      expect(isSuccess(btcResult)).toBe(true);
-
-      const ethResult = await symbolReader.getPrice(SYMBOLS.ETH);
-      expect(isSuccess(ethResult)).toBe(true);
-    });
-
-    it("should bind partial context flexibly", async () => {
-      // Exchange-only binding
-      const exchangeReader = bindContext(mockReader, { exchange: EXCHANGES.COINBASE });
-      const priceResult = await exchangeReader.getPrice(SYMBOLS.BTC);
-      expect(isSuccess(priceResult)).toBe(true);
-
-      // Symbol-only binding
-      const symbolReader = bindContext(mockReader, { symbol: SYMBOLS.BTC });
-      const priceResult2 = await symbolReader.getPrice(EXCHANGES.COINBASE);
-      expect(isSuccess(priceResult2)).toBe(true);
+      expect(interval.startDate).toBe(start);
+      expect(interval.endDate).toBe(end);
     });
   });
 
   describe("Type Safety", () => {
-    it("should maintain type safety with bound contexts", async () => {
-      const pureReader = createPureReader(mockReader, EXCHANGES.COINGECKO, SYMBOLS.BTC);
+    it("should maintain immutable data structures", () => {
+      const price = Price.create(new Date(), 50000, 1000);
 
-      // These should compile and work
-      const price = await pureReader.getPrice();
-      const ohlcv = await pureReader.getOHLCV("1h");
-      const level1 = await pureReader.getLevel1();
-
-      expect(isSuccess(price)).toBe(true);
-      expect(isSuccess(ohlcv)).toBe(true);
-      expect(isSuccess(level1)).toBe(true);
+      // Properties should be readonly - TypeScript will prevent this at compile time
+      expect(price.price).toBe(50000);
+      expect(price.size).toBe(1000);
     });
 
     it("should provide correct data structures", async () => {
-      const context = createMarketContext(EXCHANGES.COINGECKO, SYMBOLS.BTC);
+      const price = await mockReader.readPrice(testSymbol, testContext);
+      expect(price.timestamp).toBeInstanceOf(Date);
+      expect(typeof price.price).toBe("number");
+      expect(typeof price.size).toBe("number");
 
-      const priceResult = await mockReader.getPrice(context);
-      if (isSuccess(priceResult)) {
-        const price = priceResult.right;
-        expect(price.timestamp).toBeInstanceOf(Date);
-        expect(typeof price.price).toBe("number");
-        expect(typeof price.size).toBe("number");
-      }
-
-      const ohlcvResult = await mockReader.getOHLCV(context, "1d");
-      if (isSuccess(ohlcvResult)) {
-        const ohlcv = ohlcvResult.right;
-        expect(ohlcv.timestamp).toBeInstanceOf(Date);
-        expect(typeof ohlcv.open).toBe("number");
-        expect(typeof ohlcv.high).toBe("number");
-        expect(typeof ohlcv.low).toBe("number");
-        expect(typeof ohlcv.close).toBe("number");
-        expect(typeof ohlcv.volume).toBe("number");
-      }
-
-      const level1Result = await mockReader.getLevel1(context);
-      if (isSuccess(level1Result)) {
-        const level1 = level1Result.right;
-        expect(level1.timestamp).toBeInstanceOf(Date);
-        expect(typeof level1.bidPrice).toBe("number");
-        expect(typeof level1.bidSize).toBe("number");
-        expect(typeof level1.askPrice).toBe("number");
-        expect(typeof level1.askSize).toBe("number");
-      }
+      const ohlcv = await mockReader.readOHLCV(testSymbol, testContext);
+      expect(ohlcv.timestamp).toBeInstanceOf(Date);
+      expect(typeof ohlcv.open).toBe("number");
+      expect(typeof ohlcv.high).toBe("number");
+      expect(typeof ohlcv.low).toBe("number");
+      expect(typeof ohlcv.close).toBe("number");
+      expect(typeof ohlcv.volume).toBe("number");
     });
   });
 
-  describe("Performance Patterns", () => {
-    it("should support high-frequency trading patterns", async () => {
-      const btcReader = createPureReader(mockReader, EXCHANGES.COINGECKO, SYMBOLS.BTC);
-      const ethReader = createPureReader(mockReader, EXCHANGES.COINGECKO, SYMBOLS.ETH);
-
-      const startTime = Date.now();
-
-      // Simulate high-frequency calls
-      const promises = [];
-      for (let i = 0; i < 100; i++) {
-        promises.push(btcReader.getPrice());
-        promises.push(ethReader.getPrice());
+  describe("Error Handling", () => {
+    it("should handle capability limitations gracefully", async () => {
+      try {
+        await mockReader.readLevel1(testSymbol, testContext);
+        expect(true).toBe(false); // Should not reach here
+      } catch (error) {
+        expect(error).toBeInstanceOf(Error);
+        expect((error as Error).message).toContain("Level1 bid/ask data is not available");
       }
-
-      const results = await Promise.all(promises);
-      const endTime = Date.now();
-
-      expect(results.length).toBe(200);
-      expect(results.every((r) => isSuccess(r))).toBe(true);
-
-      // Should complete quickly (arbitrary performance check)
-      expect(endTime - startTime).toBeLessThan(1000);
-    });
-
-    it("should support parallel portfolio monitoring", async () => {
-      const symbolReader = createSymbolReader(mockReader, EXCHANGES.BINANCE);
-      const portfolio = [SYMBOLS.BTC, SYMBOLS.ETH];
-
-      const results = await Promise.all(portfolio.map((symbol) => symbolReader.getPrice(symbol)));
-
-      expect(results.length).toBe(2);
-      expect(results.every((r) => isSuccess(r))).toBe(true);
-    });
-  });
-
-  describe("Constants and Utilities", () => {
-    it("should provide exchange constants", () => {
-      expect(EXCHANGES.COINGECKO.id).toBe("coingecko");
-      expect(EXCHANGES.BINANCE.id).toBe("binance");
-      expect(EXCHANGES.COINBASE.id).toBe("coinbase");
-    });
-
-    it("should provide symbol constants", () => {
-      expect(SYMBOLS.BTC.ticker).toBe("BTC");
-      expect(SYMBOLS.ETH.ticker).toBe("ETH");
-    });
-
-    it("should maintain exchange types", () => {
-      expect(EXCHANGES.COINGECKO.type).toBe("aggregated");
-      expect(EXCHANGES.BINANCE.type).toBe("centralized");
-      expect(EXCHANGES.COINBASE.type).toBe("centralized");
     });
   });
 });

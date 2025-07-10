@@ -1,102 +1,60 @@
 #!/usr/bin/env bun
 
 /**
- * QiCore Crypto Data Platform - Library Exports
+ * QiCore Market Data Platform - Main Export
  *
- * Production-ready cryptocurrency data processing platform
- * with DSL-driven 2-layer actor architecture
+ * Complete export of the functional programming approach to market data processing.
+ * Clean DSL interfaces, data classes, and production-ready actors.
  */
 
 // =============================================================================
-// CORE FRAMEWORK
+// CORE DSL SYSTEM
 // =============================================================================
+
+// DSL Types and Data Classes
+export * from "./dsl/types";
+export * from "./dsl/interfaces";
+export * from "./dsl/utils";
+
+// Complete DSL Export
+export * from "./dsl";
+
+// =============================================================================
+// MARKET DATA ACTORS
+// =============================================================================
+
+// Source Actors (Readers)
+export * from "./market/crypto/actors/sources/CoinGeckoMCPReader";
+export * from "./market/crypto/actors/sources/CCXTMCPReader";
+export * from "./market/crypto/actors/sources/TwelveDataMCPReader";
+export * from "./market/crypto/actors/sources";
+
+// =============================================================================
+// CORE INFRASTRUCTURE
+// =============================================================================
+
+// QiCore Base System
 export * from "./qicore";
 
 // =============================================================================
-// LAYER 2: DSL (Domain Specific Language)
+// FUNCTIONAL PROGRAMMING UTILITIES
 // =============================================================================
-// Data types and interfaces
-export * from "./dsl";
 
-// DSL Laws
-export * from "./dsl/laws";
+// FP Utilities and Helpers
 
-// =============================================================================
-// LAYER 2: ACTORS
-// =============================================================================
-// Abstract base classes
-export { BaseReader } from "./actors/abstract/readers/BaseReader";
-export { BaseWriter } from "./actors/abstract/writers/BaseWriter";
-
-// Source actors (readers)
-export * from "./actors/sources/coingecko";
-export * from "./actors/sources/redpanda";
-// TODO: Export when fully implemented
-// export * from "./actors/sources/timescale-mcp";
-// export * from "./actors/sources/redpanda-mcp";
-
-// Target actors (writers)
-export * from "./actors/targets/redpanda";
-export * from "./actors/targets/timescale";
-// TODO: Export when implemented
-// export * from "./actors/targets/timescale-mcp";
-// export * from "./actors/targets/redpanda-mcp";
+export * from "./utils";
+export * from "./types";
 
 // =============================================================================
-// LAYER 1: BASE INFRASTRUCTURE
+// BACKWARD COMPATIBILITY
 // =============================================================================
-// Database infrastructure
-export * from "./base/database";
 
-// Streaming infrastructure
-export * from "./base/streaming";
+// Re-export DSL for backward compatibility
+export * as DSL from "./dsl";
 
 // =============================================================================
-// GENERATORS
+// VERSION INFORMATION
 // =============================================================================
-export { generateTimescaleSchema } from "./generators/schema-generator";
-export {
-  generateRedpandaTopicConfig,
-  generateJsonSchemas,
-  generateTopicMappings,
-  generateRedpandaConfigFiles,
-} from "./generators/redpanda-schema-generator";
 
-// =============================================================================
-// TYPE EXPORTS
-// =============================================================================
-export type {
-  // DSL types
-  CryptoPriceData,
-  CryptoOHLCVData,
-  CryptoMarketAnalytics,
-  Level1Data,
-  CurrentPricesOptions,
-  DateRangeOHLCVQuery,
-  Level1Query,
-  MarketDataReadingDSL,
-  MarketDataWritingDSL,
-  PublishOptions,
-  PublishResult,
-  BatchPublishOptions,
-  BatchPublishResult,
-  ClientConfig,
-  ClientAssociation,
-} from "./dsl";
-
-export type {
-  // Law types
-  TypeCoherenceLaw,
-  ErrorPropagationLaw,
-  DataFlowLaw,
-  TemporalLaw,
-  DSLCompatibilityLaw,
-  DSLCombinationLaw,
-  DSLCombinator,
-} from "./dsl/laws";
-
-export type {
-  // Result types
-  ResultType as Result,
-  QiError,
-} from "./qicore/base";
+export const VERSION = "2.0.0-fp";
+export const SYSTEM_NAME = "QiCore FP Market Data Platform";
